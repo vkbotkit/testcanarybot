@@ -24,7 +24,7 @@ class plugins_autoimport():
         try:
             test = getattr(
                 importlib.import_module(
-                        "lib."+ (self.name[0:self.name.rfind('.')]) + ".main"
+                        "library."+ (self.name[0:self.name.rfind('.')]) + ".main"
                     ), 
                 self.name[self.name.rfind('.')+1:]
             )(kwargs)
