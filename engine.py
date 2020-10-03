@@ -33,19 +33,21 @@ class plugins_autoimport():
             print(e)
 
 class plugins():
-    def __init__(self, v, assets, api):
+    def __init__(self, v, assets, tools, api):
         self.v = v
         self.all = [i for i in self.getPlugins() if i != 'tools']
         self.plugins = self.upload(self.all)
         self.assets = assets
         self.api = api
+        self.tools = tools
 
 
     def getPlugins(self):
         try:
-            return os.listdir(os.path.abspath(os.path.dirname(__file__)) + '\\lib\\')
+            return os.listdir(os.path.abspath(os.path.dirname(__file__)) + '\\library\\')
         except Exception as e:
             print(e)
+            return []
         
 
     def upload(self, all):
@@ -54,9 +56,9 @@ class plugins():
         for plugin in all:
             if plugin != 'tools':
                 try:
-                    pluginObj = getattr(importlib.import_module("lib." + plugin + ".main"), 'lib_plugin')()
-                except:
-                    print(f"{plugin} повреждён")
+                    pluginObj = getattr(importlib.import_module("library." + plugin + ".main"), 'lib_plugin')()
+                except Exception as e:
+                    print(f"{plugin} повреждён ({e})")
 
                     self.all = [i for i in self.all if i != plugin]
                     continue
@@ -65,9 +67,9 @@ class plugins():
                     if hasattr(pluginObj, 'name'):
                         if hasattr(pluginObj, 'update'):
                             pl[plugin] = pluginObj
-                            print(f"{pluginObj.name} загружен")
+                            print(f"{plugin} загружен")
                         else:
-                            print(f"{pluginObj.name} не имеет аттрибута 'update'")
+                            print(f"{plugin} не имеет аттрибута 'update'")
                             self.all = [i for i in self.all if i != plugin]
                     else:
                         print(f"{plugin} не имеет имени")
@@ -76,6 +78,23 @@ class plugins():
                     print(f"{plugin} устарел")
                     self.all = [i for i in self.all if i != plugin]
         return pl
+
+
+    def parse(self, message):
+        response = []
+        for plugin in self.plugins.values():
+            response.append(plugin.update(self.api, self.tools, message))
+
+
+class tools:
+    def __init__(self, api):
+        self.api = api
+        
+    def getMention(self, page:int, nc = None):
+        if page > 0:
+            return f'[id{page}|{self.api.users.get(user_ids = page, name_case=nc)[0]["first_name"]}]'
+        else:
+            return f'[club{-page}|{self.api.groups.getById(group_id = -page)[0]["name"]}]'
 
 
 def upd_id(number):
@@ -110,7 +129,7 @@ def parse_command(messagetoreact):
                     response.append(i)
         else:
             response.append(':::CANARYBOT:mention:::')
-        
+    response.append(':::CANARYBOT:endmessage:::')
     return response
 
 class assets():
@@ -124,22 +143,27 @@ class assets():
 
 
 if __name__ == "__main__":
-    # Подключение файла из папки lib 
+    # Подключение файла из папки library 
     # testlib = plugins_autoimport()
-    # testlib.package.check() #lib/package/main.py check()
-
-    v = '0.01.001'
+    # testlib.package.update() #library/package/main.py update()
 
     # Подключение медиафайла из папки assets
-    testassets = assets()
+    # testassets = assets()
 
-    test2 = open('test.jpg', "wb")
-    with testassets('test.jpg', "rb") as origin:
-        test2.write(origin.read())
+    # test2 = open('test.jpg', "wb")
+    # with testassets('test.jpg', "rb") as origin:
+    #     test2.write(origin.read())
+
+    # v = '002'
+    # token = ""
+
 
     # Список плагинов
-    testplugins = plugins(v, testassets)
+    # testplugins = plugins(v, testassets, api)
     
-    print(testplugins.plugins)
-    print(testplugins.all)
-    print(testplugins.getPlugins())
+    # print(testplugins.plugins)
+    # print(testplugins.all)
+    # print(testplugins.getPlugins())
+
+    # print(testplugins.getMention(517114114, 'nom'))
+    pass
