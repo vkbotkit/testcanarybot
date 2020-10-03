@@ -13,15 +13,22 @@ longpoll = VkBotLongPoll(devbot, '195675828')
 api = devbot.get_api()
 
 library = engine.plugins(v, engine.assets(), engine.tools(api), api)
-engine.upd_id(195675828)
+engine.upd_id(195675828, api)
 
-print('Работа начата')
+print(f'@{engine.shortname} started')
 
 for event in longpoll.listen():
     try:
         if event.type == VkBotEventType.MESSAGE_NEW:
-            if event.message.peer_id > 2000000000 and event.message.from_id == 517114114:            
-                event.message.text = engine.parse_command(event.message.text)
-                library.parse(event.message)
+            if event.message.peer_id > 2000000000 and event.message.from_id == 517114114: 
+                if event.message.text == "":
+                    if event.message.action:
+                        event.message.text = engine.parse_action(event.message.action)
+                    else:
+                        continue
+                else:
+                    event.message.text = engine.parse_command(event.message.text)
+                if event.message.text[0] != ':::CANARYBOT:endmessage:::':
+                    library.parse(event.message)
     except Exception as e:
         print(e)

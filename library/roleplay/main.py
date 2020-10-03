@@ -21,6 +21,5 @@ class lib_plugin():
                         user = '{user}'
                     api.messages.send(random_id = random.randint(0,9999), peer_id = message.peer_id, message=f'Вы обняли {user}')
 
-                return None
+                return 1
             api.messages.send(random_id = random.randint(0,9999), peer_id = message.peer_id, message=f'А кого?')
-        return None
