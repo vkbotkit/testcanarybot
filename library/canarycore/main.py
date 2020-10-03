@@ -11,7 +11,8 @@ class lib_plugin():
             'invite': 'Приветствую, {user}.\nПеред общением здесь ознакомься с правилами беседы и инструкциями по чатботам. \nИнструкция по Канарейке: eesmth.ml/@canarybot/rules',
             'kick': 'Кикнуть пользователя: @canarybot исключить {user}',
             'link': 'Ваша ссылка: {link}',
-            'gettype': 'Тип страницы: {typepage} \nСсылка на страницу: {pagelink} (через ID) \nУпоминание: {mention}'
+            'gettype': 'Тип страницы: {typepage} \nСсылка на страницу: {pagelink} (через ID) \nУпоминание: {mention}',
+            'mention': ['video-195675828_456239018', 'video-195675828_456239017']
         }
 
     def check(args):
@@ -20,7 +21,7 @@ class lib_plugin():
     def update(self, api, tools, message):
         if message.text[0] == ':::CANARYBOT:mention:::':
             user = tools.getMention(message.from_id, 'nom')
-            api.messages.send(random_id = random.randint(0,9999), peer_id = message.peer_id, message="{user},".format(user = user), attachment='video-195675828_456239017')
+            api.messages.send(random_id = random.randint(0,9999), peer_id = message.peer_id, message="{user},".format(user = user), attachment=random.choice(self.answers['mention']))
             return 1
 
         elif message.text[0] in ['help', 'помощь', 'инструкции']:

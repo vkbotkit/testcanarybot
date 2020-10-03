@@ -62,17 +62,17 @@ class plugins():
                 try:
                     pluginObj = getattr(importlib.import_module("library." + plugin + ".main"), 'lib_plugin')()
                 except Exception as e:
-                    print(f"{plugin} повреждён ({e})")
+                    print(f"Broken")
 
                     self.all = [i for i in self.all if i != plugin]
                     continue
 
                 if pluginObj.v != self.v:
-                    print(f"{plugin} is old")
+                    print(f"Did not match versions")
                     self.all = [i for i in self.all if i != plugin]
 
                 elif not hasattr(pluginObj, 'update'):
-                    print(f"{plugin} does not have 'update'")
+                    print(f"No 'update' function")
                     self.all = [i for i in self.all if i != plugin]
                 
                 else:

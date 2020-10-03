@@ -20,7 +20,7 @@ print(f'@{engine.shortname} started')
 for event in longpoll.listen():
     try:
         if event.type == VkBotEventType.MESSAGE_NEW:
-            if event.message.peer_id > 2000000000 and event.message.from_id == 517114114: 
+            if event.message.peer_id > 2000000000: 
                 if event.message.text == "":
                     if event.message.action:
                         event.message.text = engine.parse_action(event.message.action)
