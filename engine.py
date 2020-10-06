@@ -6,7 +6,7 @@ import random
 group_id = 0
 group_mention = ''
 shortname = ''
-
+managers = ''
 
 class plugins_autoimport():
     __slots__ = ('name', 'method', 'all')
@@ -40,9 +40,9 @@ class plugins():
         self.v = v
         self.all = [i for i in self.getPlugins() if i != 'tools']
         self.plugins = self.upload(self.all)
-        self.assets = assets
+        self.assets = assets()
         self.api = api
-        self.tools = tools
+        self.tools = tools(api)
 
 
     def getPlugins(self):
@@ -61,7 +61,7 @@ class plugins():
                 print(f"Loading: {plugin}", end="... ")
                 try:
                     pluginObj = getattr(importlib.import_module("library." + plugin + ".main"), 'lib_plugin')()
-                except Exception as e:
+                except Exception:
                     print(f"Broken")
 
                     self.all = [i for i in self.all if i != plugin]
@@ -85,12 +85,29 @@ class plugins():
             self.api.messages.send(random_id = random.randint(0,999999), peer_id = peer_id, message = 'Можешь повторить?', attachment='photo-195675828_457241495')
         else:
             for i in response:
-                if type(i) is not int:
-                    print(i)
+                if type(i) is str:
+                    if i.startswith('console: '):
+                        code = i[9:]
+                        try:
+                            exec(code)
+                        except Exception as e:
+                            self.api.messages.send(random_id = random.randint(0,999999), peer_id = peer_id, message = f'{e} ({i})')
+                    elif i.startswith('plugins: '):
+                        code = i[9:]
+                        if code in self.all:
+                            descr = self.plugins[code].descr if self.plugins[code].descr else 'Модуль без описания.'
+                            self.api.messages.send(random_id = random.randint(0,999999), peer_id = peer_id, message = f"Описание {code}: {descr}")
+                        else:
+                            response = 'Библиотека, с которой работает Canarybot:\n'
+                            for plugin in self.all:
+                                response += '\n\u2022 ' + plugin if plugin != 'canarycore' else ''
+                            response += '\n\nЧтобы получить описание модуля, отправьте @canarybot ассеты описание {название модуля}'
+                            self.api.messages.send(random_id = random.randint(0,999999), peer_id = peer_id, message = response, attachment='photo-195675828_457241499')
 
 
     def parse(self, message):
         response = []
+        
         for plugin in self.plugins.values():
             result = plugin.update(self.api, self.tools, message)
             if result: response.append(result)
@@ -101,6 +118,7 @@ class plugins():
 class tools:
     def __init__(self, api):
         self.api = api
+        self.endline = ':::CANARYBOT:endmessage:::'
         
     def getMention(self, page:int, nc = None):
         if nc == 'link':
@@ -119,9 +137,16 @@ def upd_id(number, api):
     global group_id
     global group_mention
     global shortname
+
     group_id = number
     group_mention = f'[club{group_id}|@canarybot]'
     shortname = api.groups.getById(group_id=group_id)[0]['screen_name']
+
+def getManagers(api):
+    global managers
+    lis = api.groups.getMembers(group_id = group_id, sort = 'id_asc', filter='managers')['items']
+    
+    managers = [i['id'] for i in lis if i['role'] in ['administrator', 'creator']]
 
 
 def parse_mention(mentiontoparse):
@@ -141,26 +166,32 @@ def parse_action(messageaction):
     return response
 
 def parse_command(messagetoreact):
-
-    message = messagetoreact
-    response = []
     for i in ['chat_invite_user', 'chat_kick_user', ':::CANARYBOT:mention:::']:
-        message = message.replace(i, 'system_message')
+        messagetoreact = messagetoreact.replace(i, 'system_message')
     
-    message = message.split()
+    response = []
+    message = messagetoreact.split()
 
-    if group_mention in message:
-        if message[0] == group_mention and len(message) > 1:
-            message.pop(0)
+    # сообщение содержит одно лишь упоминание или упоминание не в первом слоте -- mention
+    # упоминание в начале или console -- список
+
+
+    if len(message) > 1:
+        if message[0] in [group_mention, 'console']:
+            if message[0] == group_mention: message.pop(0)
+
             for i in message:
-                if i[0] == '[' and i[-1] == ']' and i.count('|') == 1:
-                    response.append(parse_mention(i[1:-1]))
-                else:
-                    response.append(i)
-        else:
+                response.append(parse_mention(i[1:-1]) if i[0] == '[' and i[-1] == ']' and i.count('|') == 1 else i)
+
+        elif group_mention in message:
             response.append(':::CANARYBOT:mention:::')
+            
+    elif message[0] == group_mention:
+        response.append(':::CANARYBOT:mention:::')
     response.append(':::CANARYBOT:endmessage:::')
+
     return response
+
 
 class assets():
     """
