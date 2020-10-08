@@ -1,7 +1,7 @@
 import random
 class lib_plugin():
     def __init__(self):
-        self.v = '003'
+        self.v = '0.0031'
         self.descr = 'Плагин для проведения ролевых игр.'
         self.reactions = {
             'to_someone': [
@@ -11,7 +11,7 @@ class lib_plugin():
                     'reaction': ['Вы обняли {user}.']
                 },
                 {
-                    'commands': ['поцеловать', 'поцеловали', 'чмок', 'цмок', 'цом'],
+                    'commands': ['поцеловать', 'поцеловали', 'чмок', 'чмаф', 'цмок', 'цом'],
                     'name_case': 'acc',
                     'reaction': ['Вы поцеловали {user}.']
                 },
@@ -52,21 +52,24 @@ class lib_plugin():
             if message.text[0] in i['commands']:
                 if type(message.text[1]) is int and message.text[2] == tools.endline:
                     if message.text[1] == message.from_id:
-                        return api.messages.send(random_id = random.randint(0,9999), peer_id = message.peer_id, message=f'А себя зачем?')
+                        api.messages.send(random_id = tools.random_id(), peer_id = message.peer_id, message=f'А себя зачем?')
+                        return 1
                     else:
                         try:
                             user = tools.getMention(message.text[1], i['name_case'])
                         except Exception as e:
                             print(e)
                             user = 'user'
-                        return api.messages.send(random_id = random.randint(0,9999), peer_id = message.peer_id, message=random.choice(i['reaction']).format(user = user))
+                        api.messages.send(random_id = tools.random_id(), peer_id = message.peer_id, message=random.choice(i['reaction']).format(user = user))
+                        return 1
 
-                return api.messages.send(random_id = random.randint(0,9999), peer_id = message.peer_id, message=f'А кого?')
-                
+                api.messages.send(random_id = tools.random_id(), peer_id = message.peer_id, message=f'А кого?')
+                return 1
         else:
             if message.text[1] == tools.endline:
                 for i in self.reactions['self']:
                     if message.text[0] in i['commands']:
-                        return  api.messages.send(random_id = random.randint(0,9999), peer_id = message.peer_id, message=random.choice(i['reaction']))
-                    
+                        api.messages.send(random_id = tools.random_id(), peer_id = message.peer_id, message=random.choice(i['reaction']))
+                        return 1
+                        
 
