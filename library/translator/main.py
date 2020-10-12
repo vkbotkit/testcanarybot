@@ -20,7 +20,7 @@ class lib_plugin():
                     api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message = 'Hello World!')
                 else:
                     response = ' '.join(message['text'][2:-1])
-                    response = self.translator.translate(response, dest=message['text'][1])['text']
+                    response = self.translator.translate(response, dest=message['text'][1]).text
                     
                     api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message = response)
                 
