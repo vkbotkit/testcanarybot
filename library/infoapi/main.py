@@ -1,6 +1,6 @@
 class lib_plugin():
-    def __init__(self):
-        self.v = '0.0031'
+    def __init__(self, api, tools):
+        self.v = '0.0032'
         self.descr = 'Плагин для работы с VK API и информацией о боте. \n\nКоманды для бота: \n\u2022 @canarybot помощь = Отослать полезные ссылки. \n\u2022 @canarybot ссылка *ссылка* = Сократить ссылку с помощью VK CC\n\u2022 @canarybot тип *упоминание страницы, например @durov* = узнать тип страницы, её ID, краткий адрес'
         self.answers = {
             'help': [
@@ -13,14 +13,14 @@ class lib_plugin():
         
 
     def update(self, api, tools, message):
-        if message.text[0] in ['help', 'помощь', 'инструкции']:
-            user = tools.getMention(message.from_id, 'nom')
+        if message['text'][0] in ['help', 'помощь', 'инструкции']:
+            user = tools.getMention(message['from_id'], 'nom')
             for i in self.answers['help']:
-                api.messages.send(random_id = tools.random_id(), peer_id = message.peer_id, message=i.format(user = user))
+                api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message=i.format(user = user))
             return 1
 
-        elif message.text[0] in ['тип', 'type', 'id', 'айди'] and type(message.text[1]) is int:
-            page_id = message.text[1]
+        elif message['text'][0] in ['тип', 'type', 'id', 'айди'] and type(message['text'][1]) is int:
+            page_id = message['text'][1]
             mention = tools.getMention(page_id, 'link')
 
             page_id = f"id{page_id}" if page_id > 0 else f"club{-page_id}"
@@ -28,12 +28,12 @@ class lib_plugin():
             user = api.utils.resolveScreenName(screen_name = page_id)
             typepage = 'Пользователь' if user['type'] == 'user' else 'Сообщество'
             
-            api.messages.send(random_id = tools.random_id(), peer_id = message.peer_id, message=self.answers['gettype'].format(typepage=typepage,pagelink=pagelink, mention=mention))
+            api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message=self.answers['gettype'].format(typepage=typepage,pagelink=pagelink, mention=mention))
             return 1
 
 
-        elif message.text[0] in ['short', 'link', 'сократить', 'сократи']:
-            link = api.utils.getShortLink(url = ' '.join(message.text[1:-1]))['short_url']
-            api.messages.send(random_id = tools.random_id(), peer_id = message.peer_id, message=self.answers['link'].format(link = link))
+        elif message['text'][0] in ['short', 'link', 'сократить', 'сократи']:
+            link = api.utils.getShortLink(url = ' '.join(message['text'][1:-1]))['short_url']
+            api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message=self.answers['link'].format(link = link))
             return 1
 

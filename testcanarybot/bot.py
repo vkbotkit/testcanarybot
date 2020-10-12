@@ -1,8 +1,8 @@
 from .plugins import plugins
 
+import traceback
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-
 
 class TestCanaryBot():    
     def __init__(self, token: str, group_id: int, library: str):
@@ -12,15 +12,18 @@ class TestCanaryBot():
         """
         self.bot = vk_api.VkApi(token = token)
         self.api = self.bot.get_api()
-        self.v = '0.0031'
+        self.supp_v = ['0.0032']
         
         self.longpoll = None
-        self.library = plugins(self.v, group_id, self.api, library)
+        self.library = plugins(self.supp_v, group_id, self.api, library)
 
         print(f'@{self.library.tools.shortname} started')
 
 
     def setMentions(self, *args):
+        """ 
+        Use custom mentions instead "@{groupadress}"
+        """
         self.library.tools.mentions = [self.library.tools.group_mention, *args]
 
     def listen(self, count = None):
@@ -37,11 +40,38 @@ class TestCanaryBot():
 
             print('Done!')
 
+
     def getLongPoll(self):
         """
         Take longpoll
         """
         return VkBotLongPoll(self.bot, str(self.library.tools.group_id))
+
+
+    def parse(self, event):
+        try:
+            if event.type == VkBotEventType.MESSAGE_NEW:
+                message = event.object['message']
+                if 'action' in message:
+                    message['text'] = self.library.parse_action(message['action'])
+                elif 'payload' in message:
+                    message['text'] = self.library.parse_payload(message['payload'])
+                elif 'text' in message:
+                    if message['text'] != '':
+                        if message['from_id'] not in self.library.tools.managers: message['text'] = message['text'].replace('console', '')
+                        message['text'] = self.library.parse_command(message['text'])
+                    else: 
+                        return None
+                else: 
+                    return None
+
+
+                if message['text'][0] != self.library.tools.endline: self.library.parse(message)
+        
+        except Exception as e:
+            print(traceback.format_exc())
+            print(f'{e} ({Exception})')
+
 
     def check(self):
         """
@@ -52,22 +82,4 @@ class TestCanaryBot():
             print('Longpoll have just connected.')
 
         for event in self.longpoll.check():
-            try:
-                if event.type == VkBotEventType.MESSAGE_NEW:
-                        
-                    if event.message.action:
-                        event.message.text = self.library.tools.parse_action(event.message.action)
-                    elif event.message.text:
-                        if event.message.text != '':
-                            if event.message.from_id not in self.library.tools.managers: event.message.text = event.message.text.replace('console', '')
-                            event.message.text = self.library.parse_command(event.message.text)
-                        else: 
-                            continue
-                    else: 
-                        continue
-
-
-                    if event.message.text[0] != self.library.tools.endline: self.library.parse(event.message)
-            
-            except Exception as e:
-                print(f'{e} ({Exception})')
+            self.parse(event)

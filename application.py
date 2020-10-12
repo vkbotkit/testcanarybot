@@ -1,12 +1,6 @@
 import testcanarybot
-import os
 
-token = ''
-group_id = 0
-library = testcanarybot.getLibrary(__file__)
-devbot = testcanarybot.TestCanaryBot (
-    token, 
-    group_id, library
-    )
-devbot.setMentions('кб', 'канари')
-devbot.listen() #paste here 1 if you want to check once
+devbot = testcanarybot.TestCanaryBot ("token", 0, testcanarybot.getPath(__file__)) # 0 is a group_id
+devbot.setMentions('кб', 'канари', 'канарибот', 'каня', 'киоко')
+devbot.listen()
+# devbot.listen(1) to check for updates once.
