@@ -7,10 +7,10 @@ This plugin should be modified (including necessarily name of plugin project) an
 Useful methods from Tools:
 
 use it for message['text'][0]:
-    tools.action =  if you want to manage actions (message action when message['text'] == [tools.action, *action.values])
-    tools.payload = if you created keyboard before using vk_api (message payload when message['text'] == [tools.payload, payload dict])
+    tools.objects.ACTION =  if you want to manage actions (message action when message['text'] == [tools.objects.ACTION, *action.values])
+    tools.objects.PAYLOAD = if you created keyboard before using vk_api (message payload when message['text'] == [tools.objects.PAYLOAD, payload dict])
 
-tools.endline = end of line
+tools.objects.ENDLINE = end of line
 tools.managers = list of a bot managers
 
 tools.random_id() = integer for api.messages.send (look vk.com/dev/messages.send)

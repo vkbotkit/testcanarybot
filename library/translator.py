@@ -1,8 +1,9 @@
 import googletrans
 
+
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = '0.0032'
+        self.v = 0.4
         self.descr = 'Переводчик'
         self.translator = googletrans.Translator()
         
@@ -16,14 +17,14 @@ class lib_plugin():
     def update(self, api, tools, message):
         if message['text'][0] in ['tr', 'пр', 'translate', 'переведи', 'переводчик', 'translator']:
             if message['text'][1] in self.languages:
-                if message['text'][2] == tools.endline:
+                if message['text'][2] == tools.objects.ENDLINE:
                     api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message = 'Hello World!')
+                
                 else:
                     response = ' '.join(message['text'][2:-1])
                     response = self.translator.translate(response, dest=message['text'][1]).text
                     
                     api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message = response)
-                
                     return 1
             else:
                 user = tools.getMention(message['from_id'], 'nom')
@@ -31,7 +32,8 @@ class lib_plugin():
             
                 api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message = response)
                 return 1
-        elif message['text'][0] == 'доступные' and message['text'][1] == 'языки' and message['text'][2] == tools.endline:
+
+        elif message['text'][0] == 'доступные' and message['text'][1] == 'языки' and message['text'][2] == tools.objects.ENDLINE:
             user = tools.getMention(message['from_id'], 'nom')
             response = f'{user} Вот доступный список языков: \n\n'
             response += ', '.join(self.languages)

@@ -1,7 +1,8 @@
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = '0.0032'
+        self.v = 0.4
         self.descr = 'Плагин для работы с VK API и информацией о боте. \n\nКоманды для бота: \n\u2022 @canarybot помощь = Отослать полезные ссылки. \n\u2022 @canarybot ссылка *ссылка* = Сократить ссылку с помощью VK CC\n\u2022 @canarybot тип *упоминание страницы, например @durov* = узнать тип страницы, её ID, краткий адрес'
+
         self.answers = {
             'help': [
                 'Ой, привет, {user}, почему ты пишешь мне?',
@@ -30,7 +31,6 @@ class lib_plugin():
             
             api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message=self.answers['gettype'].format(typepage=typepage,pagelink=pagelink, mention=mention))
             return 1
-
 
         elif message['text'][0] in ['short', 'link', 'сократить', 'сократи']:
             link = api.utils.getShortLink(url = ' '.join(message['text'][1:-1]))['short_url']
