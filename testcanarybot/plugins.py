@@ -94,7 +94,16 @@ class plugins():
                         else:
                             package['text'][1] = self.tools.objects.LIBRARY_ERROR
 
+
                     self.plugins['canarycore'].update(self.api, self.tools, package)
+                    for key, plugin in self.plugins.items():
+                        self.tools.plugin = key
+                        
+                        elif package['plugintype'] == self.tools.objects.ERROR_HANDLER:
+                            result = plugin.update(self.api, self.tools, package)
+
+                            if result: 
+                                response.append(result)
 
                 except Exception as e:
                     print(traceback.format_exc())
@@ -215,12 +224,8 @@ class plugins():
         message = messagetoreact.split()
 
         if len(message) > 1:
-            if message[0] in [
-                *self.tools.objects.MENTION, 
-                *self.tools.objects.CONSOLE_COMMANDS
-                ]:
-                if message[0].lower() in self.tools.objects.MENTION: 
-                    message.pop(0)
+            if message[0] in [*self.tools.objects.MENTION]:
+                message.pop(0)
 
                 for i in message:
                     if i[0] == '[' and i[-1] == ']' and i.count('|') == 1:
