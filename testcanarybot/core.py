@@ -3,7 +3,7 @@ import random
 
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = 0.4
+        self.v = 0.5
         self.descr = 'test plugin'
         self.plugintype = [
             tools.objects.MESSAGE_NEW,
@@ -30,8 +30,6 @@ class lib_plugin():
         self.parser.command = [
             "команду", "command"
             ]
-
-        )
 
 
     def update(self, api, tools, package):
@@ -65,16 +63,7 @@ class lib_plugin():
                 return response
 
         elif package["plugintype"] == self.plugintype[1]:
-            if package["text"][0] == tools.objects.NOREACT:
-                user = tools.getMention(package["from_id"], "nom")
-                api.messages.send(
-                    random_id = tools.random_id(), 
-                    peer_id = package["peer_id"], 
-                    message = random.choice(tools.objects.ERRORHANDLED_MESSAGE).format(user = user), 
-                    attachment = random.choice(tools.objects.ERRORHANDLED_ATTACHMENT)
-                    )
-
-            elif package["text"][0] == tools.objects.LIBRARY_SYNTAX:
+            if package["text"][0] == tools.objects.LIBRARY_SYNTAX:
                 response = "response"
 
                 if type(package["text"][1]) is list: # RESPONSED A LIST OF PLUGINS FROM LIBRARY
@@ -91,7 +80,8 @@ class lib_plugin():
                 else: # RESPONSED DESCRIPTION
                     response = tools.objects.LIBRARY_RESPONSE_DESCR.format(
                         name = package["text"][1], 
-                        descr = package["text"][2]
+                        ver = package["text"][2], 
+                        descr = package["text"][3]
                         )
 
                 api.messages.send(

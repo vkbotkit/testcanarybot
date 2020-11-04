@@ -12,17 +12,18 @@ def getPath(file):
 
 
 class Longpoll():    
-    def __init__(self, token: str, group_id: int, library: str):
+    def __init__(self, token: str, group_id: int, library: os.getcwd()):
         """
         Token = token you took from VK Settings: https://vk.com/{yourgroupaddress}?act=tokens
         Group_id = identificator of your group where you want to install CanaryBot Framework :)
         """
         self.bot = vk_api.VkApi(token = token)
         self.api = self.bot.get_api()
-        self.supp_v = [0.4]
+        self.supp_v = [0.4, 0.5]
         
         self.longpoll = None
         self.library = plugins(self.supp_v, group_id, self.api, library)
+        self.assets = self.library.tools.assets
 
         print(f'@{self.library.tools.shortname} started')
 
@@ -76,5 +77,5 @@ class Longpoll():
                     self.library.send(event)
 
                 except Exception as e:
-                    print(traceback.format_exc())
-                    print(f'{e} ({Exception})')
+                    self.library.tools.system_message(traceback.format_exc())
+                    self.library.tools.system_message(f'{e} ({Exception})')

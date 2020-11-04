@@ -1,20 +1,42 @@
 import random
 from . import objects as _objects
+from . import databases as dbs
 from datetime import datetime
+import sys
+import io
+
 
 class tools:
     def __init__(self, path, number, api):
         self.api = api
 
-        self.objects = _objects
-        self.objectslist = ["MENTION", "ENDLINE", "ACTION", "PAYLOAD", "NOREACT", "MESSAGE_NEW", "LIKE_ADD", "LIKE_REMOVE", "ERROR_HANDLER", "LIBRARY_SYNTAX", "CONSOLE_SYNTAX", "PARSER_SYNTAX", "LIBRARY_ERROR", "LIBRARY_NOSELECT"]
+        
         self.assets = assets(path)
+        self.objects = _objects
+        self.objects.log = self.assets("log.txt", "a+")
 
+        print("CANARYBOT_LOG_FILE", file = self.objects.log)
+        print("TESTCANARYBOT 0.5", file = self.objects.log)
+        print("BY ANDREW PROKOFIEFF 2020", file = self.objects.log)
+        print("", file = self.objects.log)
+        
+        self.objects.log.flush()
+
+        self.objectslist = ["MENTION", "ENDLINE", "ACTION", "PAYLOAD", "NOREACT", "MESSAGE_NEW", "LIKE_ADD", "LIKE_REMOVE", "ERROR_HANDLER", "LIBRARY_SYNTAX", "CONSOLE_SYNTAX", "PARSER_SYNTAX", "LIBRARY_ERROR", "LIBRARY_NOSELECT"]
+
+        self.__db = dbs.Databases(("canarycore", path + "canarycore.db"))
+        self.get = self.__db.get
+        
         self.group_id = number
         self.shortname = api.groups.getById(group_id=self.group_id)[0]['screen_name']
         self.group_mention = f'[club{self.group_id}|@{self.shortname}]'
         self.managers = self.getManagers(self.group_id)
 
+        
+        self.plugin = "system"
+        self.system_message(self.objects.START_LOGGER)
+
+        self.name_cases = ['nom', 'gen', 'dat', 'acc', 'ins', 'abl']
 
         self.selfmention = {
             'nom': 'я', 
@@ -45,60 +67,94 @@ class tools:
         self.mentions = [self.group_mention]
         self.mentions_name_cases = []
 
-       
-    def system_message(self, text:str):
-        time = datetime.now()
-        date = f'{"%02d" % time.month}/{"%02d" % time.day}/{time.year} {"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}'
-        response = f'{date} @{self.shortname}.{self.plugin}: {text}'
+
+    def add(self, db_name):
+        self.__db.add((db_name, self.assets.path + db_name))
+
+
+    def getDate(self, time = datetime.now()):
+        return f'{"%02d" % time.month}/{"%02d" % time.day}/{time.year}'
+
+
+    def getTime(self, time = datetime.now()):
+        return f'{"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}'
+
+
+    def getDateTime(self, time = datetime.now()):
+        return self.getDate(time) + ' ' + self.getTime(time)
+
+
+    def system_message(self, textToPrint:str):
+        response = f'{self.getDateTime()} @{self.shortname}.{self.plugin}: \n\t{textToPrint}\n'
+
         print(response)
+        print(response, file=self.objects.log)
+
+        self.objects.log.flush()
 
 
     def random_id(self):
         return random.randint(0, 999999)
 
 
-    def getMention(self, page:int, nc = None):
-            if nc == 'link':
-                if page > 0:
-                    return f'[id{page}|@id{page}]'
-                elif page == self.group_id:
-                    return self.group_mention
-                else:
-                    return f'[club{-page}|@{self.api.groups.getById(group_id = -page)[0]["screen_name"]}]'
+    def getMention(self, page_id: int, name_case = "nom"):
+        if name_case == 'link':
+            if page_id > 0:
+                return f'[id{page_id}|@id{page_id}]'
+
+            elif page_id == self.group_id:
+                return self.group_mention
+
             else:
-                if page > 0:
-                    return f'[id{page}|{self.api.users.get(user_ids = page, name_case=nc)[0]["first_name"]}]'
-                elif page == self.group_id:
-                    return self.selfmention[nc]
-                else:
-                    return f'[club{-page}|{self.api.groups.getById(group_id = -page)[0]["name"]}]' 
+                return f'[club{-page_id}|@{self.api.groups.getById(group_id = -page_id)[0]["screen_name"]}]'
+        
+        else:
+            if page_id > 0:
+                request = self.api.users.get(
+                    user_ids = page_id, 
+                    name_case = name_case
+                    )
+                first_name = request[0]["first_name"]
+                
+                return f'[id{page_id}|{first_name}]'
+            
+            elif page_id == self.group_id:
+                return self.selfmention[name_case]
+            
+            else:
+                request = self.api.groups.getById(
+                    group_id = -page_id
+                    )
+                name = request[0]["name"]
+                
+                return f'[club{-page_id}|{name}]' 
 
 
-    def getManagers(self, number):
-        lis = self.api.groups.getMembers(group_id = number, sort = 'id_asc', filter='managers')['items']
+    def getManagers(self, group_id: int):
+        lis = self.api.groups.getMembers(group_id = group_id, sort = 'id_asc', filter='managers')['items']
         return [i['id'] for i in lis if i['role'] in ['administrator', 'creator']]
 
 
-    def isManager(self, from_id, group_id):
+    def isManager(self, from_id: int, group_id: int):
         return from_id in self.getManagers(group_id)
 
 
-    def getChatManagers(self, peer_id):
+    def getChatManagers(self, peer_id: int):
         res = self.api.messages.getConversationsById(peer_ids = peer_id)['items'][0]['chat_settings']
         response = [*res['admin_ids'], res['owner_id']]
         return response
         
 
-    def isChatManager(self, from_id, peer_id):
+    def isChatManager(self, from_id, peer_id: int):
         return from_id in self.getChatManagers(peer_id)
 
 
-    def getMembers(self, peer_id):
+    def getMembers(self, peer_id: int):
         response = self.api.messages.getConversationMembers(peer_id = peer_id)['items']
         return [i['member_id'] for i in response]
 
 
-    def isMember(self, from_id, peer_id):
+    def isMember(self, from_id: int, peer_id: int):
         return from_id in self.getMembers(peer_id)
 
 
@@ -110,12 +166,12 @@ class tools:
         return False
 
 
-    def setObject(self, string: str, value):
-        self.objectslist.append(string)
-        setattr(self.objects, string, value)
+    def setObject(self, nameOfObject: str, newValue):
+        self.objectslist.append(nameOfObject)
+        setattr(self.objects, nameOfObject, newValue)
 
-    def getObject(self, string: str):
-        getattr(self.objects, string)
+    def getObject(self, nameOfObject: str):
+        return getattr(self.objects, nameOfObject)
 
 
 class assets():
@@ -126,5 +182,5 @@ class assets():
         self.path = path
 
 
-    def __call__(self, filename, mode):
-        return open(self.path + filename, mode)
+    def __call__(self, filename, mode, encoding="utf-8"):
+        return open(file = self.path + filename, mode = mode, encoding = encoding)

@@ -89,24 +89,24 @@ class plugins():
                             package['text'][1] = self.all
 
                         elif package['text'][1] in self.all:
+                            package['text'].append(self.plugins[package['text'][1]].v)
                             package['text'].append(self.plugins[package['text'][1]].descr)
 
                         else:
                             package['text'][1] = self.tools.objects.LIBRARY_ERROR
 
-
-                    self.plugins['canarycore'].update(self.api, self.tools, package)
                     for key, plugin in self.plugins.items():
                         self.tools.plugin = key
                         
-                        elif package['plugintype'] == self.tools.objects.ERROR_HANDLER:
-                            result = plugin.update(self.api, self.tools, package)
-
-                            if result: 
-                                response.append(result)
+                        if hasattr(plugin, 'plugintype'):
+                            if plugin.plugintype == package['plugintype'] or package['plugintype'] in plugin.plugintype:
+                                plugin.update(self.api, self.tools, package)
 
                 except Exception as e:
-                    print(traceback.format_exc())
+                    self.tools.system_message(traceback.format_exc())
+
+        self.tools.plugin = "error_handler"
+        self.tools.system_message(f"chat{package['peer_id']}-{package['from_id']}: {package['text'][:-1]}")
 
 
     def reload(self):
@@ -118,24 +118,20 @@ class plugins():
         if event.type == self.tools.objects.MESSAGE_NEW:
             self.parse(event.object['message'])
 
-        elif event.type == 'like_add':
-            package = {}
-            package['text'] = []
-            package['plugintype'] = self.tools.objects.LIKE_ADD
-            package['text'].append(event.object)
-
-            self.parse_package(package)
-
-        elif event.type == 'like_remove':
-            package = {}
-            package['text'] = []
-            package['plugintype'] = self.tools.objects.LIKE_REMOVE
-            package['text'].append(event.object)
-
-            self.parse_package(package)
-            
         else:
-            return None
+            event_type = str(event.type).upper()
+
+            if event_type in self.tools.objectslist:
+                package = {}
+                package['text'] = []
+                if not 'peer_id' in package: package['peer_id'] = self.tools.group_id
+                if not 'from_id' in package: package['from_id'] = 1
+
+                package['plugintype'] = self.tools.getObject(event_type)
+                package['text'].append(event.object)
+                package['text'].append(self.tools.objects.ENDLINE)
+
+                self.parse_package(package)
         
 
     def parse(self, message):

@@ -95,6 +95,7 @@ class lib_plugin():
                                 elif not tools.isMember(i, message['peer_id']):
                                     response += 'пользователя нет в чате.'
 
+                                tools.system_message(message['peer_id'] + ":" + response)
                                 api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message = response)
                             iskicked = True
                     

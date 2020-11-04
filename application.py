@@ -1,8 +1,8 @@
 import testcanarybot
 
 bot = testcanarybot.Longpoll(
-    "token", 
-    0, testcanarybot.getPath(__file__)
+    "816be56e3b314cd7af06e361b948b0f6958e87c348e1c906726c15046214f36e91bf3aad22547635c10da", 
+    195675828, testcanarybot.getPath(__file__)
     ) # 0 is a group_id
 
 bot.setMentions('кб', 'канари', 'канарибот', 'каня', 'киоко', 'кань')

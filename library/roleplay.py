@@ -70,7 +70,7 @@ class lib_plugin():
                             user = tools.getMention(message['text'][1], i['name_case'])
 
                         except Exception as e:
-                            print(e)
+                            tools.system_message(e)
                             user = 'user'
 
                         api.messages.send(random_id = tools.random_id(), peer_id = message['peer_id'], message=random.choice(i['reaction']).format(user = user))
