@@ -1,23 +1,27 @@
-class lib_plugin():
-    def __init__(self, api, tools):
-        self.v = 0.5
-        self.descr = 'Print here description'
-        
-        self.plugintype = [
-            tools.objects.MESSAGE_NEW,
-            # tools.objects.LIKE_ADD,
-            # tools.objects.REMOVE
+v = 0.6
+name = """testcanarybot plugin"""
+descr = """plugin descr"""
 
-            #Other types you can add via tools.setValue(itemName, value)
-        ]
+def init(tools):
+    global plugintype
+    
+    plugintype = [
+        tools.events.MESSAGE_NEW,
+        # tools.events.LIKE_ADD,
+        # tools.events.REMOVE
+
+        # list of all types you can find via tools.events.list_of_types
+    ]
 
     # TOOLS MODULE GUIDE
 
     # VARIABLES:
 
-    # tools.assets --> your folder "assets"
-    # tools.objects --> all variables that you created or changed by .setObject from tools or bot
-    # tools.objectslist --> list of names of objects in tools.objects. It's for tools.setObject and tools.getObject
+    # tools.api --> vkontakte API, for methods look vk.com/dev/methods
+    # tools.upload --> uploader, look example at send_log.py
+    # tools.assets(file_name, file_mode, encoding = "utf-8") --> opens files from your folder "assets". similar to open
+    # tools.events = list of event types
+    # tools.object_list --> list of names of objects. You can you use it to check all values through tools.getObject(name, value)
     # tools.group_id --> identificator of your group
     # tools.shortname --> short address of your group
     # tools.group_mention --> mention of your group via @ + tools.shortname
@@ -45,25 +49,25 @@ class lib_plugin():
     # ASSETS GUIDE
 
     # so assets object works like open
-    # for example, log file is found in tools by this way:
-    # self.objects.log = self.assets("log.txt", mode = "a+", encoding = "utf-8")
+    # for example, log file you can open by this method:
+    # tools.assets("log.txt", mode = "r+", encoding = "utf-8")
 
 
-    def update(self, api, tools, message):
-        if message['text'][0] == 'string': # checking for string
-            if message['text'][1] == tools.objects.ENDLINE: # end of line
-                api.messages.send(
+    def update(tools, package):
+        if package['text'][0] == 'string': # checking for string
+            if package['text'][1] == tools.objects.ENDLINE: # end of line
+                tools.api.messages.send(
                     random_id = tools.random_id(), 
-                    peer_id = message['peer_id'], 
+                    peer_id = package['peer_id'], 
                     message = 'Hello World!'
                     )
                 return 1 # if you don't want to get error after sending
 
-        elif message['text'][0] in ['list', 'of', 'strings']: # checking for list
-            if message['text'][1] == tools.objects.ENDLINE: # end of line
-                api.messages.send(
+        elif package['text'][0] in ['list', 'of', 'strings']: # checking for list
+            if package['text'][1] == tools.objects.ENDLINE: # end of line
+                tools.api.messages.send(
                     random_id = tools.random_id(), 
-                    peer_id = message['peer_id'], 
+                    peer_id = package['peer_id'], 
                     message = 'Hello World!'
                     )
                 return 1 # if you don't want to get error after sending

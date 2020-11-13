@@ -1,10 +1,11 @@
 import random
-from . import objects as _objects
+from . import objects
 from . import databases as dbs
 from datetime import datetime
 import sys
 import io
 
+from vk_api.upload import VkUpload
 
 class tools:
     def __init__(self, path, number, api):
@@ -12,17 +13,17 @@ class tools:
 
         
         self.assets = assets(path)
-        self.objects = _objects
-        self.objects.log = self.assets("log.txt", "a+")
+        self.__objects = objects
+        self.log = self.assets("log.txt", "a+")
+        self.events = self.__objects.events
+        self.upload = VkUpload(self.api)
 
-        print("CANARYBOT_LOG_FILE", file = self.objects.log)
-        print("TESTCANARYBOT 0.5", file = self.objects.log)
-        print("BY ANDREW PROKOFIEFF 2020", file = self.objects.log)
+        print("CANARYBOT_LOG_FILE", file = self.log)
+        print("TESTCANARYBOT 0.6", file = self.log)
+        print("BY KENSOI.GITHUB.IO 2020", file = self.log)
         print("", file = self.objects.log)
         
-        self.objects.log.flush()
-
-        self.objectslist = ["MENTION", "ENDLINE", "ACTION", "PAYLOAD", "NOREACT", "MESSAGE_NEW", "LIKE_ADD", "LIKE_REMOVE", "ERROR_HANDLER", "LIBRARY_SYNTAX", "CONSOLE_SYNTAX", "PARSER_SYNTAX", "LIBRARY_ERROR", "LIBRARY_NOSELECT"]
+        self.log.flush()
 
         self.__db = dbs.Databases(("canarycore", path + "canarycore.db"))
         self.get = self.__db.get
@@ -34,7 +35,7 @@ class tools:
 
         
         self.plugin = "system"
-        self.system_message(self.objects.START_LOGGER)
+        self.system_message(self.__objects.exp.START_LOGGER)
 
         self.name_cases = ['nom', 'gen', 'dat', 'acc', 'ins', 'abl']
 
@@ -68,14 +69,18 @@ class tools:
         self.mentions_name_cases = []
 
 
+    def update_list(self):
+        self.object_list = self.__objects.exp.list_of_exp
+
+
     def add(self, db_name):
         self.__db.add((db_name, self.assets.path + db_name))
 
 
     def getDate(self, time = datetime.now()):
-        return f'{"%02d" % time.month}/{"%02d" % time.day}/{time.year}'
-
-
+        return f'{"%02d" % time.day}.{"%02d" % time.month}.{time.year}'
+    
+    
     def getTime(self, time = datetime.now()):
         return f'{"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}'
 
@@ -88,9 +93,9 @@ class tools:
         response = f'{self.getDateTime()} @{self.shortname}.{self.plugin}: \n\t{textToPrint}\n'
 
         print(response)
-        print(response, file=self.objects.log)
+        print(response, file=self.log)
 
-        self.objects.log.flush()
+        self.log.flush()
 
 
     def random_id(self):
@@ -160,23 +165,26 @@ class tools:
 
     def ischecktype(self, checklist, checktype):
         for i in checklist:
-            if (type(i) is checktype) or (type(checktype) is list and type(i) in checktype):
+            if isinstance(checktype, list) and type(i) in checktype:
+                return True
+            elif isinstance(checktype, type) and isinstance(i, checktype): 
                 return True
             
         return False
 
 
     def setObject(self, nameOfObject: str, newValue):
-        self.objectslist.append(nameOfObject)
-        setattr(self.objects, nameOfObject, newValue)
+        self.__objects.setExpression(nameOfObject, newValue)
+        self.update_list()
+
 
     def getObject(self, nameOfObject: str):
-        return getattr(self.objects, nameOfObject)
+        return getattr(self.__objects.exp, nameOfObject)
 
 
 class assets():
     """
-    lib_assets(filename, mode): open path.
+    assets(filename, mode, encoding): open path.
     """
     def __init__(self, path):
         self.path = path

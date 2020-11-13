@@ -1,0 +1,20 @@
+bot.setObject(
+    "ASSETS_ERROR", 
+    "Чтобы получить описание модуля, отправьте {mention} библиотека описание {название модуля}"
+    )
+
+bot.setObject(
+    "LIBRARY_PIC", 
+    "photo-195675828_457241499"
+    )
+bot.setObject(
+    "LIBRARY_RESPONSE_LIST", 
+    "Библиотека, с которой работает {mention}:\n\n{plugins}\n\n Чтобы получить описание модуля, отправьте {mention} ассеты описание [название модуля]"
+    )
+bot.setObject(
+    "LIBRARY_RESPONSE_ERROR", 
+    "Такого модуля не существует :)"
+    )
+
+bot.setMentions('кб', 'канари', 'канарибот', 'каня', 'киоко', 'кань')
+bot.setNameCases('каня', 'кани', 'кане', 'каню', 'каней')

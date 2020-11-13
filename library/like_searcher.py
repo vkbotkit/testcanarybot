@@ -1,22 +1,31 @@
-class lib_plugin():
-    def __init__(self, api, tools):
-        self.v = 0.4
-        self.descr = "test plugin"
-        self.plugintype = [tools.objects.LIKE_ADD, tools.objects.LIKE_REMOVE]
+v = 0.6
+name = """Отслежка лайков"""
+descr = """Уведомляет о лайках на стене сообщества."""
+
+
+def init(tools):
+    global plugintype
+    plugintype = [
+        tools.events.LIKE_ADD, 
+        tools.events.LIKE_REMOVE
+        ]
         
 
-    def update(self, api, tools, package):
-        if package['plugintype'] in self.plugintype:
-            response = package['plugintype']
+def update(tools, package):
+    if package['plugintype'] in plugintype:
+        response = package['plugintype']
 
-            like = package['text'][0]
-            response += f"\n\t\tObject: {like['object_type']}{like['object_owner_id']}_{like['object_id']}"
+        response += f"\n\t\tObject: {package['object_type']}{package['object_owner_id']}_{package['object_id']}"
 
-            response += f"\n\t\t\tОт {tools.getMention(like['liker_id'], 'gen')}"
-            response += f"\n\t\t\tAt {like['post_id']} {like['thread_reply_id']}"
+        response += f"\n\t\t\tОт {tools.getMention(package['liker_id'], 'gen')}"
+        response += f"\n\t\t\tAt {package['post_id']} {package['thread_reply_id']}"
 
-            for i in tools.objects.ADMIN_SUB:
-                api.messages.send(random_id = tools.random_id(), message = response, peer_id = i)
+        for i in tools.getObject("ADMIN_SUB"):
+            tools.api.messages.send(
+                random_id = tools.random_id(), 
+                message = response, 
+                peer_id = i
+                )
 
-            tools.system_message(response)
-            return 1
+        tools.system_message(response)
+        return 1

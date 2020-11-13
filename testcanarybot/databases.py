@@ -29,13 +29,10 @@ class Databases(object):
 
 
     def check(self, name):
-        test = [
-            *self.__dbs.keys(), 
-            *[
-                i.directory for i in self.__dbs.values()
-                ]
-            ]
-        return name in test 
+        response = [*self.__dbs.keys(), 
+                *[i.directory for i in self.__dbs.values()]]
+
+        return name in response 
 
 
     def upload(self, names):
@@ -51,6 +48,7 @@ class Databases(object):
 
             else:
                 return self.__dbs[name[1]]
+
         elif check == str:
             if not self.check(name):
                 raise DBError("This DB does not exist")
@@ -92,11 +90,7 @@ class Databases(object):
 
 if __name__ == "__main__":
     try:
-        test = Databases(
-            [
-                ("test", "DatabaseTest.db")
-                ]
-            )
+        test = Databases([("test", "DatabaseTest.db")])
 
     except DBError as e:
         print(e)

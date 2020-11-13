@@ -1,98 +1,120 @@
 import random
 
 
-class lib_plugin():
-    def __init__(self, api, tools):
-        self.v = 0.5
-        self.descr = 'test plugin'
-        self.plugintype = [
-            tools.objects.MESSAGE_NEW,
-            tools.objects.ERROR_HANDLER
+v = 0.6
+name = """Управление testcanarycore"""
+descr = """Модуль для управления системой testcanarycore версии 0.6
+    {group_mention} плагины описание [ссылка на модуль без пробелов] - показать описание модуля
+    {group_mention} плагины - показать библиотеку testcanarybot
+    {group_mention} выполнить + [пересланные сообщения] - выполнить сообщения
+    """
+
+
+def init(tools):
+    global plugintype, descr
+    plugintype = [
+                tools.events.MESSAGE_NEW,
+                tools.events.ERROR_HANDLER
+            ]
+    descr = descr.format(group_mention = tools.group_mention)
+    
+    global assets, parser
+        
+    assets = tools.objects.responses()
+    parser = tools.objects.responses()
+
+    assets.commands = tools.objects.responses()
+
+    assets.commands.standart = [
+        "плагины", "плагин", "plugins", "plugin",
+        "модули", "модуль", "module", "modules",
+        "библиотека", "library",
+        "ассеты", "ассет", "assets", "asset"
         ]
-        self.assets = tools.objects.responses()
-        self.parser = tools.objects.responses()
-        self.errorhandl = tools.objects.responses()
-
-        self.assets.commands = tools.objects.responses()
-
-        self.assets.commands.standart = [
-            "плагины", "плагин", "plugins", "plugin",
-            "модули", "модуль", "module", "modules",
-            "библиотека", "library",
-            "ассеты", "ассет", "assets", "asset"
-            ]
-        self.assets.commands.descr = [
-            "описание", "характеристика", "оп", "description", "descr"
-            ]
-        self.parser.run = [
-            "выполнить", "run"
-            ]
-        self.parser.command = [
-            "команду", "command"
-            ]
+    assets.commands.descr = [ "описание", "характеристика", "оп", "description", "descr" ]
+    parser.run = [ "выполнить", "run" ]
+    parser.command = [ "команду", "command" ]
 
 
-    def update(self, api, tools, package):
-        if package["plugintype"] == self.plugintype[0]:
-            if package["text"][0] in self.assets.commands.standart:
-                if package["text"][1] in self.assets.commands.descr:
-                    if package["text"][2] == tools.objects.ENDLINE:
-                        api.messages.send(
-                            random_id = tools.random_id(), 
-                            peer_id = package["peer_id"], 
-                            message=self.tools.objects.ASSETS_ERROR.format(
-                                mention = tools.group_mention
-                                )
+def update(tools, package):
+    if package["plugintype"] == plugintype[0]:
+        if package["text"][0] == "управление":
+            return [
+                tools.getObject("LIBRARY_SYNTAX"), 
+                "canarycore"
+            ]
+
+        if package["text"][0] in assets.commands.standart:
+            if package["text"][1] in assets.commands.descr:
+
+                # @canarybot plugins description
+
+                if package["text"][2] == tools.getObject("ENDLINE"):
+                    tools.api.messages.send(
+                        random_id = tools.random_id(), 
+                        peer_id = package["peer_id"], 
+                        message=tools.getObject("ASSETS_ERROR").format(
+                            mention = tools.group_mention
                             )
-                        return 1
+                        )
+                    return 1
 
-                    else:
-                        return [tools.objects.LIBRARY_SYNTAX, " ".join(package["text"][2:-1])]
-                        
-                elif package["text"][1] == tools.objects.ENDLINE:
-                    return [tools.objects.LIBRARY_SYNTAX, tools.objects.LIBRARY_NOSELECT]
+                elif package["text"][3] == tools.getObject("ENDLINE"):
+                    return [
+                        tools.getObject("LIBRARY_SYNTAX"), 
+                        package["text"][2]
+                        ]
+                    
+            elif package["text"][1] == tools.getObject("ENDLINE"):
 
-            elif package["text"][0] in self.parser.run and package["text"][1] in [tools.objects.ENDLINE, *self.parser.command] and package["text"][-1] is tools.objects.ENDLINE:
-                response = [
-                    tools.objects.PARSER_SYNTAX
+                # @canarybot plugins
+
+                return [
+                    tools.getObject("LIBRARY_SYNTAX"), 
+                    tools.getObject("LIBRARY_NOSELECT")
                     ]
 
-                if "fwd_messages" in package: response.extend(package["fwd_messages"])
-                if "reply_message" in package: response.append(package["reply_message"])
+        elif package["text"][0] in parser.run and package["text"][1] in [tools.getObject("ENDLINE"), *parser.command] and package["text"][-1] is tools.getObject("ENDLINE"):
+            
+            # @canarybot run
+            # + forwarded messages
 
-                return response
+            response = [
+                tools.getObject("PARSER_SYNTAX")
+                ]
 
-        elif package["plugintype"] == self.plugintype[1]:
-            if package["text"][0] == tools.objects.LIBRARY_SYNTAX:
-                response = "response"
+            if "fwd_messages" in package: response.extend(package["fwd_messages"])
+            if "reply_message" in package: response.append(package["reply_message"])
 
-                if type(package["text"][1]) is list: # RESPONSED A LIST OF PLUGINS FROM LIBRARY
-                    response = tools.objects.LIBRARY_RESPONSE_LIST.format(
-                            plugins = '\n'.join(
-                                [tools.objects.LIBRARY_RESPONSE_LIST_ITEM + " " + i for i in package["text"][1]]
-                                ),
-                            mention = tools.group_mention
-                        )
+            response.append(tools.getObject("ENDLINE"))
 
-                elif package["text"][1] == tools.objects.LIBRARY_ERROR: # NO PLUGIN FOUND
-                    response = tools.objects.LIBRARY_RESPONSE_ERROR
+            return response
+            
+    else:
+        if package["text"][0] == tools.getObject("LIBRARY_SYNTAX"):
+            response = "response"
 
-                else: # RESPONSED DESCRIPTION
-                    response = tools.objects.LIBRARY_RESPONSE_DESCR.format(
-                        name = package["text"][1], 
-                        ver = package["text"][2], 
-                        descr = package["text"][3]
-                        )
-
-                api.messages.send(
-                    random_id = tools.random_id(), 
-                    peer_id = package["peer_id"], 
-                    message = response, 
-                    attachment = tools.objects.LIBRARY_PIC
+            if type(package["text"][1]) is list: # RESPONSED A LIST OF PLUGINS FROM LIBRARY
+                response = tools.getObject("LIBRARY_RESPONSE_LIST").format(
+                        plugins = '\n'.join(
+                            [tools.getObject("LIBRARY_RESPONSE_LIST_ITEM") + " " + i for i in package["text"][1]]
+                            ),
+                        mention = tools.group_mention
                     )
 
-            elif package["text"][0] == tools.objects.PARSER_SYNTAX:
-                for i in package["text"][1:]:
-                    pass
+            elif package["text"][1] == tools.getObject("LIBRARY_ERROR"): # NO PLUGIN FOUND
+                response = tools.getObject("LIBRARY_RESPONSE_ERROR")
 
-                # парсит библиотеку
+            else: # RESPONSED DESCRIPTION
+                response = package["text"][3].format(listitem = tools.getObject("LIBRARY_RESPONSE_LIST_ITEM"))
+
+            tools.api.messages.send(
+                random_id = tools.random_id(), 
+                peer_id = package["peer_id"], 
+                message = response, 
+                attachment = tools.getObject("LIBRARY_PIC")
+                )
+
+        elif package["text"][0] == tools.getObject("PARSER_SYNTAX"):
+            for i in package["text"][1:]:
+                pass

@@ -7,19 +7,16 @@ import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll
 
 
-def getPath(file):
-    return os.path.abspath(file)[:-len(file)]
-
-
 class Longpoll():    
-    def __init__(self, token: str, group_id: int, library: os.getcwd()):
+    def __init__(self, token: str, group_id: int, library = os.getcwd()):
         """
         Token = token you took from VK Settings: https://vk.com/{yourgroupaddress}?act=tokens
         Group_id = identificator of your group where you want to install CanaryBot Framework :)
+        Library = not needed arg, if you want to change location of your files.
         """
         self.bot = vk_api.VkApi(token = token)
         self.api = self.bot.get_api()
-        self.supp_v = [0.4, 0.5]
+        self.supp_v = [0.6]
         
         self.longpoll = None
         self.library = plugins(self.supp_v, group_id, self.api, library)
@@ -32,7 +29,7 @@ class Longpoll():
         """ 
         Use custom mentions instead "@{groupadress}"
         """
-        self.library.tools.setObject("MENTION", [self.library.tools.group_mention, *args])
+        self.library.tools.setObject("MENTIONS", [self.library.tools.group_mention, *args])
     
 
     def setNameCases(self, *args):
@@ -64,6 +61,7 @@ class Longpoll():
 
     def check(self, debug = False):
         """Check VK for updates once time, like canarybot.listen(1)"""
+        self.plugins.tools.update_list()
         if not self.longpoll:
             self.longpoll = self.getLongPoll()
             print('Longpoll have just connected.')
