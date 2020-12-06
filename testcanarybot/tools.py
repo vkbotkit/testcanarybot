@@ -1,194 +1,360 @@
-import random
-from . import objects
-from . import databases as dbs
-from datetime import datetime
-import sys
-import io
+from io import TextIOWrapper as openfile
+from io import BytesIO as req
+from enum import Enum
+import os
+import six
+import json
 
-from vk_api.upload import VkUpload
+from .objects import Object
 
-class tools:
-    def __init__(self, path, number, api):
-        self.api = api
+
+class _assets:
+    def __init__(self):
+        self.path = os.getcwd() + '\\assets\\'
+
+    def __call__(self, *args, **kwargs):
+        args = list(args)
+        if len(args) > 0:
+            args[0] = self.path + args[0]
+        
+        elif 'file' in kwargs:
+            kwargs['file'] = self.path + kwargs['file']
+        
+        return open(*args, **kwargs)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+
+assets = _assets()
+
+
+class uploader:
+    __slots__ = ('__api', '__http', '__assets')
+
+    def __init__(self, api):
+        self.__api = api
+        self.__http = api._http
+        self.__assets = _assets()
+
+
+    async def photo_messages(self, photos):
+        response = await self.__api.photos.getMessagesUploadServer(peer_id = 0)
+        response = await self.__http.post(response.upload_url, data = self.convertAsset(photos))
+        response = await response.json(content_type = None)
+
+        result = await self.__api.photos.saveMessagesPhoto(**response)
+        return [Object(**res) for res in result]
 
         
-        self.assets = assets(path)
-        self.__objects = objects
-        self.log = self.assets("log.txt", "a+")
-        self.events = self.__objects.events
-        self.upload = VkUpload(self.api)
+    async def photo_group_widget(self, photo, image_type):
+        response = await self.__api.appWidgets.getGroupImageUploadServer(image_type = image_type)
+        response = await self.__http.post(response.upload_url, data = self.convertAsset(photo))
+        response = await response.json()
 
-        print("CANARYBOT_LOG_FILE", file = self.log)
-        print("TESTCANARYBOT 0.6", file = self.log)
-        print("BY KENSOI.GITHUB.IO 2020", file = self.log)
-        print("", file = self.objects.log)
-        
-        self.log.flush()
+        result =  await self.__api.appWidgets.saveGroupImage(**response)
 
-        self.__db = dbs.Databases(("canarycore", path + "canarycore.db"))
-        self.get = self.__db.get
-        
-        self.group_id = number
-        self.shortname = api.groups.getById(group_id=self.group_id)[0]['screen_name']
-        self.group_mention = f'[club{self.group_id}|@{self.shortname}]'
-        self.managers = self.getManagers(self.group_id)
+        return Object(**result)
 
-        
-        self.plugin = "system"
-        self.system_message(self.__objects.exp.START_LOGGER)
 
-        self.name_cases = ['nom', 'gen', 'dat', 'acc', 'ins', 'abl']
+    async def photo_chat(self, photo, peer_id):
+        if peer_id < 2000000000: 
+            raise ValueError("Incorrect peer_id")
 
-        self.selfmention = {
-            'nom': 'я', 
-            'gen': 'меня',
-            'gen2': 'себя',
-            'dat': 'мне',
-            'dat2': 'себе',
-            'acc': 'меня',
-            'acc2': 'себя',
-            'ins': 'мной',
-            'ins2': 'собой',
-            'abl': 'мне',
-            'abl2': 'себе',
+        else: 
+            values = dict()
+            values['chat_id'] = peer_id - 2000000000
+
+        response = await self.__api.photos.getChatUploadServer(**values)
+        response = await self.__http.post(url.upload_url, data = self.convertAsset(photo))
+        response = await response.json()
+
+        result =  await self.__api.messages.setChatPhoto(file = response['response'])
+
+        return Object(**result)
+
+
+    async def document(self, document, title=None, tags=None, peer_id=None, doc_type = 'doc', to_wall = None):
+        values = {
+            'peer_id': peer_id,
+            'type': doc_type
         }
-        self.submentions = {
-            'all': 'всех',
-            'him': 'его',
-            'her': 'её',
-            'it': 'это',
-            'they': 'их',
-            'them': 'их',
-            'us': 'нас',
-            'everyone': '@everyone',
-            'everyone2': '@all',
-            'everyone3': '@все'
-        }
-
-        self.mentions = [self.group_mention]
-        self.mentions_name_cases = []
-
-
-    def update_list(self):
-        self.object_list = self.__objects.exp.list_of_exp
-
-
-    def add(self, db_name):
-        self.__db.add((db_name, self.assets.path + db_name))
-
-
-    def getDate(self, time = datetime.now()):
-        return f'{"%02d" % time.day}.{"%02d" % time.month}.{time.year}'
-    
-    
-    def getTime(self, time = datetime.now()):
-        return f'{"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}'
-
-
-    def getDateTime(self, time = datetime.now()):
-        return self.getDate(time) + ' ' + self.getTime(time)
-
-
-    def system_message(self, textToPrint:str):
-        response = f'{self.getDateTime()} @{self.shortname}.{self.plugin}: \n\t{textToPrint}\n'
-
-        print(response)
-        print(response, file=self.log)
-
-        self.log.flush()
-
-
-    def random_id(self):
-        return random.randint(0, 999999)
-
-
-    def getMention(self, page_id: int, name_case = "nom"):
-        if name_case == 'link':
-            if page_id > 0:
-                return f'[id{page_id}|@id{page_id}]'
-
-            elif page_id == self.group_id:
-                return self.group_mention
-
-            else:
-                return f'[club{-page_id}|@{self.api.groups.getById(group_id = -page_id)[0]["screen_name"]}]'
         
+        response = await self.__api.docs.getMessagesUploadServer(**values)
+        response = await self.__http.post(response.upload_url, data = self.convertAsset(document))
+        response = await response.json()
+
+        if title: response['title'] = title
+        if tags: response['tags'] = tags
+
+        result = await self.__api.docs.save(**response)
+
+        return Object(**result)
+
+
+    async def audio_message(self, audio, peer_id=None):
+        return await self.document(
+            audio,
+            doc_type='audio_message',
+            peer_id=peer_id
+        )
+
+
+    async def story(self, file, file_type,
+              reply_to_story=None, link_text=None,
+              link_url=None):
+        # переписал функцию для историй, так как адаптированная версия с VK_api под aiohttp 
+        # выдавала тупо сам результат запроса. Сделал как фреймворку нужно :3
+
+        if file_type == 'photo':
+            method = self.__api.stories.getPhotoUploadServer
+
+        elif file_type == 'video':
+            method = self.__api.stories.getVideoUploadServer
+
         else:
-            if page_id > 0:
-                request = self.api.users.get(
-                    user_ids = page_id, 
-                    name_case = name_case
-                    )
-                first_name = request[0]["first_name"]
-                
-                return f'[id{page_id}|{first_name}]'
-            
-            elif page_id == self.group_id:
-                return self.selfmention[name_case]
-            
-            else:
-                request = self.api.groups.getById(
-                    group_id = -page_id
-                    )
-                name = request[0]["name"]
-                
-                return f'[club{-page_id}|{name}]' 
+            raise ValueError('type should be either photo or video')
 
+        if (not link_text) != (not link_url):
+            raise ValueError(
+                'Either both link_text and link_url or neither one are required'
+            )
 
-    def getManagers(self, group_id: int):
-        lis = self.api.groups.getMembers(group_id = group_id, sort = 'id_asc', filter='managers')['items']
-        return [i['id'] for i in lis if i['role'] in ['administrator', 'creator']]
+        if link_url and not link_url.startswith('__https://vk.com'):
+            raise ValueError(
+                'Only internal __https://vk.com links are allowed for link_url'
+            )
 
+        if link_url and len(link_url) > 2048:
+            raise ValueError('link_url is too long. Max length - 2048')
 
-    def isManager(self, from_id: int, group_id: int):
-        return from_id in self.getManagers(group_id)
+        values = dict()
 
+        values['add_to_news'] = True
+        if reply_to_story: values['reply_to_story'] = reply_to_story
+        if link_text: values['link_text'] = link_text
+        if link_url: values['link_url'] = link_url
 
-    def getChatManagers(self, peer_id: int):
-        res = self.api.messages.getConversationsById(peer_ids = peer_id)['items'][0]['chat_settings']
-        response = [*res['admin_ids'], res['owner_id']]
-        return response
+        response = await method(**values)
+        response = await self.__http.post(response['upload_url'], data = self.convertAsset(file, 'file' if file_type == "photo" else 'video_file'))
+        response = await response.json(content_type=None)
+
+        result = await self.__api.stories.save(upload_results = response['response']['upload_result'])
         
-
-    def isChatManager(self, from_id, peer_id: int):
-        return from_id in self.getChatManagers(peer_id)
+        return Object(**result)
 
 
-    def getMembers(self, peer_id: int):
-        response = self.api.messages.getConversationMembers(peer_id = peer_id)['items']
-        return [i['member_id'] for i in response]
+    def convertAsset(self, files, sign = 'file'):
+        if isinstance(files, (str, openfile, req)):
+            return {
+                sign: self.__assets(files, 'rb') if isinstance(files, str) else files
+            }
+
+        elif isinstance(files, list):
+            files_dict = {}
+
+            for i in range(min(len(files), 5)):
+                if isinstance(files[i], (str, openfile, req)):
+                    files_dict[sign + str(i+1)] = self.__assets(files[i], 'rb') if isinstance(files[i], str) else files[i]
+                else:
+                    raise TypeError("Only str or file-like objects")
+
+            return files_dict
+
+        else:
+            raise TypeError("Only str or file-like objects")
 
 
-    def isMember(self, from_id: int, peer_id: int):
-        return from_id in self.getMembers(peer_id)
+MAX_BUTTONS_ON_LINE = 5
+MAX_DEFAULT_LINES = 10
+MAX_INLINE_LINES = 6
+
+def sjson_dumps(*args, **kwargs):
+    kwargs['ensure_ascii'] = False
+    kwargs['separators'] = (',', ':')
+
+    return json.dumps(*args, **kwargs)
 
 
-    def ischecktype(self, checklist, checktype):
-        for i in checklist:
-            if isinstance(checktype, list) and type(i) in checktype:
-                return True
-            elif isinstance(checktype, type) and isinstance(i, checktype): 
-                return True
-            
-        return False
+class keyboardcolor(Enum):
+    PRIMARY = 'primary' # blue
+    SECONDARY = 'secondary' # white
+    NEGATIVE = 'negative' # red
+    POSITIVE = 'positive' # green
 
 
-    def setObject(self, nameOfObject: str, newValue):
-        self.__objects.setExpression(nameOfObject, newValue)
-        self.update_list()
+class keyboardbutton(Enum):
+    TEXT = "text"
+    LOCATION = "location"
+    VKPAY = "vkpay"
+    VKAPPS = "open_app"
+    OPENLINK = "open_link"
+    CALLBACK = "callback"
 
 
-    def getObject(self, nameOfObject: str):
-        return getattr(self.__objects.exp, nameOfObject)
+class keyboard:
+    __slots__ = ('one_time', 'lines', 'keyboard', 'inline')
 
+    def __init__(self, one_time=False, inline=False):
+        self.one_time = one_time
+        self.inline = inline
+        self.lines = [[]]
 
-class assets():
-    """
-    assets(filename, mode, encoding): open path.
-    """
-    def __init__(self, path):
-        self.path = path
+        self.keyboard = {
+            'one_time': self.one_time,
+            'inline': self.inline,
+            'buttons': self.lines
+        }
 
+    def get_keyboard(self):
+        return sjson_dumps(self.keyboard)
 
-    def __call__(self, filename, mode, encoding="utf-8"):
-        return open(file = self.path + filename, mode = mode, encoding = encoding)
+    @classmethod
+    def get_empty_keyboard(cls):
+        keyboard = cls()
+        keyboard.keyboard['buttons'] = []
+        return keyboard.get_keyboard()
+
+    def add_button(self, label, color=keyboardcolor.SECONDARY, payload=None):
+        current_line = self.lines[-1]
+
+        if len(current_line) >= MAX_BUTTONS_ON_LINE:
+            raise ValueError(f'Max {MAX_BUTTONS_ON_LINE} buttons on a line')
+
+        color_value = color
+
+        if isinstance(color, keyboardcolor):
+            color_value = color_value.value
+
+        if payload is not None and not isinstance(payload, six.string_types):
+            payload = sjson_dumps(payload)
+
+        button_type = keyboardbutton.TEXT.value
+
+        current_line.append({
+            'color': color_value,
+            'action': {
+                'type': button_type,
+                'payload': payload,
+                'label': label,
+            }
+        })
+
+    def add_callback_button(self, label, color=keyboardcolor.SECONDARY, payload=None):
+        current_line = self.lines[-1]
+
+        if len(current_line) >= MAX_BUTTONS_ON_LINE:
+            raise ValueError(f'Max {MAX_BUTTONS_ON_LINE} buttons on a line')
+
+        color_value = color
+
+        if isinstance(color, keyboardcolor):
+            color_value = color_value.value
+
+        if payload is not None and not isinstance(payload, six.string_types):
+            payload = sjson_dumps(payload)
+
+        button_type = keyboardbutton.CALLBACK.value
+
+        current_line.append({
+            'color': color_value,
+            'action': {
+                'type': button_type,
+                'payload': payload,
+                'label': label,
+            }
+        })
+
+    def add_location_button(self, payload=None):
+        current_line = self.lines[-1]
+
+        if len(current_line) != 0:
+            raise ValueError(
+                'This type of button takes the entire width of the line'
+            )
+
+        if payload is not None and not isinstance(payload, six.string_types):
+            payload = sjson_dumps(payload)
+
+        button_type = keyboardbutton.LOCATION.value
+
+        current_line.append({
+            'action': {
+                'type': button_type,
+                'payload': payload
+            }
+        })
+
+    def add_vkpay_button(self, hash, payload=None):
+        current_line = self.lines[-1]
+
+        if len(current_line) != 0:
+            raise ValueError(
+                'This type of button takes the entire width of the line'
+            )
+
+        if payload is not None and not isinstance(payload, six.string_types):
+            payload = sjson_dumps(payload)
+
+        button_type = keyboardbutton.VKPAY.value
+
+        current_line.append({
+            'action': {
+                'type': button_type,
+                'payload': payload,
+                'hash': hash
+            }
+        })
+
+    def add_vkapps_button(self, app_id, owner_id, label, hash, payload=None):
+        current_line = self.lines[-1]
+
+        if len(current_line) != 0:
+            raise ValueError(
+                'This type of button takes the entire width of the line'
+            )
+
+        if payload is not None and not isinstance(payload, six.string_types):
+            payload = sjson_dumps(payload)
+
+        button_type = keyboardbutton.VKAPPS.value
+
+        current_line.append({
+            'action': {
+                'type': button_type,
+                'app_id': app_id,
+                'owner_id': owner_id,
+                'label': label,
+                'payload': payload,
+                'hash': hash
+            }
+        })
+
+    def add_openlink_button(self, label, link, payload=None):
+        current_line = self.lines[-1]
+
+        if len(current_line) >= MAX_BUTTONS_ON_LINE:
+            raise ValueError(f'Max {MAX_BUTTONS_ON_LINE} buttons on a line')
+
+        if payload is not None and not isinstance(payload, six.string_types):
+            payload = sjson_dumps(payload)
+
+        button_type = keyboardbutton.OPENLINK.value
+
+        current_line.append({
+            'action': {
+                'type': button_type,
+                'link': link,
+                'label': label,
+                'payload': payload
+            }
+        })
+
+    def add_line(self):
+        if self.inline:
+            if len(self.lines) >= MAX_INLINE_LINES:
+                raise ValueError(f'Max {MAX_INLINE_LINES} lines for inline keyboard')
+        else:
+            if len(self.lines) >= MAX_DEFAULT_LINES:
+                raise ValueError(f'Max {MAX_DEFAULT_LINES} lines for default keyboard')
+
+        self.lines.append([])

@@ -1,14 +1,13 @@
 import sqlite3
+import os
+
+from .exceptions import DBError
 
 
-class DBError(Exception):
-    pass
-
-
-class Database(object):
+class Database:
     def __init__(self, directory):
-        self.directory = directory
-        self.connection = sqlite3.connect(directory)
+        self.directory = 'assets/' + directory
+        self.connection = sqlite3.connect(self.directory)
         self.cursor = self.connection.cursor()
 
 
@@ -23,7 +22,7 @@ class Database(object):
         self.connection.close()
 
 
-class Databases(object):
+class Databases:
     def __init__(self, names: list):
         self.upload(names)
 
