@@ -1,6 +1,7 @@
 from testcanarybot.objects import static # if it supports for testcanarybot 0.7 and newer
-from testcanarybot.tools import uploader
+from testcanarybot.tools import uploader, assets
 from testcanarybot import events
+import os
 
 class Main(object):
     async def start(self, tools): 
@@ -8,7 +9,7 @@ class Main(object):
         self.version = static
         self.description = """description"""
         self.packagetype = [
-            events.MESSAGE_NEW
+            events.message_new
         ]
         self.upload = uploader(tools.api)
 
@@ -16,7 +17,7 @@ class Main(object):
     async def package_handler(self, tools, package):
         if package.text.endswith('document'):
             obj = await self.upload.document(
-                doc = tools.log, # testcanarybot takes assets/log.txt as logger
+                document = assets("log.txt", 'rb'), # testcanarybot takes assets/log.txt as logger
                 title = f"@{tools.group_address} log",
                 peer_id = package.peer_id
             )
@@ -24,30 +25,45 @@ class Main(object):
             await tools.api.messages.send(
                 random_id = tools.random_id(),
                 peer_id = package.peer_id,
-                attachment = ",".join(
-                [f"doc{i.doc.owner_id}_{i.doc.id}" for i in obj]
-                )
-            )
+                attachment = f"doc{obj.doc.owner_id}_{obj.doc.id}")
             return 1
             
         elif package.text.endswith('audio_message'):
+            try:
+                info = await tools.api.messages.getConversationsById(
+                    peer_ids = package.peer_id
+                ) # vk.com/dev/messages.getConversationsById
+
+                message = f"Беседу с номером {package.peer_id} основал {info.items[0].chat_settings.owner_id}" 
+                    # получаем id основателя беседы, у сообществ id отрицательный
+            except:
+                message = f"переписка {tools.group_id} с {package.from_id}"
+                    # если это переписка бота и пользователя.
+
             obj = await self.upload.audio_message(
-                audio = "audio_message.ogg",
+                audio = assets("audio_message.ogg", 'rb'),
                 peer_id = package.peer_id
             )
+                # получаем объект аудиосообщения.
+
+            message2 = str(obj.audio_message.__dict__)
+
+            message = f"{message}\n\n\n{message2}"
+            # print(message) # вывести копию сообщения в терминале
 
             await tools.api.messages.send(
                 random_id = tools.random_id(),
                 peer_id = package.peer_id,
+                message = message,
                 attachment = f"audio_message{obj.audio_message.owner_id}_{obj.audio_message.id}"
                 )
+                # отправляем сообщение с данными о беседе и аудиосообщения.
+                # vk.com/dev/messages.send
 
             return 1
 
         elif package.text.endswith('photo_messages'):
-            obj = list()
-            ph = ["photo.png"]
-            obj.append(await self.upload.photo_messages(photos = ph))
+            obj = await self.upload.photo_messages(photos = ["photo.png"])
 
             await tools.api.messages.send(
                 random_id = tools.random_id(),

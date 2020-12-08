@@ -1,10 +1,5 @@
-from .objects import static
-from .objects import init_async
-
-from ._events import events
-from ._vk import *
-
-
+from ._source import app
+from ._source import init_async
+from ._values import events
 
 __all__ = ['events', 'exceptions', 'objects', 'tools']
-supporting = [static, 0.7, 0.8]    

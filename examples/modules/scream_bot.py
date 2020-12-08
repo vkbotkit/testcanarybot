@@ -19,7 +19,7 @@ class Main(object):
         """ 
         
         self.packagetype = [
-            events.MESSAGE_NEW,
+            events.message_new,
         ]
 
 

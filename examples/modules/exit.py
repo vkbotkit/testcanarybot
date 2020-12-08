@@ -9,7 +9,7 @@ class Main:
             Test plugin
             """
         self.packagetype = [
-            events.MESSAGE_NEW
+            events.message_new
         ]
 
     async def package_handler(self, tools, package):

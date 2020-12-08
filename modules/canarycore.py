@@ -1,6 +1,8 @@
 import random
 from testcanarybot import events
-from testcanarybot.objects import static # if it supports for testcanarybot 0.7 and newer
+from testcanarybot.objects import static, message, expression
+    # static for supporting testcanarybot 0.801 and newer
+    # message to convert fwd_messages or reply_message into object
 
 """
 System plugin to work with method error_handler in testcanarybot/library. Name "canarycore" is automaticaly hidden by system.
@@ -15,7 +17,6 @@ class Main:
 
     class parser:
         run = ["выполнить", "run"]
-        command = ["команду", "command"]
 
 
     async def start(self, tools):
@@ -28,7 +29,7 @@ class Main:
             """.format(group_mention = tools.group_mention)
 
         self.packagetype = [
-                    events.MESSAGE_NEW
+                    events.message_new
                 ]
 
 
@@ -43,15 +44,15 @@ class Main:
             elif package.items[2] == tools.getValue("ENDLINE"):
                 return tools.getValue("LIBRARY"), package.items[1]
 
-        elif package.items[0] in self.parser.run and package.items[1] is tools.getValue("ENDLINE"):
-            response = [tools.getValue("PARSER")]
+        elif package.items[0] in self.parser.run:
+            if package.items[1] is tools.getValue("ENDLINE"):
+                response = [tools.getValue("PARSER")]
 
-            if hasattr(package, 'fwd_messages'): response.extend(package.fwd_messages)
-            if hasattr(package, 'reply_message'): response.append(package.reply_message)
+                if hasattr(package, 'fwd_messages'): response.extend(message(**obj.__dict__) for obj in package.fwd_messages)
+                if hasattr(package, 'reply_message'): response.append(message(**package.reply_message.__dict__))
 
-            response.append(tools.getValue("ENDLINE"))
-
-            return response
+                response.append(tools.getValue("ENDLINE"))
+                return response
 
 
     async def error_handler(self, tools, package):

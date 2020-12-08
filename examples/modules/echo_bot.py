@@ -1,5 +1,6 @@
 from testcanarybot.objects import static # if it supports for testcanarybot 0.7 and newer
 from testcanarybot import events
+from testcanarybot.tools import uploader, assets
 import aiohttp
 import io
 
@@ -9,8 +10,9 @@ class Main(object):
         self.version = static
         self.description = """echo bot"""
         self.packagetype = [
-            events.MESSAGE_NEW
+            events.message_new
         ]
+        self.upload = uploader(tools.api)
 
 
     async def package_handler(self, tools, package):
@@ -23,11 +25,12 @@ class Main(object):
             return 1
 
         else:
-            for att in package['attachments']:
+            for att in package.attachments:
                 if att.type == 'audio_message':
-                    file_ogg = att['audio_message']['link_ogg']
+                    file_ogg = att.audio_message.link_ogg
+
                     async with tools.http.get(file_ogg) as response:
-                        obj = await tools.upload.audio_message(
+                        obj = await self.upload.audio_message(
                             audio = io.BytesIO(await response.read()),
                             peer_id = package.peer_id
                         )

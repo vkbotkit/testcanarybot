@@ -1,40 +1,21 @@
-from io import TextIOWrapper as openfile
-from io import BytesIO as req
+from io import IOBase as FileType
+from io import BytesIO
 from enum import Enum
+
+import json
 import os
 import six
-import json
 
 from .objects import Object
-
-
-class _assets:
-    def __init__(self):
-        self.path = os.getcwd() + '\\assets\\'
-
-    def __call__(self, *args, **kwargs):
-        args = list(args)
-        if len(args) > 0:
-            args[0] = self.path + args[0]
-        
-        elif 'file' in kwargs:
-            kwargs['file'] = self.path + kwargs['file']
-        
-        return open(*args, **kwargs)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass
-
-assets = _assets()
+from ._source import assets
 
 
 class uploader:
-    __slots__ = ('__api', '__http', '__assets')
+    __slots__ = ('__api', '__http')
 
     def __init__(self, api):
         self.__api = api
-        self.__http = api._http
-        self.__assets = _assets()
+        self.__http = api.http
 
 
     async def photo_messages(self, photos):
@@ -42,8 +23,7 @@ class uploader:
         response = await self.__http.post(response.upload_url, data = self.convertAsset(photos))
         response = await response.json(content_type = None)
 
-        result = await self.__api.photos.saveMessagesPhoto(**response)
-        return [Object(**res) for res in result]
+        return await self.__api.photos.saveMessagesPhoto(**response)
 
         
     async def photo_group_widget(self, photo, image_type):
@@ -51,9 +31,7 @@ class uploader:
         response = await self.__http.post(response.upload_url, data = self.convertAsset(photo))
         response = await response.json()
 
-        result =  await self.__api.appWidgets.saveGroupImage(**response)
-
-        return Object(**result)
+        return await self.__api.appWidgets.saveGroupImage(**response)
 
 
     async def photo_chat(self, photo, peer_id):
@@ -68,9 +46,7 @@ class uploader:
         response = await self.__http.post(url.upload_url, data = self.convertAsset(photo))
         response = await response.json()
 
-        result =  await self.__api.messages.setChatPhoto(file = response['response'])
-
-        return Object(**result)
+        return await self.__api.messages.setChatPhoto(file = response['response'])
 
 
     async def document(self, document, title=None, tags=None, peer_id=None, doc_type = 'doc', to_wall = None):
@@ -79,24 +55,21 @@ class uploader:
             'type': doc_type
         }
         
-        response = await self.__api.docs.getMessagesUploadServer(**values)
-        response = await self.__http.post(response.upload_url, data = self.convertAsset(document))
+        response = await self.__api.docs.getMessagesUploadServer(**values) # vk.com/dev/docs.getMessagesUploadServer
+        response = await self.__http.post(response.upload_url, data = self.convertAsset(document, sign = 'file'))
         response = await response.json()
-
-        if title: response['title'] = title
+        if title: response['title'] = title 
         if tags: response['tags'] = tags
 
-        result = await self.__api.docs.save(**response)
-
-        return Object(**result)
+        return await self.__api.docs.save(**response) 
 
 
     async def audio_message(self, audio, peer_id=None):
         return await self.document(
             audio,
-            doc_type='audio_message',
-            peer_id=peer_id
-        )
+            doc_type = 'audio_message',
+            peer_id = peer_id
+            )
 
 
     async def story(self, file, file_type,
@@ -135,33 +108,50 @@ class uploader:
         if link_url: values['link_url'] = link_url
 
         response = await method(**values)
-        response = await self.__http.post(response['upload_url'], data = self.convertAsset(file, 'file' if file_type == "photo" else 'video_file'))
+        response = await self.__http.post(response.upload_url, data = self.convertAsset(file, 'file' if file_type == "photo" else 'video_file'))
         response = await response.json(content_type=None)
-
-        result = await self.__api.stories.save(upload_results = response['response']['upload_result'])
         
-        return Object(**result)
+        return await self.__api.stories.save(upload_results = response.response.upload_result)
 
 
     def convertAsset(self, files, sign = 'file'):
-        if isinstance(files, (str, openfile, req)):
+        if isinstance(files, (str, bytes)) or issubclass(type(files), FileType):
+            response = None
+
+            if isinstance(files, str): 
+                response = assets(files, 'rb', buffering = 0)
+            elif isinstance(files, bytes): 
+                response = BytesIO(files)
+            else:
+                response = files
+
             return {
-                sign: self.__assets(files, 'rb') if isinstance(files, str) else files
+                sign: response
             }
 
         elif isinstance(files, list):
             files_dict = {}
 
-            for i in range(min(len(files), 5)):
-                if isinstance(files[i], (str, openfile, req)):
-                    files_dict[sign + str(i+1)] = self.__assets(files[i], 'rb') if isinstance(files[i], str) else files[i]
+            for i in range(min(len(files), 5)): # ограничение в пять файлов
+                if isinstance(files[i], (str, bytes)) or issubclass(type(files[i]), FileType):
+                    response = None
+
+                    if isinstance(files[i], str): 
+                        response = self.assets(files[i], 'rb', buffering = 0)
+                    elif isinstance(files[i], bytes): 
+                        response = BytesIO(files[i])
+                    else:
+                        response = files[i]
+
+                    files_dict[sign + str(i+1)] = response
+
                 else:
-                    raise TypeError("Only str or file-like objects")
+                    raise TypeError("Only str, bytes or file-like objects")
 
             return files_dict
 
         else:
-            raise TypeError("Only str or file-like objects")
+            raise TypeError("Only str, bytes or file-like objects")
 
 
 MAX_BUTTONS_ON_LINE = 5

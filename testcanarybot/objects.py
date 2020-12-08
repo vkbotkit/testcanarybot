@@ -1,11 +1,9 @@
-import os
-
 project_name = "TESTCANARYBOT"
 
 
-def init_async(coroutine: asyncio.coroutine):
-    return asyncio.get_event_loop().run_until_complete(coroutine)
-
+class static:
+    pass
+    
     
 class Object:
     def __init__(self, **entries):
@@ -24,24 +22,22 @@ class Object:
                     ])
 
 
-class static:
+class message(Object):
+    id = 0
+    date = 0
+    random_id = 0
+    peer_id = 1
+    from_id = 1
+    items = []
+
+
+class package(message):
     pass
 
 
-class events:
-    def __init__(self):
-        self.list = []
-
-
-class event:
-    __slots__ = ('value') 
-    def __init__(self, variable):
-        self.value = variable
-
 
 class expressions:
-    def __init__(self):
-        self.list = []
+    list = []
 
 
 class expression:
@@ -54,6 +50,7 @@ class expression:
 
 
 class mention:
+    __slots__ = ('id') 
     def __init__(self, page_id):
         self.id = page_id
 
@@ -61,34 +58,15 @@ class mention:
         return self.id
 
 
-class message(Object):
-    id = 0
-    date = 0
-    random_id = 0
-    peer_id = 1
-    from_id = 1
-    attachments = []
-    payload = ''
-    keyboard = {}
-    fwd_messages = []
-    reply_message = {}
-    action = {}
-    conversation_message_id = ''
-    type = event('empty')
-    items = []
-    text = ''
-
-
-class package(message):
-    pass
-
-
-class staticPlugin:
-    name = ""
+class objectPlugin:
+    codename = str()
+    name = str()
     version = static
-    description = "whatever"
+    description = str()
     packagetype = []
 
+
+class staticPlugin(objectPlugin):
     async def package_handler(self, tools, package):
         pass
 

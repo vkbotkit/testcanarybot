@@ -3,7 +3,11 @@ import os
 import string as sr
 import random
 
-from ._manager_objects import *
+from ._values import module_cover
+from ._values import package_events
+from ._values import package_handler
+from ._values import package_handler_import
+from ._values import error_handler
 
 parser = argparse.ArgumentParser(description='manager for testcanarybot')
 parser.add_argument("-c", dest="create_module", action = 'store_true', help='create a testcanarybot 0.7 module')
