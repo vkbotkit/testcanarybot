@@ -1,15 +1,9 @@
-from testcanarybot.objects import static
+from testcanarybot.objects import libraryModule
 
-class Main:
-    async def start(self, tools):
-        self.version = static
-        self.name = """canarycore"""
-        self.description = """module to show description of another modules""".format(group_mention = tools.group_mention)
-
-
+class Main(libraryModule):
     async def error_handler(self, tools, package):
         if package.items[0] == tools.getValue("LIBRARY") and len(package.items) == 4:
-            response = package.items[3].format(listitem = tools.getValue("LIBRARY_RESPONSE_LIST_ITEM").value)
+            response = package.items[3].format(listitem = tools.getValue("LISTITEM").value)
 
             await tools.api.messages.send(
                 random_id = tools.random_id(), 

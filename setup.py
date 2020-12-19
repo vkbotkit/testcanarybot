@@ -5,14 +5,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="testcanarybot",
-    version="0.802",
+    version="0.900",
     author="andprokofieff",
     author_email="prokofieff.help@gmail.com",
     description="VKontakte asynchronous bot framework like Django",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/kensoi/testcanarybot",
-    packages=['testcanarybot'],
+    packages = setuptools.find_packages(exclude=('assets', 'assets.*', 'examples', 'examples.*', 'library', 'library.*', 'modules', 'modules.*')),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

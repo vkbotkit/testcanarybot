@@ -1,13 +1,9 @@
 import argparse
 import os
-import string as sr
+import string
 import random
 
-from ._values import module_cover
-from ._values import package_events
-from ._values import package_handler
-from ._values import package_handler_import
-from ._values import error_handler
+from .source.manager import *
 
 parser = argparse.ArgumentParser(description='manager for testcanarybot')
 parser.add_argument("-c", dest="create_module", action = 'store_true', help='create a testcanarybot 0.7 module')
@@ -33,8 +29,8 @@ def parsename(name: str):
     test, i = len(name), 0
     while i< test:
         if name[i] not in [
-                *sr.ascii_lowercase,
-                *sr.digits]:
+                *string.ascii_lowercase,
+                *string.digits]:
             name = name[:i] + name[i+1:]
             test -= 1
 
@@ -55,11 +51,11 @@ def __write(file_dest, var):
         new_file.write(var)
 
 
-def bool_str(string: str):
-    if string.lower() in ['true', '1', 'правда', 'y', 'yes', 'да']:
+def bool_str(line: str):
+    if line.lower() in ['true', '1', 'правда', 'y', 'yes', 'да']:
         return True
 
-    elif string.lower() in ['false', '1', 'ложь', 'n', 'no', 'нет']:
+    elif line.lower() in ['false', '1', 'ложь', 'n', 'no', 'нет']:
         return False
 
     else:
@@ -74,8 +70,8 @@ def gen_str(test = None):
 
     for i in range(num):
         result += random.choice([
-                *sr.ascii_lowercase,
-                *sr.digits]
+                *string.ascii_lowercase,
+                *string.digits]
         )
     return result
 
@@ -246,64 +242,3 @@ if args.create_module:
     __write(test, render)
         
     print(f"Executed! [{test}]")     
-
-
-# def class(*args):
-#     render = module_cover
-
-#     print(f"Hello! it's a manager for testcanarybot!")
-#     name = input("Enter a name for your plugin: ") if args.name == '' else args.name
-
-#     if name == "": name = "module" + gen_str()
-#     codename = parsename(name)
-
-#     print(f"Your module will be saved with codename \"{codename}\"")
-#     print("Enter a description for your plugin: ")
-
-#     descr, descr_line = str(), ":::TESTCANARYBOT:DESCR_LINE:::"
-
-#     if args.folder:
-#         dest = f'\\library\\{codename}\\main.py'
-    
-#     else:
-#         dest = f'\\library\\{codename}.py'
-
-#     while descr_line != "":
-#         descr_line = input("\t")
-#         descr += descr_line
-
-#         if descr_line != "":
-#             descr += '\n' +  " " * 12
-
-#     if descr == '': descr = 'Look at this string, you can use it like a password: ' + gen_str() + '\n' +  " " * 12
-
-#     render = render.replace("{name}", name)
-#     render = render.replace("{descr}", descr)
-
-#     if args.package_handler:
-#         render = render.format(
-#             package_events = package_events, 
-#             package_handler = package_handler,
-#             package_handler_import = package_handler_import
-#             )
-
-#     else:
-#         render = render.format(
-#             package_events = "", 
-#             package_handler = "",
-#             package_handler_import = ""
-#             )
-
-#     if args.error_handler:
-#         render = render.replace("{error_handler}", error_handler)
-
-#     else:
-#         render = render.replace("{error_handler}", "")
-
-
-#     test = os.getcwd() + dest
-#     __write(test, render)
-        
-#     print(f"Executed! [{test}]")
-
-

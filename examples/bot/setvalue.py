@@ -7,9 +7,8 @@ bot = testcanarybot.app(
 
 bot.hide('description', 'echo_bot') # hide list of selected plugins from LIBRARY_LIST
 
-bot.setValue("ONLY_COMMANDS", False) # parsing all messages that does not starts with mention.
-bot.setValue("ADD_MENTIONS", True)
+bot.setValue("ONLY_COMMANDS", False, "bool") # parsing all messages that does not starts with mention.
+bot.setValue("ADD_MENTIONS", True, "bool")
 bot.setMentions('каня') # custom mentions
 
-bot.install() 
-bot.listen()
+bot.start_polling()

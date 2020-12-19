@@ -1,16 +1,15 @@
+from testcanarybot.objects import libraryModule
+from testcanarybot.events import events
 import random
-from testcanarybot import events
-from testcanarybot.objects import static # if it supports for testcanarybot 0.7 and newer
 
 """
 testcanarybot example on vk.com/screambot
 """
 
-class Main(object):
+class Main(libraryModule):
     tomention = "@all го орать"
     async def start(self, tools): 
         self.name = """Реакции @screambot"""
-        self.version = static
         self.description = """
         {listitem} @screambot помощь - выслать инструкции в беседу
         {listitem} @screambot генерировать [число] - сгенерировать смех в указанном количестве сообщений

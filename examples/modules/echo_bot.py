@@ -1,14 +1,11 @@
-from testcanarybot.objects import static # if it supports for testcanarybot 0.7 and newer
-from testcanarybot import events
+from testcanarybot.objects import libraryModule # if it supports for testcanarybot 0.7 and newer
+from testcanarybot.events import events
 from testcanarybot.tools import uploader, assets
-import aiohttp
 import io
 
-class Main(object):
+class Main(libraryModule):
     async def start(self, tools): 
         self.name = """echo bot"""
-        self.version = static
-        self.description = """echo bot"""
         self.packagetype = [
             events.message_new
         ]

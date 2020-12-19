@@ -1,5 +1,5 @@
-from ._source import app
-from ._source import init_async
-from ._values import events
+from .source.application import app
+from .source.versions_list import supporting
 
 __all__ = ['events', 'exceptions', 'objects', 'tools']
+__version__ = supporting[-1]

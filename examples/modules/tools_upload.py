@@ -1,16 +1,15 @@
-from testcanarybot.objects import static # if it supports for testcanarybot 0.7 and newer
+from testcanarybot.objects import libraryModule # if it supports for testcanarybot 0.7 and newer
+from testcanarybot.events import events
 from testcanarybot.tools import uploader, assets
-from testcanarybot import events
 import os
 
-class Main(object):
+class Main(libraryModule):
+    description = """uploader example (kensoi.github.io/testcanarybot/tools/upload.html)"""
+    packagetype = [
+        events.message_new
+    ]
+    
     async def start(self, tools): 
-        self.name = """uploader example (kensoi.github.io/testcanarybot/tools/upload.html)"""
-        self.version = static
-        self.description = """description"""
-        self.packagetype = [
-            events.message_new
-        ]
         self.upload = uploader(tools.api)
 
 

@@ -1,19 +1,14 @@
-from testcanarybot import events
-from testcanarybot.objects import static
+from testcanarybot.events import events
+from testcanarybot.objects import libraryModule
 
-class Main:
+class Main(libraryModule):
     async def start(self, tools):
-        self.name = "exit"
-        self.version = static
-        self.description = """
-            Test plugin
-            """
         self.packagetype = [
             events.message_new
         ]
 
     async def package_handler(self, tools, package):
-        if package.items[0] == '1':
+        if package.items[0] == 'exit' and tools.isManager(package.from_id, tools.group_id):
             quit()
         
         
