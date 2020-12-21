@@ -12,7 +12,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/kensoi/testcanarybot",
-    packages = setuptools.find_packages(exclude=('assets', 'assets.*', 'examples', 'examples.*', 'library', 'library.*', 'modules', 'modules.*')),
+    packages = setuptools.find_packages(where='./testcanarybot'),
+    package_dir={
+        '': 'testcanarybot',
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
