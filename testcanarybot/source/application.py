@@ -1,16 +1,19 @@
-from .versions_list import supporting
-from .library import api
-from .library import handler
-from .library import init_async
-from .library import library
-from . import exceptions
-
 import aiohttp
 import asyncio
 import atexit
 import os
 import time
 
+for filename in ['assets', 'library']:
+    if filename in os.listdir(os.getcwd()): continue
+    os.mkdir(os.getcwd() + '\\' + filename)
+
+from .versions_list import supporting
+from .library import api
+from .library import handler
+from .library import init_async
+from .library import library
+from . import exceptions
 
 class multiloop_session:
     """
@@ -75,10 +78,6 @@ class app:
         api_version: str - VK API version
         """
         self.http = session(headers = self.headers)
-        
-        for filename in ['assets', 'library']:
-            if filename in os.listdir(os.getcwd()): continue
-            os.mkdir(os.getcwd() + '\\' + filename)
             
 
         self.__token = token
