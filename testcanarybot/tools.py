@@ -7,7 +7,7 @@ import os
 import six
 
 from .objects import Object
-from .library import assets, init_async
+from .source.library import assets, init_async
 
 class uploader:
     __slots__ = ('__api', '__http')
