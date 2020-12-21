@@ -239,10 +239,10 @@ class handler(threading.Thread):
                                     else:
                                         event_package.items[1] = self.library.tools.getValue("LIBRARY_ERROR")
 
-                                    eh = [asyncio.ensure_future(self.library.modules[i].error_handler(self.library.tools, event_package), loop = self.thread_loop) for i in self.library.error_handlers]
+                                eh = [asyncio.ensure_future(self.library.modules[i].error_handler(self.library.tools, event_package), loop = self.thread_loop) for i in self.library.error_handlers]
                                     
-                                    self.library.tools.module = 'error_handler'
-                                    self.thread_loop.run_until_complete(asyncio.wait(eh))
+                                self.library.tools.module = 'error_handler'
+                                self.thread_loop.run_until_complete(asyncio.wait(eh))
 
                             except Exception as e:
                                 self.library.tools.system_message(traceback.format_exc())
