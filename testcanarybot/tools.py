@@ -20,7 +20,7 @@ class uploader:
     async def photo_messages(self, photos):
         response = await self.__api.photos.getMessagesUploadServer(peer_id = 0)
         response = await self.__http.post(response.upload_url, data = self.convertAsset(photos))
-        response = await response.json(content_type = None)
+        response = await response.json(content_type=None)
 
         return await self.__api.photos.saveMessagesPhoto(**response)
 
@@ -28,7 +28,7 @@ class uploader:
     async def photo_group_widget(self, photo, image_type):
         response = await self.__api.appWidgets.getGroupImageUploadServer(image_type = image_type)
         response = await self.__http.post(response.upload_url, data = self.convertAsset(photo))
-        response = await response.json()
+        response = await response.json(content_type=None)
 
         return await self.__api.appWidgets.saveGroupImage(**response)
 
@@ -43,7 +43,7 @@ class uploader:
 
         response = await self.__api.photos.getChatUploadServer(**values)
         response = await self.__http.post(url.upload_url, data = self.convertAsset(photo))
-        response = await response.json()
+        response = await response.json(content_type=None)
 
         return await self.__api.messages.setChatPhoto(file = response['response'])
 
@@ -56,7 +56,7 @@ class uploader:
         
         response = await self.__api.docs.getMessagesUploadServer(**values) # vk.com/dev/docs.getMessagesUploadServer
         response = await self.__http.post(response.upload_url, data = self.convertAsset(document, sign = 'file'))
-        response = await response.json()
+        response = await response.json(content_type=None)
         if title: response['title'] = title 
         if tags: response['tags'] = tags
 
@@ -136,7 +136,7 @@ class uploader:
                     response = None
 
                     if isinstance(files[i], str): 
-                        response = self.assets(files[i], 'rb', buffering = 0)
+                        response = assets(files[i], 'rb', buffering = 0)
                     elif isinstance(files[i], bytes): 
                         response = BytesIO(files[i])
                     else:

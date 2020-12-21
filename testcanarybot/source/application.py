@@ -45,7 +45,7 @@ class multiloop_session:
                     h = {}
 
                 async with aiohttp.request(name.upper(), *args, **kwargs, headers = h) as resp:
-                    await resp.json()
+                    await resp.json(content_type=None)
                     return resp
 
             return request  
