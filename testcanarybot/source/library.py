@@ -371,7 +371,7 @@ class library:
             self.tools.system_message(self.tools.getValue("LIBRARY_UPLOADER_GET"), module = "library.uploader")
             
             listdir = os.listdir(os.getcwd() + '\\library\\')
-            listdir.remove("__pycache__")
+            if "__pycache__" in listdir: listdir.remove("__pycache__")
             if len(listdir) == 0:
                 raise exceptions.LibraryError(
                     self.__library.tools.getValue("SESSION_LIBRARY_ERROR"))
