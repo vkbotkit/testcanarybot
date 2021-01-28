@@ -4,7 +4,7 @@
     </a>
 </p>
 
-# testcanarybot
+# testcanarybot/dev
 async framework for vk chatbots
 
 
