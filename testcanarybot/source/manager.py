@@ -1,33 +1,47 @@
-from .versions_list import supporting
-module_cover = """from testcanarybot.objects import libraryModule{package_handler_import}
+module_cover = """from testcanarybot import objects
+from testcanarybot import enums # for Main.events
 
-class Main(libraryModule):
-    async def start(self, tools):
-        self.name = "{name}" # optional
-        self.version = """ + str(supporting[-1]) + """ # optional
-        self.description = \"\"\"
-            {descr}\"\"\" # optional{package_events}
-        
-        {package_handler}{error_handler}
-"""
+class Main(objects.libraryModule):
+\tasync def start(self, tools: objects.tools):
+\t\t\"\"\"
+\t\tasync init for your module.
 
-package_events = """
-        self.packagetype = [
-            events.message_new
-        ]"""
+\t\ttools [objects.tools]: VK API methods (tools.api) and some useful functions by developer
+\t\t\"\"\"
+\t\t
+\t\t
+\t@objects.event(events = [enums.events.like_add]) # any event, excluding message_new.
+\tasync def events_handler(self, tools: objects.tools, package: objects.package):
+\t\t\"\"\"
+\t\tThis is the handler for registered events.
 
-package_handler = """
-    async def package_handler(self, tools, package):
-        # tools: testcanarybot.tools
-        # package: formatted into message object got from longpoll server
-        pass
+\t\ttools [objects.tools]: VK API methods (tools.api) and some useful functions by developer
+\t\tpackage [objects.package]: parsed package got from VK Bots Longpoll
+\t\t\"\"\"
+\t\tpass
 
-"""
-package_handler_import = ", events # for Main.package_handler"
 
-error_handler = """
-    async def error_handler(self, tools, package):
-        # tools: testcanarybot.tools
-        # package: formatted into message object got from longpoll server
-        pass
-"""
+\t@objects.void
+\tasync def void_handler(self, tools: objects.tools, package: objects.package):
+\t\t\"\"\"
+\t\tThis is the handler for unregistered commands.
+
+\t\ttools [objects.tools]: VK API methods (tools.api) and some useful functions by developer
+\t\tpackage [objects.package]: parsed package got from VK Bots Longpoll
+\t\t\"\"\"
+\t\tpass
+
+
+\t@objects.priority(commands = ["test1", "test2", "test3"])
+\tasync def priority_handler(self, tools: objects.tools, package: objects.package):
+\t\t\"\"\"
+\t\tThis is the handler for these commands:
+\t\t@yourbot test1 [items]
+\t\t@yourbot test2 [items]
+\t\t@yourbot test3 [items]
+\t\t
+\t\ttools [objects.tools]: VK API methods (tools.api) and some useful functions by developer
+\t\tpackage [objects.package]: parsed package got from VK Bots Longpoll
+\t\t\"\"\"
+
+\t\tpass"""

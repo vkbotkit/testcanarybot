@@ -5,7 +5,7 @@ token = """:::PASTE:TOKEN:::"""
 group_id = 0
 
 bot = testcanarybot.app(
-    token = token, 
+    access_token = token, 
     group_id = group_id
     )
 
