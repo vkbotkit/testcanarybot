@@ -1,19 +1,14 @@
 import asyncio
 import importlib
+import json
 import os
-import random
-import six
-import sqlite3
 import threading
-import traceback
+import typing
 
-
-from .events import events
-from .versions_list import static
-
-from . import objects
-from datetime import datetime
-from .expressions import expressions, setExpression, Pages
+from .others import objects
+from .others import exceptions
+from .others.values import global_expressions, Pages
+from .others.enums import events
 
 class _assets:
     def __init__(self):
@@ -33,256 +28,153 @@ class _assets:
         pass
 
 assets = _assets()
+tools_test = objects.tools()
+package_test = objects.package(**{'type': events.message_new, 'items': ['test']})
 
 class handler(threading.Thread):
     processing = False
 
     def __init__(self, library, handler_id):
         threading.Thread.__init__(self)
-        self.thread_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.thread_loop)
         self.daemon = True
         self.handler_id = handler_id
 
         self.library = library
-        self.event = None
+        self.packages = []
 
 
     def run(self):
         self.setName(f"handler_{self.handler_id}")
-        self.library.tools.system_message(f"{self.getName()} is started", module = "message_handler")
-        while True:
-            if self.event: 
-                self.processing = True
-                self.parse_event(self.event)
-                self.event = None
-                self.processing = False
+        self.library.tools.system_message(f"{self.getName()} is started", module = "package_handler")
+
+        self.all_messages = self.library.tools.values.ALL_MESSAGES.value
+        self.add_mentions = self.library.tools.values.MENTIONS.value
+        self.mentions = self.library.tools.mentions
+
+        self.thread_loop = asyncio.new_event_loop()
+        self.thread_loop.set_exception_handler(self.exception_handler)
+        asyncio.set_event_loop(self.thread_loop)
+        self.library.tools.http.create_session(self)
+
+        self.thread_loop.run_forever()
+
+    def exception_handler(self, loop, context):
+        try:
+            raise context['exception']
+
+        except exceptions.CallVoid as e:
+            for i in self.library.handlers['void']:
+                module = self.library.modules[i.__module__]
+
+                peer_id, from_id = str(e)[1:].split("_")
+                package = objects.package(**{
+                    'peer_id': int(peer_id), 
+                    'from_id': int(from_id), 
+                    'items': [self.library.tools.values.NOREPLY]
+                    })
+                task = self.thread_loop.create_task(i(module, self.library.tools, package))
+
+        except Exception as e:
+            print(type(context['exception']).__name__)
+            print(e)
+
+    def create_task(self, package):
+        if isinstance(package, objects.package):
+            if package.type == events.message_new or package.type in self.library.handlers['events']:
+                asyncio.run_coroutine_threadsafe(self.resolver(package), self.thread_loop)
+
+        else:
+            asyncio.run_coroutine_threadsafe(self.__start_module(package), self.thread_loop)
+
+    async def __start_module(self, package):
+        self.thread_loop.create_task(package(self.library.tools))
+
+    async def resolver(self, package):
+        if package.type == events.message_new:
+            await asyncio.sleep(0.00001)
+
+            if hasattr(package, 'action'): 
+                package.params.action = True
+
+            elif hasattr(package, 'payload'): 
+                package.params.payload = True
+                package.payload = json.loads(package.params)
+            
+            elif package.text != '':
+                message = package.text.split()
+                package.params.command = False
+                if len(message) > 1 and ((message[0].lower() in self.mentions) or (message[0][:-1].lower() in self.mentions)):
+                    package.params.gment = message.pop(0)
+                    package.params.command = True
+
+                package = await self.findMentions(package, message)
+
+            elif len(package.attachments) > 0: 
+                package.params.attachments = True
+
+            await self.handler(package)
+            
+        else:
+            await self.handler(package)
 
 
-    def parse_event(self, event):
-        if isinstance(event, dict):
-            if hasattr(events, event['type']):
-                event_type = getattr(events, event['type'])
-
-                if event_type == events.message_new:
-                    package = objects.message(**event['object']['message'])
-                    package.items = []
-
-                    if hasattr(package, 'action'): 
-                        package.items.append(self.library.tools.getValue("ACTION"))
-                    
-                    elif hasattr(package, 'payload'):
-                        package.items.append(self.library.tools.getValue("PAYLOAD"))
-                        package.payload = json.loads(package.payload)
-
-                    elif package.text != '': 
-                        package.items, package.mentions = self.parse_command(package.text)
-
-                    elif len(package.attachments) > 0: 
-                        package.items.append(self.library.tools.getValue("ATTACHMENTS"))
-                        
-                    not_command = len(package.items) == 0
-                    only_commands = self.library.tools.getValue("ONLY_COMMANDS").value
-
-                    if not only_commands or not not_command: 
-                        if not_command: package.items.append(self.library.tools.getValue("NOT_COMMAND"))
-                        
-                        package.items.append(self.library.tools.getValue("ENDLINE"))
-                        self.parse_package(package)
-
+    async def findMentions(self, package: objects.package, message: str) -> objects.package:
+        for count in range(len(message)):
+            if message[count][0] == '[' and message[count].count('|') == 1:
+                if message[count].count(']') > 0:
+                    mention = self.library.tools.parse_mention(
+                            message[count][message[count].rfind('[') + 1:message[count].find(']')]
+                            )
+                    package.params.mentions.append(mention)
+                    package.items.append(
+                        mention
+                        )
                 else:
-                    package = objects.package(**event['object'])
-                    package.type = event_type
-
-                    for key, value in event['object'].items():
-                        if key in _ohr.peer_id: package.peer_id = value
-                        if key in _ohr.from_id: package.from_id = value
-
-                    self.parse_package(package)  
-
-        elif issubclass(type(self.event), objects.Object):
-            package = self.event
-            if package.type == events.message_new:
-
-                if hasattr(package, 'action'): 
-                    package.items.append(self.library.tools.getValue("ACTION"))
-                
-                elif hasattr(package, 'payload'):
-                    package.items.append(self.library.tools.getValue("PAYLOAD"))
-                    package.payload = json.loads(package.payload)
-
-                elif package.text != '': 
-                    package.items, package.mentions = self.parse_command(package.text)
-
-                elif len(package.attachments) > 0: 
-                    package.items.append(self.library.tools.getValue("ATTACHMENTS"))
-                    
-                package.items.append(self.library.tools.getValue("ENDLINE"))
-                if not self.library.tools.getValue("ONLY_COMMANDS").value:
-                    self.parse_package(package)
-
+                    for j in range(count, len(message)):
+                        if message[j].count(']') > 0:
+                            last_string, message[j] = message[j][0:message[j].find(']')], message[j][message[j].find(']') + 1:]
+                            mention = self.library.tools.parse_mention(" ".join([*message[count:j], last_string])[1:])
+                            package.items.append(mention)
+                            package.params.mentions.append(mention)
+                            count = j
+                            break
             else:
-                for key, value in event['object'].items():
-                    if key in _ohr.peer_id: package.peer_id = value
-                    if key in _ohr.from_id: package.from_id = value
+                package.items.append(message[count])
+            count += 1
+        return package
+            
 
-                self.parse_package(package)
+    async def handler(self, package: objects.package):
+        package.items.append(self.library.tools.values.ENDLINE)
+        try:
+            if package.type == events.message_new:
+                test = objects.WaitReply(package)
+                if test in self.library.tools.waiting_replies:
+                    self.library.tools.waiting_replies[test] = package
 
-
-    def parse_command(self, messagetoreact):
-        response, mentions = [], []
-        message = messagetoreact.split() 
-
-        if len(message) > 1:
-            if message[0] in [*self.library.tools.getValue("MENTIONS").value]:
-                message.pop(0)
-                message_lenght = len(message)
-                i = 0
-                while i != message_lenght:
-                    if message[i][0] == '[' and message[i].count('|') == 1:
-                        if message[i].count(']') > 0:
-                            mention = self.library.tools.parse_mention(
-                                    message[i][message[i].rfind('[') + 1:message[i].find(']')]
-                                    )
-                            mentions.append(mention)
-                            response.append(
-                                mention
-                                )
-                        else:
-                            for j in range(i, message_lenght):
-                                if message[j].count(']') > 0:
-                                    last_string, message[j] = message[j][0:message[j].find(']')], message[j][message[j].find(']') + 1:]
-                                    mention = " ".join([*message[i:j], last_string])[1:]
-                                    mention = self.library.tools.parse_mention(
-                                            mention
-                                            )
-                                    response.append(mention)
-                                    mentions.append(mention)
-                                    response.append(message[j])
-                                    i = j
-                                    break
-                    else:
-                        response.append(message[i])
-
-                    i += 1
-
-            if len(response) != 0:
-                return response, mentions
-        
-        if self.library.tools.getValue("ADD_MENTIONS").value:
-            message_lenght = len(message)
-            i = 0
-            ment_obj = self.library.tools.getValue("MENTION")
-            while i != message_lenght:
-                if message[i].lower() in [*self.library.tools.getValue("MENTIONS").value, 
-                                    *self.library.tools.getValue("MENTION_NAME_CASES").value] and len(response) == 0: 
-                    response = [ment_obj]
-
-                if message[i][0] == '[' and message[i].count('|') == 1:
-                    if message[i].count(']') > 0:
-                        mention = self.library.tools.parse_mention(
-                                message[i][message[i].rfind('[') + 1:message[i].find(']')]
-                                )
-                        mentions.append(mention)
-                    else:
-                        for j in range(i, message_lenght):
-                            if message[j].count(']') > 0:
-                                last_string, message[j] = message[j][0:message[j].find(']')], message[j][message[j].find(']') + 1:]
-                                mention = " ".join([*message[i:j], last_string])[1:]
-                                mention = self.library.tools.parse_mention(
-                                        mention
-                                        )
-                                mentions.append(mention)
-                                i = j
-                                break
-                    
-                i += 1
-
-            if len(response) != 0:
-                return response, mentions
-
-        return [], []
-
-
-    def parse_package(self, event_package):
-        if (not self.library.tools.getValue("ONLY_COMMANDS")) == (len(event_package.items) == 1):
-            if event_package.type in self.library.event_supports.keys():
-                itemscopy = event_package.items.copy()
-                modules = [asyncio.ensure_future(self.library.modules[i].package_handler(self.library.tools, event_package), loop = self.thread_loop) for i in self.library.event_supports[event_package.type]]
+                elif package.params.command and len(package.items) > 0 and package.items[0] in self.library.handlers['priority'].keys():
+                    for i in self.library.handlers['priority'][package.items[0]]:
+                        module = self.library.modules[i.__module__]
                         
-                reaction = [i for i in self.thread_loop.run_until_complete(asyncio.gather(*modules)) if i != None]
+                        self.thread_loop.create_task(i(module, self.library.tools, package))
+                        await asyncio.sleep(0.00001)
 
-                if len(self.library.error_handlers) > 0:
-                    if len(reaction) == 0 and len(event_package.items) > 1:
-                        reaction.append([self.library.tools.getValue("NOREACT")])
-                        
-                    for i in reaction:
-                        if isinstance(i, (list, tuple)):
-                            if isinstance(i, tuple): i = list(i)
-                            event_package.items = i
+                elif self.library.void_react:
+                    if self.all_messages or package.params.command:
+                        for i in self.library.handlers['void']:
+                            module = self.library.modules[i.__module__]
 
-                            try:
-                                if event_package.items[0] == self.library.tools.getValue("LIBRARY"):
-                                    if event_package.items[1] == self.library.tools.getValue("LIBRARY_NOSELECT"):
-                                        event_package.items[1] = [
-                                            (e, self.library.modules[e].name) for e in self.library.modules.keys() if e not in self.library.hidden_modules
-                                        ]
+                            self.thread_loop.create_task(i(module, self.library.tools, package))
+                            await asyncio.sleep(0.00001)
 
-                                    elif event_package.items[1] == self.library.tools.getValue("LIBRARY_RELOAD"):
-                                        self.library.upload(isReload = True, loop = self.thread_loop)
-                                        event_package.items.append(self.library.tools.getValue("LIBRARY_SUCCESS"))
+            elif package.type in self.library.handlers['events'].keys():
+                for i in self.library.handlers['events'][package.type]:
+                    module = self.library.modules[i.__module__]
+                    self.thread_loop.create_task(i(module, self.library.tools, package))
 
-                                    elif event_package.items[1] in self.library.modules.keys():
-                                        event_package.items.append(self.library.modules[event_package.items[1]].version)
-                                        event_package.items.append(self.library.modules[event_package.items[1]].description)
-
-                                    else:
-                                        event_package.items[1] = self.library.tools.getValue("LIBRARY_ERROR")
-
-                                eh = [asyncio.ensure_future(self.library.modules[i].error_handler(self.library.tools, event_package), loop = self.thread_loop) for i in self.library.error_handlers]
-                                    
-                                self.library.tools.module = 'error_handler'
-                                self.thread_loop.run_until_complete(asyncio.wait(eh))
-
-                            except Exception as e:
-                                self.library.tools.system_message(traceback.format_exc())
-                    
-                response = self.library.tools.getValue("MESSAGE_HANDLER_TYPE").value + '\n'
-                if event_package.peer_id != event_package.from_id:
-                    response += self.library.tools.getValue("MESSAGE_HANDLER_CHAT").value + '\n'
-
-                response += self.library.tools.getValue("MESSAGE_HANDLER_USER").value + '\n'
-                if self.library.tools.getValue("NOT_COMMAND") not in itemscopy and self.library.tools.ischecktype(itemscopy, objects.expression):
-                    response += self.library.tools.getValue("MESSAGE_HANDLER_ITEMS").value + '\n'
-                    itemscopy = [str(i) for i in itemscopy[:-1]]
-                if event_package.text !='': response += self.library.tools.getValue("MESSAGE_HANDLER_IT").value + '\n'
-                
-                response = response.format(
-                    peer_id = event_package.peer_id,
-                    from_id = event_package.from_id,
-                    event_type = event_package.type.value,
-                    items = itemscopy,
-                    text = "\t" + event_package.text.replace("\n", "\n\t\t\t")
-                )
-                self.library.tools.system_message(response, module = "message_handler")
-
-
-class database:
-    def __init__(self, directory):
-        self.directory = 'assets/' + directory
-        self.connection = sqlite3.connect(self.directory)
-        self.cursor = self.connection.cursor()
-
-
-    def request(self, request: str):
-        self.cursor.execute(request)
-        self.connection.commit()
-        
-        return self.cursor.fetchall()
-
-
-    def close(self):
-        self.connection.close()
+                    await asyncio.sleep(0.00001)
+        except Exception as e:
+            self.library.tools.system_message(module = "exception_handler", write = e)
 
 
 class databases:
@@ -326,180 +218,185 @@ class databases:
         if check == list:
             for name in names:
                 if self.check(name[0]):
-                    raise DBError("This DB already exists")
+                    raise exceptions.DBError("This DB already exists")
 
                 else:
-                    self.__dbs[name[0]] = database(name[1])
+                    self.__dbs[name[0]] = objects.database(name[1])
 
         elif check == tuple:
             if self.check(names[0]):
-                raise DBError("This DB already exists")
+                raise exceptions.DBError("This DB already exists")
 
             else:
-                self.__dbs[names[0]] = database(names[1])
+                self.__dbs[names[0]] = objects.database(names[1])
 
         elif check == str:
             if self.check(names):
-                raise DBError("This DB already exists")
+                raise exceptions.DBError("This DB already exists")
 
             else:
-                self.__dbs[names] = database(names)
+                self.__dbs[names] = objects.database(names)
         
         else:
-            raise DBError("Incorrect type of 'names'")
+            raise exceptions.DBError("Incorrect type of 'names'")
 
 
 class library:
     modules = {}
-    event_supports = {}
+    handlers = {
+        'void': [], # [handler1, handler2]
+        'priority': {}, # {'test', 'hello', 'world'}: [handler1, handler2, ...]
+        'events': {} # event.abstract_event: [handler1, handler2]
+    }
 
-    error_handlers = []
-    package_handlers = []
-    hidden_modules = []
+    def __init__(self, tools):
+        self.tools = tools
+        self.list = []
+        self.void_react = False
+        self.commands = []
 
-    needattr = {'name', 'version', 'description'}
 
+    def getPriority(self, command):
+        return self.handlers['priority'][command]
 
-    def __init__(self, v, group_id, api, http):
-        self.supp_v = v
-        self.tools = tools(group_id, api, http)
-
+    def getVoid(self):
+        return self.handlers['void']
+            
 
     def upload(self, isReload = False, loop = asyncio.get_event_loop()):
         self.modules = {}
+
         if 'library' in os.listdir(os.getcwd()):
-            self.tools.system_message(self.tools.getValue("LIBRARY_UPLOADER_GET"), module = "library.uploader")
+            self.tools.system_message(str(self.tools.values.LIBRARY_GET), module = "library.uploader")
             
             listdir = os.listdir(os.getcwd() + '\\library\\')
             if "__pycache__" in listdir: listdir.remove("__pycache__")
             if len(listdir) == 0:
                 raise exceptions.LibraryError(
-                    self.__library.tools.getValue("SESSION_LIBRARY_ERROR"))
-            
+                    self.tools.values.SESSION_LIBRARY_ERROR)
             init_async(
                     asyncio.wait(
                         [
-                            loop.create_task(self.moduleload(module, isReload)) for module in listdir
+                            loop.create_task(self.upload_handler(module)) for module in listdir
                         ]
                     ), loop = loop
                 )
             self.tools.system_message(
                 "Supporting event types: {event_types}".format(
-                    event_types = "\n".join(["", *["\t\t" + str(i) for i in self.event_supports.keys()], ""])
+                    event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['events'].keys()], ""])
                 ), module = "library.uploader", newline = True)
-        
-    async def moduleload(self, module_name, isReload):
-        module = importlib.import_module("library." + module_name[:-3] if module_name.endswith('.py') else module_name + 'main')
-        
-        if isReload:
-            module = importlib.reload(module)
-            
-        if module_name[-3:] == '.py': module_name = module_name[:-3]
+    
+
+    async def upload_handler(self, module_name):
+        module_name = "library." + (module_name[:-3] if module_name.endswith('.py') else module_name + '.main')
+        module = importlib.import_module(module_name)
+
         if hasattr(module, 'Main'):
             moduleObj = module.Main()
-            if hasattr(moduleObj, "start"):
-                await moduleObj.start(self.tools)
-                
-            if not(issubclass(type(moduleObj), objects.libraryModule) or self.needattr & set(dir(moduleObj)) == self.needattr):
-                return self.tools.system_message(self.tools.getValue("MODULE_FAILED_BROKEN").value.format(
+            moduleObj.module_name = module_name
+                    
+            if not issubclass(type(moduleObj), objects.libraryModule):
+                return self.tools.system_message(self.tools.values.MODULE_FAILED_SUBCLASS.value.format(
                     module = module_name), module = "library.uploader")
 
-
         else:
-            return self.tools.system_message(self.tools.getValue("MODULE_FAILED_BROKEN").value.format(
+            return self.tools.system_message(self.tools.values.MODULE_FAILED_BROKEN.value.format(
                 module = module_name), module = "library.uploader")
-        if not isReload:
-            if hasattr(moduleObj, 'error_handler'): self.error_handlers.append(module_name)
-            if hasattr(moduleObj, 'package_handler'):
-                if hasattr(moduleObj, 'packagetype') and len(moduleObj.packagetype) > 0:
-                    for package in moduleObj.packagetype:
-                        if package not in self.event_supports: self.event_supports[package] = list()
-                        self.event_supports[package].append(module_name)
+                
+        for coro_name in set(dir(moduleObj)) - set(dir(objects.libraryModule)):
+            coro = getattr(moduleObj, coro_name)
 
-                    self.package_handlers.append(module_name)
+            if coro_name not in ['start', 'priority', 'void', 'event'] and callable(coro):
+                try:
+                    await coro(self.tools, package_test)
 
-                else:
-                    return self.tools.system_message(self.tools.getValue("MODULE_FAILED_PACKAGETYPE").value.format(
-                        module = module_name), module = "library.uploader")
+                except:
+                    pass
 
-        if module_name in [*self.error_handlers, *self.package_handlers]:
-            self.modules[module_name] = moduleObj
-            return self.tools.system_message(self.tools.getValue("MODULE_INIT").value.format(
+        message = self.tools.values.MODULE_INIT.value.format(
+            module = module_name)
+
+        if len(moduleObj.commands) == 0 and len(moduleObj.event_handlers.keys()) == 0 and not moduleObj.void_react:
+            return self.tools.system_message(self.tools.values.MODULE_FAILED_HANDLERS.value.format(
                 module = module_name), module = "library.uploader")
+        
+        if len(moduleObj.commands) > 0:
+            message += self.tools.values.MODULE_INIT_PRIORITY.value.format(count = len(moduleObj.commands))
 
-        else:
-            return self.tools.system_message(self.tools.getValue("MODULE_FAILED_HANDLERS").value.format(
-                module = module_name), module = "library.uploader")
+            for i in moduleObj.handler_dict.values():
+                for j in i['commands']:
+                    if j not in self.handlers['priority']:
+                        self.handlers['priority'][j] = []
+
+                    self.handlers['priority'][j].append(i['handler'])
+
+        if len(moduleObj.event_handlers.keys()) > 0:
+            for event in moduleObj.event_handlers.keys():
+                message += self.tools.values.MODULE_INIT_EVENTS.value.format(event = str(event))
+                if not event in self.handlers['events']:
+                    self.handlers['events'][event] = []
+
+                self.handlers['events'][event].extend(moduleObj.event_handlers[event])
+        
+
+        if moduleObj.void_react:
+            self.handlers['void'].append(moduleObj.void_react)
+            self.void_react = True
+            message += self.tools.values.MODULE_INIT_VOID.value
+
+        self.modules[module_name] = moduleObj
+        self.list = module_name
+        return self.tools.system_message(write = message, module = "library.uploader")
 
 
-    def getCompactible(self, packagetype):
-        if packagetype in self.event_supports:
-            return self.event_supports[packagetype]
-        else:
-            return []
-
-
-class tools:
+class tools(objects.tools):
     __module = "system_message"
-    log = _assets()("log.txt", "a+", encoding="utf-8")
     __db = databases(("system", "system.db"))
 
-    def __init__(self, number, api, http):
-        self.group_id = number
+    def __init__(self, group_id, api, http, log):
+        self.values = global_expressions()
+        self.group_id = group_id
         self.api = api
+        self.assets = assets
         self.http = http
+        self.log = log
+        self.waiting_replies = {}
+        
         init_async(self.__setShort())
 
         self.group_mention = f'[club{self.group_id}|@{self.group_address}]'
         self.mentions = [self.group_mention]
-        self.mentions_name_cases = []
+
         self.get = self.__db.get
+        threading.current_thread()
 
 
+    def getCurrentThread(self):
+        return threading.current_thread()
 
-        for print_test in self.getValue("LOGGER_START").value:
-            print(print_test, 
-                file = self.log
-                )
-                
-        self.log.flush()
 
-        self.name_cases = [
-            'nom', 'gen', 
-            'dat', 'acc', 
-            'ins', 'abl'
-            ]
-        self.mentions_self = {
-            'nom': 'я', 
-            'gen': ['меня', 'себя'],
-            'dat': ['мне', 'себе'],
-            'acc': ['меня', 'себя'],
-            'ins': ['мной', 'собой'],
-            'abl': ['мне','себе'],
-        }
-        self.mentions_unknown = {
-            'all': 'всех',
-            'him': 'его',
-            'her': 'её',
-            'it': 'это',
-            'they': 'их',
-            'them': 'их',
-            'us': 'нас',
-            'everyone': ['@everyone', '@all', '@все']
-        }
-
-    
     async def __setShort(self):
         res = await self.api.groups.getById(group_id=self.group_id)
         self.group_address = res[0].screen_name
-        return 1
+        return
+    
+
+    async def wait_reply(self, package):
+        wait = objects.WaitReply(package)
+        self.waiting_replies[wait] = False
+
+        while True:
+            if self.waiting_replies[wait]: 
+                return self.waiting_replies.pop(wait)
+            
+            await asyncio.sleep(0)
 
 
-    def system_message(self, *args, textToPrint = None, module = None, newline = False):
+    def system_message(self, *args, write = None, module = None, newline = False):
         if not module: module = self.__module
-        if not textToPrint: textToPrint = " ".join([str(i) for i in list(args)])
+        if not write: write = " ".join([str(i) for i in list(args)])
         
-        response = f'@{self.group_address}.{module}: {textToPrint}'
+        response = f'@{self.group_address}.{module}: {write}'
 
         if self.log.closed:
             self.log = assets("log.txt", "a+", encoding="utf-8")
@@ -512,62 +409,10 @@ class tools:
 
         self.log.flush()
 
-
-    def random_id(self):
-        return random.randint(0, 99999999)
-
-
-    def ischecktype(self, checklist, checktype):
-        for i in checklist:
-            if isinstance(checktype, list) and type(i) in checktype:
-                return True
-                
-            elif isinstance(checktype, type) and isinstance(i, checktype): 
-                return True
-            
-        return False
-
-
-    def getDate(self, time = datetime.now()):
-        return f'{"%02d" % time.day}.{"%02d" % time.month}.{time.year}'
     
-    
-    def getTime(self, time = datetime.now()):
-        return f'{"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}'
-
-
-    def getDateTime(self, time = datetime.now()):
-        return self.getDate(time) + ' ' + self.getTime(time)
-
-
     def makepages(self, obj:list, page_lenght: int = 5, listitem: bool = False):
-        listitem_symb = self.getValue("LISTITEM") if listitem else str()
+        listitem_symb = self.values.LISTITEM if listitem else str()
         return Pages(obj, page_lenght, listitem_symb)
-
-
-    def setValue(self, nameOfObject: str, newValue, exp_type = "package_expr"):
-        setExpression(nameOfObject, newValue, exp_type)
-        self.update_list(nameOfObject)
-
-
-    def getValue(self, nameOfObject: str):
-        try:
-            return getattr(expressions, nameOfObject)
-            
-        except AttributeError as e:
-            return "AttributeError"
-
-
-    def update_list(self, nameOfObject = ""):
-        if hasattr(self, "expression_list"):
-            if expressions.list != self.expression_list:
-                self.expression_list = expressions.list
-                if nameOfObject != "":
-                    expressions.parse(nameOfObject)
-        
-        else:
-            self.expression_list = expressions.list
-
 
 
     def add(self, db_name):
@@ -597,7 +442,7 @@ class tools:
                 return f'[id{page_id}|{first_name}]'
             
             elif page_id == self.group_id:
-                return self.selfmention[name_case]
+                return self.mentions_self[name_case]
             
             else:
                 request = await self.api.groups.getById(
@@ -647,64 +492,6 @@ class tools:
 
     async def isMember(self, from_id: int, peer_id: int):
         return from_id in await self.getMembers(peer_id)
-
-
-    def parse_mention(self, mention):
-        page_id, call = mention[0: mention.find('|')], mention[mention.find('|') + 1:]
-
-        page_id = page_id.replace('id', '')
-        page_id = page_id.replace('club', '-')
-        page_id = page_id.replace('public', '-')
-            
-        return objects.mention(int(page_id), call)
-
-
-    def parse_link(self, link):
-        response = link
-
-        response.replace('https://', '')
-        response.replace('http://', '')
-        
-        return response
-
-
-class api:
-    __slots__ = ('http', '_method', '_string')
-
-    def __init__(self, http, method, string = None):
-        self.http = http
-        self._method = method    
-        self._string = string
-
-
-    def __getattr__(self, method):
-        if '_' in method:
-            m = method.split('_')
-            method = m[0] + ''.join(i.title() for i in m[1:])
-
-        self._string = self._string + "." if self._string else ""
-
-        return api(
-            self.http, self._method,
-            (self._string if self._method else '') + method
-        )
-
-    async def __call__(self, **kwargs):
-        for k, v in six.iteritems(kwargs):
-            if isinstance(v, (list, tuple)):
-                kwargs[k] = ','.join(str(x) for x in v)
-
-        result = await self._method(self._string, kwargs)
-        if isinstance(result, list):
-            return [
-                objects.Object(**i) for i in result
-            ]
-        
-        elif isinstance(result, dict):
-            return objects.Object(**result)
-
-        else:
-            return result
 
 
 def init_async(coro: asyncio.coroutine, loop = asyncio.get_event_loop()):

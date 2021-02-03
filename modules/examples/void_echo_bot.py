@@ -1,18 +1,18 @@
-from testcanarybot.objects import libraryModule # if it supports for testcanarybot 0.7 and newer
-from testcanarybot.events import events
+from testcanarybot import objects
 from testcanarybot.tools import uploader, assets
 import io
 
-class Main(libraryModule):
-    async def start(self, tools): 
-        self.name = """echo bot"""
-        self.packagetype = [
-            events.message_new
-        ]
+class Main(objects.libraryModule):
+    """
+    корутина "Войд"
+    все не зарегистрированные с помощью register(commands) команды будут направляться сюда.
+    """
+
+    async def start(self, tools):
         self.upload = uploader(tools.api)
 
-
-    async def package_handler(self, tools, package):
+    @objects.void
+    async def echo(self, tools, package):
         if package.text != '':
             await tools.api.messages.send(
                 random_id = tools.random_id(),

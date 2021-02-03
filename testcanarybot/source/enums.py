@@ -3,6 +3,8 @@ from enum import Enum
 class events(Enum):
     message_new = 'message_new'
     message_allow = 'message_allow'
+    message_typing_state = 'message_typing_state'
+    message_reply = 'message_reply'
     message_deny = 'message_deny'
     message_event = 'message_event'
     
@@ -56,3 +58,16 @@ class events(Enum):
 
     like_add = 'like_add'
     like_remove = 'like_remove'
+
+class values(Enum):
+    empty = ''
+    log = 'log'
+    tumbler = 'tumbler'
+    workspace = 'workspace'
+
+    expr = 'expr'
+
+
+    hidden = '$$$'
+
+    

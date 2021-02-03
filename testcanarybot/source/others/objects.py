@@ -1,6 +1,5 @@
 from .enums import events as enums_events
 from .values import expression
-from .versions_list import current
 
 from datetime import datetime
 import aiohttp
@@ -45,10 +44,10 @@ class database:
 class data:
     def __init__(self, **entries):
         self.__dict__.update(entries)
-        self.raw = entries
 
         for i in self.__dict__.keys():
             setattr(self, i, self.__convert(getattr(self, i)))
+        self.raw = entries
             
 
     def __convert(self, attr):
@@ -68,8 +67,8 @@ class key(data):
     pass
 
 class package(data):
-    __any = "$any"
-    __str = "$str"
+    __item = "$item"
+    __items = "$items"
     __mention = "$mention"
     __mentions = "$mentions"
     __expr = "$expr"
@@ -103,8 +102,8 @@ class package(data):
     def check(self, command: list) -> typing.Union[bool, list]:
         """
         Following keys:
-        $any - any string
-        $str - string item
+        $item - any string
+        $items - any string
         $expr - expression item
         $exprs - list from this item to the end is a list of expression objects
         $mention - mention item
@@ -112,8 +111,8 @@ class package(data):
         """
         if len(self.items) == 0:
             return False
-
-        if command[-1] not in ['$mentions', '$exprs']:
+        
+        if command[-1] not in [self.__mentions, self.__exprs, self.__items]:
             if len(command) + 1 != len(self.items): 
                 return False
 
@@ -121,13 +120,13 @@ class package(data):
             if command[i] == self.items[i]:
                 continue
                 
-            elif command[i] == self.__any:
+            elif command[i] == self.__item:
                 if not isinstance(self.items[i], str):
                     return False
                 continue
 
-            elif command[i] == self.__str and ([str(i) for i in self.items[i:]] == self.items[i:-1]):
-                return True
+            elif command[i] == self.__items:
+                return self.items[i:-1]
 
             elif command[i] == self.__expr:
                 if not isinstance(self.items[i], (expression, str)):
@@ -137,12 +136,11 @@ class package(data):
             elif command[i] == self.__mention:
                 if not isinstance(self.items[i], mention):
                     return False
-                return True
+                continue
 
             elif command[i] == self.__exprs:
-                for j in self.items[i:-1]:
-                    if not isinstance(j, expression):
-                        return False
+                if not isinstance(j, expression):
+                    return False
                 return self.items[i:-1]
 
             elif command[i] == self.__mentions:
@@ -166,12 +164,10 @@ class package(data):
 def WaitReply(packagetest):
     return f"${packagetest.peer_id}_{packagetest.from_id}"
 
-    
 
 class libraryModule:
     codename = "testcanarybot_module"
     name = "testcanarybot sample module"
-    v = current
     description = "http://kensoi.github.io/testcanarybot/createmodule.html"
     packagetype = []
 
@@ -242,340 +238,7 @@ class tools:
     sampled tools object
     """
     class api:
-        """
-        Usage: await tools.api.{method name}(method args)
-        Example: await tools.api.messages.send(random_id = tools.random_id(), peer_id = 1, message = "Hello World!")
-        """
-
-        # class account:
-        #     class ban: 
-        #         pass
-
-        #     class changePassword: 
-        #         pass
-
-        #     class getActiveOffers: 
-        #         pass
-
-        #     class getAppPermissions: 
-        #         pass
-
-        #     class getBanned: 
-        #         pass
-
-        #     class getCounters: 
-        #         pass
-
-        #     class getInfo: 
-        #         pass
-
-        #     class getProfileInfo: 
-        #         pass
-
-        #     class getPushSettings: 
-        #         pass
-
-        #     class registerDevice: 
-        #         pass
-
-        #     class saveProfileInfo: 
-        #         pass
-
-        #     class setInfo: 
-        #         pass
-
-        #     class setNameInMenu: 
-        #         pass
-
-        #     class setOffline: 
-        #         pass
-
-        #     class setOnline: 
-        #         pass
-
-        #     class setPushSettings: 
-        #         pass
-
-        #     class setSilenceMode: 
-        #         pass
-
-        #     class unban: 
-        #         pass
-
-        #     class unregisterDevice:
-        #         pass
-
-        # class ads:
-        #     class addOfficeUsers: 
-        #         pass
-        #     class checkLink: 
-        #         pass
-        #     class createAds: 
-        #         pass
-        #     class createCampaigns: 
-        #         pass
-        #     class createClients: 
-        #         pass
-        #     class createLookalikeRequest: 
-        #         pass
-        #     class createTargetGroup: 
-        #         pass
-        #     class createTargetPixel: 
-        #         pass
-        #     class deleteAds: 
-        #         pass
-        #     class deleteCampaigns: 
-        #         pass
-        #     class deleteClients: 
-        #         pass
-        #     class deleteTargetGroup: 
-        #         pass
-        #     class deleteTargetPixel: 
-        #         pass
-        #     class getAccounts: 
-        #         pass
-        #     class getAds: 
-        #         pass
-        #     class getAdsLayout: 
-        #         pass
-        #     class getAdsTargeting: 
-        #         pass
-        #     class getBudget: 
-        #         pass
-        #     class getCampaigns: 
-        #         pass
-        #     class getCategories: 
-        #         pass
-        #     class getClients: 
-        #         pass
-        #     class getDemographics: 
-        #         pass
-        #     class getFloodStats: 
-        #         pass
-        #     class getLookalikeRequests: 
-        #         pass
-        #     class getMusicians: 
-        #         pass
-        #     class getMusiciansByIds: 
-        #         pass
-        #     class getOfficeUsers: 
-        #         pass
-        #     class getPostsReach: 
-        #         pass
-        #     class getRejectionReason: 
-        #         pass
-        #     class getStatistics: 
-        #         pass
-        #     class getSuggestions: 
-        #         pass
-        #     class getTargetGroups: 
-        #         pass
-        #     class getTargetPixels: 
-        #         pass
-        #     class getTargetingStats: 
-        #         pass
-        #     class getUploadURL: 
-        #         pass
-        #     class getVideoUploadURL: 
-        #         pass
-        #     class importTargetContacts: 
-        #         pass
-        #     class removeOfficeUsers: 
-        #         pass
-        #     class removeTargetContacts: 
-        #         pass
-        #     class saveLookalikeRequestResult: 
-        #         pass
-        #     class shareTargetGroup: 
-        #         pass
-        #     class updateAds: 
-        #         pass
-        #     class updateCampaigns: 
-        #         pass
-        #     class updateClients: 
-        #         pass
-        #     class updateOfficeUsers: 
-        #         pass
-        #     class updateTargetGroup: 
-        #         pass
-        #     class updateTargetPixel:
-        #         pass
-
-        # class appWidgets: 
-        #     class getAppImageUploadServer: 
-        #         pass
-        #     class getAppImages: 
-        #         pass
-        #     class getGroupImageUploadServer: 
-        #         pass
-        #     class getGroupImages: 
-        #         pass
-        #     class getImagesById: 
-        #         pass
-        #     class saveAppImage: 
-        #         pass
-        #     class saveGroupImage: 
-        #         pass
-        #     class update: 
-        #         pass
-
-        # class apps: 
-        #     class deleteAppRequests: 
-        #         pass
-        #     class get: 
-        #         pass
-        #     class getCatalog: 
-        #         pass
-        #     class getFriendsList: 
-        #         pass
-        #     class getLeaderboard: 
-        #         pass
-        #     class getMiniAppPolicies: 
-        #         pass
-        #     class getScopes: 
-        #         pass
-        #     class getScore: 
-        #         pass
-        #     class promoHasActiveGift: 
-        #         pass
-        #     class promoUseGift: 
-        #         pass
-        #     class sendRequest:
-        #         pass
-
-        # class board:
-        #     class addTopic: 
-        #         pass
-        #     class closeTopic: 
-        #         pass
-        #     class createComment: 
-        #         pass
-        #     class deleteComment: 
-        #         pass
-        #     class deleteTopic: 
-        #         pass
-        #     class editComment: 
-        #         pass
-        #     class editTopic: 
-        #         pass
-        #     class fixTopic: 
-        #         pass
-        #     class getComments: 
-        #         pass
-        #     class getTopics: 
-        #         pass
-        #     class openTopic: 
-        #         pass
-        #     class restoreComment: 
-        #         pass
-        #     class unfixTopic: 
-        #         pass
-
-        # class database: 
-        #     pass
-
-        # class docs: 
-        #     pass
-
-        # class fave: 
-        #     pass
-
-        # class friends: 
-        #     pass
-
-        # class gifts: 
-        #     pass
-
-        # class groups: 
-        #     pass
-        
-        # class leads: 
-        #     pass
-        
-        # class likes: 
-        #     pass
-        
-        # class market: 
-        #     pass
-        
-        # class messages: 
-        #     pass
-        
-        # class newsfeed: 
-        #     pass
-        
-        # class notes: 
-        #     pass
-        
-        # class notifications: 
-        #     pass
-        
-        # class pages: 
-        #     pass
-        
-        # class photos: 
-        #     pass
-        
-        # class polls: 
-        #     pass
-        
-        # class search: 
-        #     pass
-        
-        # class secure: 
-        #     pass
-        
-        # class stats: 
-        #     pass
-        
-        # class status: 
-        #     pass
-        
-        # class storage: 
-        #     pass
-        
-        # class users: 
-        #     pass
-        
-        # class utils: 
-        #     pass
-        
-        # class video: 
-        #     pass
-        
-        # class donut: 
-        #     pass
-        
-        # class podcasts: 
-        #     pass
-        
-        # class leadforms: 
-        #     pass
-        
-        # class prettycards: 
-        #     pass
-        
-        # class stories: 
-        #     pass
-        
-        # class appwidgets: 
-        #     pass
-        
-        # class streaming: 
-        #     pass
-        
-        # class orders: 
-        #     pass
-        
-        # class wall: 
-        #     pass
-
-        # class widgets:
-        #     pass
-
-    class values:
         pass
-    
     http = object()
 
     mentions = list()

@@ -4,10 +4,6 @@ from testcanarybot.tools import uploader, assets
 import os
 
 class Main(libraryModule):
-    description = """uploader example (kensoi.github.io/testcanarybot/tools/upload.html)"""
-    packagetype = [
-        events.message_new
-    ]
     
     async def start(self, tools): 
         self.upload = uploader(tools.api)
