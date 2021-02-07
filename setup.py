@@ -1,11 +1,12 @@
 import setuptools
+from testcanarybot.source.versions import current
 
 with open("docs/index.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name = "testcanarybot",
-    version = "0.09.100",
+    version = current,
     author = "andprokofieff",
     author_email = "prokofieff@internet.ru",
     description = "VK Bot Framework",

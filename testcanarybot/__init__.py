@@ -1,6 +1,6 @@
 from .source.application import app
 from .source.library import init_async
-from .source.versions_list import current
+from .source.versions import current
 
 __all__ = ['enums', 'exceptions', 'objects', 'tools']
 __version__ = current
