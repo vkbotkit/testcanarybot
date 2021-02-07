@@ -2,9 +2,8 @@ from . import exceptions
 from . import objects
 
 class databases:
-    def __init__(self, names: list):
-        self.upload(names)
-
+    def __init__(self):
+        self.__dbs = {}
 
     def check(self, name):
         response = [*self.__dbs.keys(), 

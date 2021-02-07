@@ -145,7 +145,7 @@ class library:
 
 class tools():
     __module = "system_message"
-    __db = databases(("system", "system.db"))
+    __db = databases()
     mentions = list()
     mentions_name_cases = []
 

@@ -9,12 +9,10 @@ raw = {
     'sorted': {
         'stable': {},
 
-        'unstable': {
-            0: {9: [100]} 
-        },
+        'unstable': {},
 
         'dev': {
-            0: {9: [101, 102, 103, 104, 105, 106]} 
+            0: {9: [100 + i for i in range(1, 8)]} 
         }
     },
     'root': {
