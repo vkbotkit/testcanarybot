@@ -12,7 +12,7 @@ from .others import objects
 from .others.enums import values
 from .others.enums import events
 from .others.api import api
-from .library import handler
+from .others.handler import handler
 from .library import init_async
 from .library import library
 from .library import tools

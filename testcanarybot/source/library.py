@@ -7,7 +7,6 @@ import threading
 import typing
 import random
 
-from .others.handler import handler
 from .others.databases import databases
 from .others import objects
 from .others import exceptions

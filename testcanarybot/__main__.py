@@ -67,11 +67,12 @@ def gen_str(test = None):
     if isinstance(test, int):
         num = test
 
-    for i in range(num):
+    while num != 0:
         result += random.choice([
                 *string.ascii_lowercase,
                 *string.digits]
         )
+        num -= 1
     return result
 
 # if args.create_manager:
