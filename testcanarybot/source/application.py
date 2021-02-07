@@ -199,7 +199,6 @@ class app:
 
         for i in self.__library.modules.values():
             if hasattr(i, "start"):
-                print(1)
                 self.__getThread().create_task(i.start)
                 
 
