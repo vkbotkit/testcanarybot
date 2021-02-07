@@ -1,5 +1,15 @@
-from .source.application import app
-from .source.library import init_async
+import os
+
+try:
+    if 'assets' not in os.listdir(os.getcwd()): os.mkdir(os.getcwd() + '\\assets\\')
+    if 'library' not in os.listdir(os.getcwd()): os.mkdir(os.getcwd() + '\\library\\')
+except:
+    pass
+
+if 'assets' in os.listdir(os.getcwd()):
+    from .source.application import app
+    from .source.library import init_async
+    
 from .source.versions import current
 
 __all__ = ['enums', 'exceptions', 'objects', 'tools']
