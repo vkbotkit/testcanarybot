@@ -2,6 +2,7 @@ from .enums import events as enums_events
 from .values import expression
 
 from datetime import datetime
+import abc
 import aiohttp
 import threading
 import asyncio
@@ -233,131 +234,136 @@ def void(coro: typing.Generator):
 
 
 
-class tools:
+class tools(abc.ABC):
     """
-    sampled tools object
+    tools typing object
     """
-    class api:
-        pass
-    http = object()
+    __error = "use system testcanarybot tools."
+    
 
-    mentions = list()
-    mentions_name_cases = []
+    class api(abc.ABC):
+        def __getattr__(self, method):
+            raise TypeError(self.__error)
 
-    group_id = 0
-    name_cases = [
-            'nom', 'gen', 
-            'dat', 'acc', 
-            'ins', 'abl'
-            ]
+    class http(abc.ABC):
+        def __getattr__(self, method):
+            raise TypeError(self.__error)
+        
+    @property
+    @abc.abstractmethod
+    def mentions(self):
+        raise TypeError(self.__error)
 
-    mentions_self = {
-        'nom': 'я', 
-        'gen': ['меня', 'себя'],
-        'dat': ['мне', 'себе'],
-        'acc': ['меня', 'себя'],
-        'ins': ['мной', 'собой'],
-        'abl': ['мне','себе'],
-    }
-    mentions_unknown = {
-        'all': 'всех',
-        'him': 'его',
-        'her': 'её',
-        'it': 'это',
-        'they': 'их',
-        'them': 'их',
-        'us': 'нас',
-        'everyone': ['@everyone', '@all', '@все']
-    }
+    @property
+    @abc.abstractmethod
+    def mentions_name_cases(self):
+        raise TypeError(self.__error)
+    
+    @property
+    @abc.abstractmethod
+    def group_id(self):
+        raise TypeError(self.__error)
+    
+    @property
+    @abc.abstractmethod
+    def name_cases(self):
+        raise TypeError(self.__error)
 
+    @property
+    @abc.abstractmethod
+    def mentions_self(self):
+        raise TypeError(self.__error)
+
+    @property
+    @abc.abstractmethod
+    def mentions_unknown(self):
+        raise TypeError(self.__error)
+
+    @abc.abstractmethod
     def get(self, db_name: str) -> database:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def system_message(self, *args, textToPrint = None, module = None, newline = False) -> None:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def random_id(self) -> int:
-        return random.randint(0, 99999999)
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def ischecktype(self, checklist, checktype) -> bool:
-        for i in checklist:
-            if isinstance(checktype, list) and type(i) in checktype:
-                return True
-                
-            elif isinstance(checktype, type) and isinstance(i, checktype): 
-                return True
-            
-        return False
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def getDate(self, time = None) -> str:
-        if not time: time = datetime.now()
-        return f'{"%02d" % time.day}.{"%02d" % time.month}.{time.year}'
-    
-    
+        raise TypeError(self.__error)
+
+
+    @abc.abstractmethod
     def getTime(self, time = None) -> str:
-        if not time: time = datetime.now()
-        return f'{"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}.{time.microsecond}'
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def getDateTime(self, time = None) -> str:
-        if not time: time = datetime.now()
-        return self.getDate(time) + ' ' + self.getTime(time)
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def makepages(self, obj:list, page_lenght: int = 5, listitem: bool = False):
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def add(self, db_name: str) -> None:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     async def getMention(self, page_id: int, name_case = "nom") -> str:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     async def getManagers(self, group_id = None) -> list:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     async def isManager(self, from_id: int, group_id = None) -> bool:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     async def getChatManagers(self, peer_id: int) -> list:
-        pass
-        
+        raise TypeError(self.__error)
 
+
+    @abc.abstractmethod
     def isChatManager(self, from_id, peer_id: int) -> bool:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     async def getMembers(self, peer_id: int) -> list:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     async def isMember(self, from_id: int, peer_id: int) -> bool:
-        pass
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def parse_mention(self, ment) -> mention:
-        page_id, call = ment[0: ment.find('|')], ment[ment.find('|') + 1:]
-
-        page_id = page_id.replace('id', '')
-        page_id = page_id.replace('club', '-')
-        page_id = page_id.replace('public', '-')
-            
-        return mention(int(page_id), call)
+        raise TypeError(self.__error)
 
 
+    @abc.abstractmethod
     def parse_link(self, link) -> str:
-        response = link
-
-        response.replace('https://', '')
-        response.replace('http://', '')
-        
-        return response
+        raise TypeError(self.__error)

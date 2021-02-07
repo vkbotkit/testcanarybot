@@ -35,7 +35,7 @@ class global_expressions:
         self.__values["DEBUG_MESSAGES"] = expr(values.tumbler, False)
         self.__values["MENTIONS"] = expr(values.tumbler, False)
 
-        self.__values["LOGGER_START"] = expr(values.log, [f'TESTCANARYBOT 1.0', 'KENSOI.GITHUB.IO 2020', ''])
+        self.__values["LOGGER_START"] = expr(values.log, ['testcanarybot started', 'about: http://kensoi.github.io/testcanarybot'])
         self.__values["LOGGER_CLOSE"] = expr(values.log, ["","$$$",""])
 
         self.__values["SESSION_START"] = expr(values.log, "started")

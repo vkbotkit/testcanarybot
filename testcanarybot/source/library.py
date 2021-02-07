@@ -1,10 +1,13 @@
 import asyncio
+from datetime import datetime
 import importlib
 import json
 import os
 import threading
 import typing
+import random
 
+from .others.databases import databases
 from .others import objects
 from .others import exceptions
 from .others.values import global_expressions, Pages
@@ -28,217 +31,8 @@ class _assets:
         pass
 
 assets = _assets()
-tools_test = objects.tools()
 package_test = objects.package(**{'type': events.message_new, 'items': ['test']})
 
-class handler(threading.Thread):
-    processing = False
-
-    def __init__(self, library, handler_id):
-        threading.Thread.__init__(self)
-        self.daemon = True
-        self.handler_id = handler_id
-
-        self.library = library
-        self.packages = []
-
-
-    def run(self):
-        self.setName(f"handler_{self.handler_id}")
-        self.library.tools.system_message(f"{self.getName()} is started", module = "package_handler")
-
-        self.all_messages = self.library.tools.values.ALL_MESSAGES.value
-        self.add_mentions = self.library.tools.values.MENTIONS.value
-        self.mentions = self.library.tools.mentions
-
-        self.thread_loop = asyncio.new_event_loop()
-        self.thread_loop.set_exception_handler(self.exception_handler)
-        asyncio.set_event_loop(self.thread_loop)
-        self.library.tools.http.create_session(self)
-
-        self.thread_loop.run_forever()
-
-    def exception_handler(self, loop, context):
-        try:
-            raise context['exception']
-
-        except exceptions.CallVoid as e:
-            for i in self.library.handlers['void']:
-                module = self.library.modules[i.__module__]
-
-                peer_id, from_id = str(e)[1:].split("_")
-                package = objects.package(**{
-                    'peer_id': int(peer_id), 
-                    'from_id': int(from_id), 
-                    'items': [self.library.tools.values.NOREPLY]
-                    })
-                task = self.thread_loop.create_task(i(module, self.library.tools, package))
-
-        except Exception as e:
-            print(type(context['exception']).__name__)
-            print(e)
-
-    def create_task(self, package):
-        if isinstance(package, objects.package):
-            if package.type == events.message_new or package.type in self.library.handlers['events']:
-                asyncio.run_coroutine_threadsafe(self.resolver(package), self.thread_loop)
-
-        else:
-            asyncio.run_coroutine_threadsafe(self.__start_module(package), self.thread_loop)
-
-    async def __start_module(self, package):
-        self.thread_loop.create_task(package(self.library.tools))
-
-    async def resolver(self, package):
-        if package.type == events.message_new:
-            await asyncio.sleep(0.00001)
-
-            if hasattr(package, 'action'): 
-                package.params.action = True
-
-            elif hasattr(package, 'payload'): 
-                package.params.payload = True
-                package.payload = json.loads(package.params)
-            
-            elif package.text != '':
-                message = package.text.split()
-                package.params.command = False
-                if len(message) > 1 and ((message[0].lower() in self.mentions) or (message[0][:-1].lower() in self.mentions)):
-                    package.params.gment = message.pop(0)
-                    package.params.command = True
-
-                package = await self.findMentions(package, message)
-
-            elif len(package.attachments) > 0: 
-                package.params.attachments = True
-
-            await self.handler(package)
-            
-        else:
-            await self.handler(package)
-
-
-    async def findMentions(self, package: objects.package, message: str) -> objects.package:
-        for count in range(len(message)):
-            if message[count][0] == '[' and message[count].count('|') == 1:
-                if message[count].count(']') > 0:
-                    mention = self.library.tools.parse_mention(
-                            message[count][message[count].rfind('[') + 1:message[count].find(']')]
-                            )
-                    package.params.mentions.append(mention)
-                    package.items.append(
-                        mention
-                        )
-                else:
-                    for j in range(count, len(message)):
-                        if message[j].count(']') > 0:
-                            last_string, message[j] = message[j][0:message[j].find(']')], message[j][message[j].find(']') + 1:]
-                            mention = self.library.tools.parse_mention(" ".join([*message[count:j], last_string])[1:])
-                            package.items.append(mention)
-                            package.params.mentions.append(mention)
-                            count = j
-                            break
-            else:
-                package.items.append(message[count])
-            count += 1
-        return package
-            
-
-    async def handler(self, package: objects.package):
-        package.items.append(self.library.tools.values.ENDLINE)
-        try:
-            if package.type == events.message_new:
-                test = objects.WaitReply(package)
-                if test in self.library.tools.waiting_replies:
-                    self.library.tools.waiting_replies[test] = package
-
-                elif package.params.command and len(package.items) > 0 and package.items[0] in self.library.handlers['priority'].keys():
-                    for i in self.library.handlers['priority'][package.items[0]]:
-                        module = self.library.modules[i.__module__]
-                        
-                        self.thread_loop.create_task(i(module, self.library.tools, package))
-                        await asyncio.sleep(0.00001)
-
-                elif self.library.void_react:
-                    if self.all_messages or package.params.command:
-                        for i in self.library.handlers['void']:
-                            module = self.library.modules[i.__module__]
-
-                            self.thread_loop.create_task(i(module, self.library.tools, package))
-                            await asyncio.sleep(0.00001)
-
-            elif package.type in self.library.handlers['events'].keys():
-                for i in self.library.handlers['events'][package.type]:
-                    module = self.library.modules[i.__module__]
-                    self.thread_loop.create_task(i(module, self.library.tools, package))
-
-                    await asyncio.sleep(0.00001)
-        except Exception as e:
-            self.library.tools.system_message(module = "exception_handler", write = e)
-
-
-class databases:
-    def __init__(self, names: list):
-        self.upload(names)
-
-
-    def check(self, name):
-        response = [*self.__dbs.keys(), 
-                *[i.directory for i in self.__dbs.values()]]
-
-        return name in response 
-
-
-    def upload(self, names):
-        self.__dbs = {}
-        self.add(names)
-
-
-    def get(self, name):
-        check = type(name)
-        if check == tuple:
-            if not self.check(name[0]):
-                raise exceptions.DBError("This DB does not exist")
-
-            else:
-                return self.__dbs[name[1]]
-
-        elif check == str:
-            if not self.check(name):
-                raise exceptions.DBError("This DB does not exist")
-
-            else:
-                return self.__dbs[name]
-
-
-
-    def add(self, names): 
-        check = type(names)
-
-        if check == list:
-            for name in names:
-                if self.check(name[0]):
-                    raise exceptions.DBError("This DB already exists")
-
-                else:
-                    self.__dbs[name[0]] = objects.database(name[1])
-
-        elif check == tuple:
-            if self.check(names[0]):
-                raise exceptions.DBError("This DB already exists")
-
-            else:
-                self.__dbs[names[0]] = objects.database(names[1])
-
-        elif check == str:
-            if self.check(names):
-                raise exceptions.DBError("This DB already exists")
-
-            else:
-                self.__dbs[names] = objects.database(names)
-        
-        else:
-            raise exceptions.DBError("Incorrect type of 'names'")
 
 
 class library:
@@ -349,9 +143,37 @@ class library:
         return self.tools.system_message(write = message, module = "library.uploader")
 
 
-class tools(objects.tools):
+class tools():
     __module = "system_message"
-    __db = databases(("system", "system.db"))
+    __db = databases()
+    mentions = list()
+    mentions_name_cases = []
+
+    group_id = 0
+    name_cases = [
+            'nom', 'gen', 
+            'dat', 'acc', 
+            'ins', 'abl'
+            ]
+
+    mentions_self = {
+        'nom': 'я', 
+        'gen': ['меня', 'себя'],
+        'dat': ['мне', 'себе'],
+        'acc': ['меня', 'себя'],
+        'ins': ['мной', 'собой'],
+        'abl': ['мне','себе'],
+    }
+    mentions_unknown = {
+        'all': 'всех',
+        'him': 'его',
+        'her': 'её',
+        'it': 'это',
+        'they': 'их',
+        'them': 'их',
+        'us': 'нас',
+        'everyone': ['@everyone', '@all', '@все']
+    }
 
     def __init__(self, group_id, api, http, log):
         self.values = global_expressions()
@@ -370,9 +192,54 @@ class tools(objects.tools):
         self.get = self.__db.get
         threading.current_thread()
 
+    
+    def random_id(self) -> int:
+        return random.randint(0, 99999999)
 
-    def getCurrentThread(self):
-        return threading.current_thread()
+    
+    def ischecktype(self, checklist, checktype) -> bool:
+        for i in checklist:
+            if isinstance(checktype, list) and type(i) in checktype:
+                return True
+                
+            elif isinstance(checktype, type) and isinstance(i, checktype): 
+                return True
+            
+        return False
+    
+    
+    def parse_mention(self, ment) -> objects.mention:
+        page_id, call = ment[0: ment.find('|')], ment[ment.find('|') + 1:]
+
+        page_id = page_id.replace('id', '')
+        page_id = page_id.replace('club', '-')
+        page_id = page_id.replace('public', '-')
+            
+        return objects.mention(int(page_id), call)
+
+
+    def parse_link(self, link) -> str:
+        response = link
+
+        response.replace('https://', '')
+        response.replace('http://', '')
+        
+        return response
+
+
+    def getDate(self, time = None) -> str:
+        if not time: time = datetime.now()
+        return f'{"%02d" % time.day}.{"%02d" % time.month}.{time.year}'
+    
+    
+    def getTime(self, time = None) -> str:
+        if not time: time = datetime.now()
+        return f'{"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}.{time.microsecond}'
+
+
+    def getDateTime(self, time = None) -> str:
+        if not time: time = datetime.now()
+        return self.getDate(time) + ' ' + self.getTime(time)
 
 
     async def __setShort(self):
