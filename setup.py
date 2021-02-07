@@ -5,7 +5,7 @@ with open("docs/index.md", "r") as fh:
 
 setuptools.setup(
     name = "testcanarybot",
-    version = "0.0.999",
+    version = "0.09.100",
     author = "andprokofieff",
     author_email = "prokofieff@internet.ru",
     description = "VK Bot Framework",
