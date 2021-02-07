@@ -1,3 +1,3 @@
-# TESTCANARYBOT DEV
-version 00.09.107  
+# TESTCANARYBOT UNSTABLE
+version 00.09.108  
 kensoi.github.io/testcanarybot
