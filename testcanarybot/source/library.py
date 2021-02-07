@@ -1,9 +1,11 @@
 import asyncio
+from datetime import datetime
 import importlib
 import json
 import os
 import threading
 import typing
+import random
 
 from .others import objects
 from .others import exceptions
@@ -28,7 +30,6 @@ class _assets:
         pass
 
 assets = _assets()
-tools_test = objects.tools()
 package_test = objects.package(**{'type': events.message_new, 'items': ['test']})
 
 class handler(threading.Thread):
@@ -349,9 +350,37 @@ class library:
         return self.tools.system_message(write = message, module = "library.uploader")
 
 
-class tools(objects.tools):
+class tools():
     __module = "system_message"
     __db = databases(("system", "system.db"))
+    mentions = list()
+    mentions_name_cases = []
+
+    group_id = 0
+    name_cases = [
+            'nom', 'gen', 
+            'dat', 'acc', 
+            'ins', 'abl'
+            ]
+
+    mentions_self = {
+        'nom': 'я', 
+        'gen': ['меня', 'себя'],
+        'dat': ['мне', 'себе'],
+        'acc': ['меня', 'себя'],
+        'ins': ['мной', 'собой'],
+        'abl': ['мне','себе'],
+    }
+    mentions_unknown = {
+        'all': 'всех',
+        'him': 'его',
+        'her': 'её',
+        'it': 'это',
+        'they': 'их',
+        'them': 'их',
+        'us': 'нас',
+        'everyone': ['@everyone', '@all', '@все']
+    }
 
     def __init__(self, group_id, api, http, log):
         self.values = global_expressions()
@@ -370,9 +399,54 @@ class tools(objects.tools):
         self.get = self.__db.get
         threading.current_thread()
 
+    
+    def random_id(self) -> int:
+        return random.randint(0, 99999999)
 
-    def getCurrentThread(self):
-        return threading.current_thread()
+    
+    def ischecktype(self, checklist, checktype) -> bool:
+        for i in checklist:
+            if isinstance(checktype, list) and type(i) in checktype:
+                return True
+                
+            elif isinstance(checktype, type) and isinstance(i, checktype): 
+                return True
+            
+        return False
+    
+    
+    def parse_mention(self, ment) -> objects.mention:
+        page_id, call = ment[0: ment.find('|')], ment[ment.find('|') + 1:]
+
+        page_id = page_id.replace('id', '')
+        page_id = page_id.replace('club', '-')
+        page_id = page_id.replace('public', '-')
+            
+        return objects.mention(int(page_id), call)
+
+
+    def parse_link(self, link) -> str:
+        response = link
+
+        response.replace('https://', '')
+        response.replace('http://', '')
+        
+        return response
+
+
+    def getDate(self, time = None) -> str:
+        if not time: time = datetime.now()
+        return f'{"%02d" % time.day}.{"%02d" % time.month}.{time.year}'
+    
+    
+    def getTime(self, time = None) -> str:
+        if not time: time = datetime.now()
+        return f'{"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}.{time.microsecond}'
+
+
+    def getDateTime(self, time = None) -> str:
+        if not time: time = datetime.now()
+        return self.getDate(time) + ' ' + self.getTime(time)
 
 
     async def __setShort(self):

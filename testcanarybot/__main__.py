@@ -6,7 +6,8 @@ import random
 from .source.manager import *
 
 parser = argparse.ArgumentParser(description='manager for testcanarybot')
-parser.add_argument("-c", dest="create_module", action = 'store_true', help='create a testcanarybot 1.0 module')
+parser.add_argument("-c", dest="create_module", action = 'store_true', help='create module testcanarybot')
+# parser.add_argument("-cm", dest="create_manager", action = 'store_true', help='create a bot folders')
 
 parser.add_argument("--name", type = str, default = '', help='module name on folder')
 parser.add_argument("-m", dest = "manually", action = 'store_true', help='write details manually')
@@ -73,6 +74,11 @@ def gen_str(test = None):
         )
     return result
 
+# if args.create_manager:
+#     os.mkdir(os.getcwd() + "\\assets\\")
+#     os.mkdir(os.getcwd() + "\\library\\")
+#     os.mkdir(os.getcwd() + "\\data\\")
+#     with open('data\\startup.py') as manifest:
 
 if args.create_module:
     render = module_cover
