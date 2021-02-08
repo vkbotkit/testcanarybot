@@ -4,7 +4,7 @@ import json
 
 from . import objects
 from . import exceptions
-from .enums import events
+from .enums import events, action
 
 
 class handler(threading.Thread):
@@ -67,10 +67,12 @@ class handler(threading.Thread):
 
     async def resolver(self, package):
         if package.type == events.message_new:
-            await asyncio.sleep(0.00001)
+            package.params.action = False
+            package.params.payload = False
 
             if hasattr(package, 'action'): 
                 package.params.action = True
+                package.action.type = getattr(action, package.action.type)
 
             elif hasattr(package, 'payload'): 
                 package.params.payload = True
@@ -125,15 +127,21 @@ class handler(threading.Thread):
         try:
             if package.type == events.message_new:
                 test = objects.WaitReply(package)
+
                 if test in self.library.tools.waiting_replies:
                     self.library.tools.waiting_replies[test] = package
+
+                elif package.params.action:
+                    for i in self.library.action_handlers[package.action.type]:
+                        module = self.library.modules[i.__module__]
+                        
+                        self.thread_loop.create_task(i(module, self.library.tools, package))
 
                 elif package.params.command and len(package.items) > 0 and package.items[0] in self.library.handlers['priority'].keys():
                     for i in self.library.handlers['priority'][package.items[0]]:
                         module = self.library.modules[i.__module__]
                         
                         self.thread_loop.create_task(i(module, self.library.tools, package))
-                        await asyncio.sleep(0.00001)
 
                 elif self.library.void_react:
                     if self.all_messages or package.params.command:
@@ -141,13 +149,11 @@ class handler(threading.Thread):
                             module = self.library.modules[i.__module__]
 
                             self.thread_loop.create_task(i(module, self.library.tools, package))
-                            await asyncio.sleep(0.00001)
 
             elif package.type in self.library.handlers['events'].keys():
                 for i in self.library.handlers['events'][package.type]:
                     module = self.library.modules[i.__module__]
                     self.thread_loop.create_task(i(module, self.library.tools, package))
 
-                    await asyncio.sleep(0.00001)
         except Exception as e:
             self.library.tools.system_message(module = "exception_handler", write = e)

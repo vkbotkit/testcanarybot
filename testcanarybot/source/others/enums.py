@@ -59,6 +59,19 @@ class events(Enum):
     like_add = 'like_add'
     like_remove = 'like_remove'
 
+
+class action(Enum):
+    chat_photo_update = "chat_photo_update"
+    chat_photo_remove = "chat_photo_remove"
+    chat_create = "chat_create"
+    chat_title_update = "chat_title_update"
+    chat_invite_user = "chat_invite_user"
+    chat_kick_user = "chat_kick_user"
+    chat_pin_message = "chat_pin_message"
+    chat_unpin_message = "chat_unpin_message"
+    chat_invite_user_by_link = "chat_invite_user_by_link"
+
+
 class values(Enum):
     empty = ''
     log = 'log'

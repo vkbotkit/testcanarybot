@@ -40,7 +40,8 @@ class library:
     handlers = {
         'void': [], # [handler1, handler2]
         'priority': {}, # {'test', 'hello', 'world'}: [handler1, handler2, ...]
-        'events': {} # event.abstract_event: [handler1, handler2]
+        'events': {}, # event.abstract_event: [handler1, handler2]
+        'action': {}
     }
 
     def __init__(self, tools):
@@ -132,6 +133,13 @@ class library:
 
                 self.handlers['events'][event].extend(moduleObj.event_handlers[event])
         
+        if len(moduleObj.action_handlers.keys()) > 0:
+            for action in moduleObj.action_handlers.keys():
+                message += self.tools.values.MODULE_INIT_ACTION.value.format(event = str(action))
+
+                if not action in self.handlers['action']:
+                    self.handlers['action'][action] = []
+                self.handlers['action'][action].extend(moduleObj.action_handlers[action])
 
         if moduleObj.void_react:
             self.handlers['void'].append(moduleObj.void_react)

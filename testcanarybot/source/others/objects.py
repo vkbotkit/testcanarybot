@@ -1,4 +1,4 @@
-from .enums import events as enums_events
+
 from .values import expression
 
 from datetime import datetime
@@ -170,7 +170,10 @@ class libraryModule:
     codename = "testcanarybot_module"
     name = "testcanarybot sample module"
     description = "http://kensoi.github.io/testcanarybot/createmodule.html"
-    packagetype = []
+
+    void_react = False
+    event_handlers = {}
+    action_handlers = {}
 
     def __init__(self):
         self.commands = []
@@ -178,60 +181,73 @@ class libraryModule:
         self.void_react = False
         self.event_handlers = {} # event.abstract_event: []
 
-    def registerCommand(self, ):
-        pass
+
+def ContextManager( # key, args: typing.Optional[list] = None
+        events: typing.Optional[list] = None, 
+        commands: typing.Optional[list] = None, 
+        action: typing.Optional[list] = None, 
+        # payload: typing.Optional[list] = None
+        ):
+
+    def decorator(coro: typing.Callable):
+        def registerCommand(self):
+            if events:
+                from .enums import events as enums_events
+                for i in events:
+                    if not isinstance(i, enums_events):
+                        raise TypeError("Incorrect type!")
+
+                    elif i not in self.event_handlers and i != enums_events.message_new:
+                        self.event_handlers[i] = []
+
+                    self.event_handlers[i].append(coro)
+                
+                return # coro(self, *args, **kwargs) 
+
+            if commands:
+                self.commands.extend(commands)
+                self.handler_dict[coro.__name__] = {'handler': coro, 'commands': commands}
+
+                return # coro(self, *args, **kwargs)
+
+            if action:
+                from .enums import action as enums_action
+                for i in action:
+                    if not isinstance(i, enums_action):
+                        raise TypeError("use testcanarybot.enums.action for this context!")
+                    
+                    if i not in self.action_handlers:
+                        self.action_handlers[i] = list()
+                        
+                    self.action_handlers[i].append(coro)
+
+                return # coro(self, *args, **kwargs)
+
+            if not (events or commands or action):
+                if self.void_react:
+                    raise NameError("Void handler is already created")
+
+                self.void_react = coro
+                return # coro(self, *args, **kwargs)
+        
+        return registerCommand
+    return decorator
 
 
 def event(events: list):
-    def decorator(coro: asyncio.coroutine):
-        def registerCommand(self, *args, **kwargs):
-            try:
-                if coro.__name__ in ['package_handler', 'priority', 'void', 'event']:
-                    raise TypeError("Incorrect coroutine registered as command handler!")
-
-                else:
-                    for i in events:
-                        if not isinstance(i, enums_events):
-                            raise TypeError("Incorrect type!")
-
-                        elif i not in self.event_handlers and i != enums_events.message_new:
-                            self.event_handlers[i] = []
-
-                        self.event_handlers[i].append(coro)
-                return # coro(self, *args, **kwargs)
-            except Exception as e:
-                print(e)
-            
-        return registerCommand
-    return decorator
+    return ContextManager(events = events)
 
 
-def priority(commands: list): 
-    def decorator(coro: typing.Generator):
-        def registerCommand(self: libraryModule, *args, **kwargs):
-            if coro.__name__ in ['package_handler', 'priority', 'void', 'event']:
-                raise TypeError("Incorrect coroutine registered as priority handler!")
-
-            else:
-                self.commands.extend(commands)
-
-                self.handler_dict[coro.__name__] = {'handler': coro, 'commands': commands}
-            return # coro(self, *args, **kwargs)
-        return registerCommand
-    return decorator
+def priority(commands: list):
+    return ContextManager(commands = commands)
 
 
-def void(coro: typing.Generator):
-    def registerCommand(self: libraryModule, *args, **kwargs):
-        if coro.__name__ in ['package_handler', 'priority', 'void', 'event']:
-            raise TypeError("Incorrect coroutine registered as void handler!")
+def void(coro: typing.Callable):
+    return ContextManager()(coro)
+    
 
-        else:
-            self.void_react = coro
-
-        return # coro(self, *args, **kwargs)
-    return registerCommand
-
+def action(action: list()):
+    return ContextManager(action = action)
 
 
 class tools(abc.ABC):
