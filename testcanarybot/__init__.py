@@ -1,25 +1,46 @@
 import os
+from .framework._application import (
+    _app as app, 
+    _create_folders as create_folders, 
+    _codenameToINT as codenameToINT, 
+    _correctCodeName as correctCodeName
+    )
 
-try:
-    if 'assets' not in os.listdir(os.getcwd()): os.mkdir(os.getcwd() + '\\assets\\')
-    if 'library' not in os.listdir(os.getcwd()): os.mkdir(os.getcwd() + '\\library\\')
-except:
-    pass
 
-if 'assets' in os.listdir(os.getcwd()):
-    from .source.application import app
-    from .source.library import init_async
-    
-from .source.versions import current
+version_raw = {
+    'sorted': {
+        'stable': {},
 
-__all__ = ['enums', 'exceptions', 'objects', 'tools']
-__version__ = current
+        'unstable': {
+            0: {9: [108]}},
 
-__title__ = 'TestCanaryBot, ' + current
+        'dev': {
+            0: {9: [110]} 
+        }
+    },
+    'root': {
+        #convertedINT: currentCodeName
+    }
+}
+
+
+for i in version_raw['sorted'].keys():
+    for j in version_raw['sorted'][i].keys():
+        for k in version_raw['sorted'][i][j].keys():
+            for l in version_raw['sorted'][i][j][k]:
+                version_raw['root'][codenameToINT(j,k,l)] = correctCodeName(j,k,l) + " " + i
+
+
+version = version_raw['root'][max(version_raw['root'].keys())]
+
+
+__version__ = version
+
+__title__ = 'TestCanaryBot, ' + version
 __author__ = 'Kensoi'
 __license__ = 'Apache v2'
-__copyright__ = 'Copyright 2020 by Kensoi'
+__copyright__ = 'Copyright 2021 by Kensoi'
 
-__doc__ = "kensoi/testcanarybot, " + current + """
+__doc__ = "kensoi/testcanarybot, " + version + """
 Documentation is available at kensoi.github.io/testcanarybot
 """

@@ -1,52 +1,51 @@
-# Install and try testcanarybot
+# Install and try testcanarybot 0.09.110
+## Requirements
 
-Чтобы использовать testcanarybot для создания бота, вам нужно установить фреймворк на ваш компьютер. Перед этим требуется установить Python 3.7 и удобную среду для разработки.
-
-Также требуется создать сообщество, через которое чатбот будет отвечать на сообщения. 
-
-По ссылке vk.com/{yourcommunity}?act=tokens создайте ключ доступа. 
-
-По ссылке vk.com/{yourcommunity}?act=longpoll_api настройте ваш Longpoll сервер, через который ваш бот будет получать и обрабатывать уведомления.
+- Python 3.7
+- VK Community
+- Access token (group auth)
+- **[OPTIONAL] Service token**
 
 ## Install
 
+You can install testcanarybot with PYPI or GitHub:
+
 #### Install with PIP
 
-Установив Python, откройте командную строку от имени администратора и введите следующую команду:
+```bash
+pip install [--upgrade] testcanarybot
+```
 
-`pip install testcanarybot`
+#### Install with GitHub
 
-Если вы уже используете testcanarybot, то можно обновить его такой командой
+**Stable** -- tested versions of testcanarybot
 
-`pip install --upgrade testcanarybot`
+```bash
+pip install [--upgrade] https://github.com/kensoi/testcanarybot/tarball/stable`
+```
 
-#### Install with Github
+**Unstable** -- raw versions of testcanarybot
 
-Если вы используете github, то установить или обновить testcanarybot можно следующими командами в зависимости от нужного канала обновлений:
+```bash
+pip install [--upgrade] https://github.com/kensoi/testcanarybot/tarball/unstable`
+```
 
-**Stable** -- релизы проверенных версий testcanarybot
+**Dev** -- development branch
 
-`pip install [--upgrade] https://github.com/kensoi/testcanarybot/tarball/stable`
-
-**Unstable** -- законченные версии testcanarybot в тестировании
-
-`pip install [--upgrade] https://github.com/kensoi/testcanarybot/tarball/unstable`
-
-**Dev** -- сырые версии testcanarybot с малым количеством изменений
-
-`pip install [--upgrade] https://github.com/kensoi/testcanarybot/tarball/dev`
+```bash
+pip install [--upgrade] https://github.com/kensoi/testcanarybot/tarball/dev`
+```
 
 ## Manual "How to create your first bot"
 
-После установки можно заняться изучением фреймворка.
-
-Для вашего проекта требуется выделить отдельный каталог, в котором будет содержаться библиотека, которую использует testcanarybot для работы вашего чатбота. Создайте файл (к примеру app.py) с любым названием в каталоге и впишите в него следующий код:
+Create an root file (for example app.py) and paste this code:
 
 ```python
 import testcanarybot
 
 bot = testcanarybot.app(
-    access_token = {your_token},
+    access_token = {your access token},
+    #service_token = {your service token| optional},
     groupId = {your community id},
     countThread = 1
     )
@@ -61,6 +60,8 @@ $ python -m testcanarybot -cf #creating directories for assets and library
 Creating directories...
 Creating readme files...
 Done! Look new files at created folders: ./assets/ and ./library/
+
+$ 
 ```
 
 And this. How you can see, bot didn't started and raised the Library Error, let's see what happened:
@@ -80,9 +81,13 @@ Traceback (most recent call last):
     self.tools.values.LIBRARY_ERROR)
 testcanarybot.exceptions.LibraryError: library directory is broken
 @bot.session: closed
+
+$
 ```
 
-Твоя библиотека повреждена, это говорит о неналичии никаких модулей внутри её директории. Для решения можно скачать примеры модулей с Github репозитория или воспользоваться этой командой:
+"Library directory is broken", it says that library is empty or all modules are corrupted.
+
+Try to create sample module:
 
 ```bash
 $ python -m testcanarybot -cm --name testHandler
@@ -108,13 +113,13 @@ class Main(objects.libraryModule):
 		await tools.api.message.send(random_id = tools.random_id, peer_id = package.peer_id, message = "handler is working!")
 ```
 
-Trying to run app.py again:
+Executing root file with created module:
 
 ```bash
-$python test.py
+$ python app.py
 @bot.session: started
 @bot.library.uploader: library directory is listed  
-@bot.library.uploader: library.testhandler is loaded
+@bot.library.uploader: library.testhandler is loaded # see, this is your module!
                  + registered 1 commands
 
 @bot.library.uploader: Supporting event types:      
@@ -126,4 +131,4 @@ $python test.py
 @bot.longpoll: polling is started 
 ```
 
-Success! Now try to send a message "@{your bot address} check" to your community.
+Success! Now open your.

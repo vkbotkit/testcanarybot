@@ -1,6 +1,8 @@
 import six
-import typing
-from . import objects
+
+
+from .. import objects
+
 
 class api:
     __slots__ = ('http', '_method', '_string')

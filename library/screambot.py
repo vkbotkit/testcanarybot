@@ -11,7 +11,7 @@ class Main(objects.libraryModule):
         Примечание: бот реагирует на любое сообщение, содержащее в себе "ору" вне учёта регистра
         """.format(
             listitem = tools.values.LISTITEM,
-            mention = tools.group_address
+            mention = tools.link
         )
         self.mention = "@all го орать"
         self.err = "Использование: \"{mention} спам/генерировать [целое число больше 0]\""
@@ -33,7 +33,7 @@ class Main(objects.libraryModule):
     async def scream(self, tools: objects.tools, package: objects.package):
         if tools.group_id in package.params.mentions:
             await tools.api.messages.send(
-                random_id = tools.random_id(),
+                random_id = tools.random_id,
                 peer_id = package.peer_id,
                 message = self.gen()
             )
@@ -43,7 +43,7 @@ class Main(objects.libraryModule):
     @objects.priority(commands = ['помощь']) # @testcanarybot помощь
     async def help(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(
-            random_id = tools.random_id(),
+            random_id = tools.random_id,
             peer_id = package.peer_id,
             message = self.description
         )
@@ -54,7 +54,7 @@ class Main(objects.libraryModule):
         
         if counter == 0:
             await tools.api.messages.send(
-                random_id = tools.random_id(),
+                random_id = tools.random_id,
                 peer_id = package.peer_id,
                 message = self.err
             )
@@ -63,7 +63,7 @@ class Main(objects.libraryModule):
             if package.items[0] == 'спам':
                 for count in range(counter):
                     await tools.api.messages.send(
-                        random_id = tools.random_id(),
+                        random_id = tools.random_id,
                         peer_id = package.peer_id,
                         message = self.mention
                     )
@@ -71,7 +71,7 @@ class Main(objects.libraryModule):
             else:
                 for count in range(counter):
                     await tools.api.messages.send(
-                        random_id = tools.random_id(),
+                        random_id = tools.random_id,
                         peer_id = package.peer_id,
                         message = self.gen()
                     )

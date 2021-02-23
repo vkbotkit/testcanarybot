@@ -37,12 +37,6 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# testcanarybot dev scripts & folders
-test.py
-assets/
-library/
-raw/
-
 
 # Unit test / coverage reports
 htmlcov/
