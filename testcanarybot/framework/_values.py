@@ -1,24 +1,60 @@
-from .enums import values
+from ..enums import values
+from ..objects import expression
+
 import typing
+import random
+import string
 
-
-
-class expression:
-    __slots__ = ('type', 'value')
-
-    def __str__(self):
-        return self.value
-
-    def __int__(self):
-        return self.value
-    
-    def __list__(self):
-        return self.value
 
 class expr(expression):
     def __init__(self, stype: values, value: typing.Optional[str] = None):
         self.type = stype
         self.value = value if value else None
+
+
+def parsename(name: str):
+    name = name.lower()
+    test, i = len(name), 0
+    while i< test:
+        if name[i] not in [
+                *string.ascii_lowercase,
+                *string.digits]:
+            name = name[:i] + name[i+1:]
+            test -= 1
+
+        else:
+            i+= 1
+
+    if name == '': name = 'module_' + gen_str()
+    
+    return name
+
+
+def bool_str(line: str):
+    if line.lower() in ['true', '1', 'правда', 'y', 'yes', 'да']:
+        return True
+
+    elif line.lower() in ['false', '1', 'ложь', 'n', 'no', 'нет']:
+        return False
+
+    else:
+        raise ValueError("Wrong string")
+
+
+def gen_str(test = None):
+    result, num = "", random.randint(5, 25)
+
+    if isinstance(test, int):
+        num = test
+
+    while num != 0:
+        result += random.choice([
+                *string.ascii_lowercase,
+                *string.digits]
+        )
+        num -= 1
+    return result
+
 
 class global_expressions:
     __types = {
@@ -35,7 +71,7 @@ class global_expressions:
         self.__values["DEBUG_MESSAGES"] = expr(values.tumbler, False)
         self.__values["MENTIONS"] = expr(values.tumbler, False)
 
-        self.__values["LOGGER_START"] = expr(values.log, ['testcanarybot started', 'about: http://kensoi.github.io/testcanarybot'])
+        self.__values["LOGGER_START"] = expr(values.log, """testcanarybot started here""")
         self.__values["LOGGER_CLOSE"] = expr(values.log, ["","$$$",""])
 
         self.__values["SESSION_START"] = expr(values.log, "started")
@@ -86,7 +122,7 @@ class global_expressions:
         return expr(values.empty, f":::{name}:UNKNOWN:::")
 
     @property
-    def all(self):
+    def keys(self):
         return self.__values.keys()
 
     
@@ -104,30 +140,6 @@ class global_expressions:
 
             else:
                 raise TypeError("Incorrect exp_type")
-
-
-class Pages:
-    def __init__(self, obj:list, page_lenght: int = 5, listitem: str = ""):
-        self.listitem = listitem
-        self.source = obj
-        self.lenght = len(obj)
-        self.page_lenght = page_lenght
-
-        self.pages_count, mod = divmod(self.lenght, self.page_lenght)
-        self.pages_count += 1 if mod > 0 else 0
-
-
-    def get_page(self, page: int):
-        if page > self.pages_count or page < 0: raise ValueError("Incorrect page number")
-
-        page_result = self.source[
-            page * self.page_lenght:min(self.lenght, (page + 1) * self.page_lenght)
-            ]
-        
-        if self.listitem != str():
-            page_result = [f"{self.listitem} {str(i)}" for i in page_result]
-
-        return "\n".join(page_result)
 
 
 class _ohr:

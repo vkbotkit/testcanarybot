@@ -1,129 +1,55 @@
 import argparse
 import os
-import string
-import random
+import typing
 
-from .source.manager import *
+from .framework._values import parsename
+from .framework._values import bool_str
+from .framework._values import gen_str
 
-parser = argparse.ArgumentParser(description='manager for testcanarybot')
-parser.add_argument("-c", dest="create_module", action = 'store_true', help='create module testcanarybot')
-# parser.add_argument("-cm", dest="create_manager", action = 'store_true', help='create a bot folders')
+module_clear = "from testcanarybot import objects\nfrom testcanarybot import exceptions #handling and raising errors\n\"\"\"\n(c) kensoi.github.io, since 2020\n\"\"\"\nclass Main(objects.libraryModule):\n\tasync def start(self, tools: objects.tools):\n\t\tpass # create task at start\n\n\t@objects.ContextManager(commands = [\"check\"])\n\tasync def ContextManagerHandler(self, tools: objects.tools, package: objects.package):\n\t\tawait tools.api.message.send(random_id = tools.random_id, peer_id = package.peer_id, message = \"handler is working!\")"
 
-parser.add_argument("--name", type = str, default = '', help='module name on folder')
-parser.add_argument("-m", dest = "manually", action = 'store_true', help='write details manually')
+parser = argparse.ArgumentParser(
+    description = """TestCanaryBot Pocket Manager. V2
+    + creating standart folders
+    + creating sampled plugin
+    """
+    )
+
+parser.add_argument("-cf", dest="create_folder", action = 'store_true', help='create important folders with instructions')
+parser.add_argument("-cm", dest="create_module", action = 'store_true', help='create module testcanarybot')
+parser.add_argument("--name", type = str, default = "", help='module name on folder')
 parser.add_argument("-f", dest = "folder", action = 'store_true', help='create module in a folder')
 
 args = parser.parse_args()
 
+if args.create_folder:
+    print("Creating directories...")
+    from .framework._application import _create_folders as create_folders
+    create_folders()
 
-for filename in ['\\assets\\', '\\library\\']:
-    try:
-        os.mkdir(os.getcwd() + filename)
-    except:
-        pass
+    print("Creating readme files...")
 
-
-def parsename(name: str):
-    name = name.lower()
-    test, i = len(name), 0
-    while i< test:
-        if name[i] not in [
-                *string.ascii_lowercase,
-                *string.digits]:
-            name = name[:i] + name[i+1:]
-            test -= 1
-
-        else:
-            i+= 1
-
-    if name == '': name = gen_str()
+    with open(os.getcwd() + '\\library\\readme.txt', 'w+') as readme:
+        readme.write("(c) kensoi.github.io, since 2020\n=======create sampled module========\n\"python -m testcanarybot -cm [--name {module_name_without_space}] [-f]")
+    with open(os.getcwd() + '\\assets\\readme.txt', 'w+') as readme:
+        readme.write("(c) kensoi.github.io, since 2020\n================USAGE================\nfrom testcanarybot.assets import _assets\n\nassets = _assets()\n\nwith assets(\"readme.txt\", \"r+\") as readme:\n\tprint(readme.read())")
     
-    return name
+    print("Done! Look new files at created folders: ./assets/ and ./library/ ")
 
+elif args.create_module:
+    print('parsing module name...')
+    name = parsename(args.name)
 
-def __write(file_dest, var):
-    if file_dest.endswith("main.py"):
-        folder = file_dest[:file_dest.rfind("\\")]
-        if not os.path.exists(folder): os.mkdir(folder)
-
-    with open(file_dest, mode="w+", encoding="utf-8") as new_file:
-        new_file.write(var)
-
-
-def bool_str(line: str):
-    if line.lower() in ['true', '1', 'правда', 'y', 'yes', 'да']:
-        return True
-
-    elif line.lower() in ['false', '1', 'ложь', 'n', 'no', 'нет']:
-        return False
-
+    if args.folder:
+        print('creating module directory...')
+        os.mkdir(os.getcwd() + '\\library\\' + name)
+        name += '\\main.py'
     else:
-        raise ValueError("Wrong string")
+        name += '.py'
 
+    print('writing code example...')
+    with open(os.getcwd() + '\\library\\' + name, 'w+') as module:
+        module.write(module_clear)
+    
+    print('Done! Result ./library/' + name.replace('\\', '/'))
 
-def gen_str(test = None):
-    result, num = "", random.randint(5, 25)
-
-    if isinstance(test, int):
-        num = test
-
-    while num != 0:
-        result += random.choice([
-                *string.ascii_lowercase,
-                *string.digits]
-        )
-        num -= 1
-    return result
-
-# if args.create_manager:
-#     os.mkdir(os.getcwd() + "\\assets\\")
-#     os.mkdir(os.getcwd() + "\\library\\")
-#     os.mkdir(os.getcwd() + "\\data\\")
-#     with open('data\\startup.py') as manifest:
-
-if args.create_module:
-    render = module_cover
-
-    descr, descr_line = str(), ":::TESTCANARYBOT:DESCR_LINE:::"
-    dest = '\\library\\{codename}{folder}.py'
-
-    if args.manually:
-        print(f"Hello! it's a manager for testcanarybot!")
-        name = input("Enter a name for your plugin: ") if args.name == '' else args.name
-        codename = parsename(name)
-
-        ans = input("Create module in a folder? [y/n] \n>> ")
-        ans = bool_str(ans)
-
-        if ans:
-            dest = dest.format(
-                codename = codename,
-                folder = '\\main'
-                )
-
-        else:
-            dest = dest.format(
-                codename = codename,
-                folder = ''
-                    )
-
-    else:
-        name =  "module" + gen_str() if args.name == '' else args.name
-        codename = parsename(name)
-        descr = 'Look at this string, you can use it like a password: ' + gen_str() + '\n' +  " " * 12
-        
-        if args.folder:
-            dest = dest.format(
-                codename = codename,
-                folder = '\\main'
-                )
-        
-        else:
-            dest = dest.format(
-                codename = codename,
-                folder = ''
-                )
-
-    __write(os.getcwd() + dest, render)
-        
-    print(f"Executed! [{os.getcwd() + dest}]")     
