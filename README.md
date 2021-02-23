@@ -1,4 +1,4 @@
-+# ASYNCHRONOUS VK BOT FRAMEWORK
+# ASYNCHRONOUS VK BOT FRAMEWORK
 |              |                                        |
 | :----------- | :------------------------------------- |
 | version      | 00.09.110                              |
