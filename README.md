@@ -2,6 +2,6 @@
 |              |                                        |
 | :----------- | :------------------------------------- |
 | version      | 00.09.110                              |
-| channel type | UNSTABLE                               |
+| channel type | DEV                                    |
 | docs link    | https://kensoi.github.io/testcanarybot |
 |              |                                        |
