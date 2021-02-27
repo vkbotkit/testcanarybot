@@ -1,7 +1,6 @@
 import os
 from .framework._application import (
     _app as app, 
-    _create_folders as create_folders, 
     _codenameToINT as codenameToINT, 
     _correctCodeName as correctCodeName
     )

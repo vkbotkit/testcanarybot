@@ -11,17 +11,18 @@ from ..enums import events, action
 class thread(threading.Thread):
     processing = False
 
-    def __init__(self, library, handler_id):
+    def __init__(self, library, handler_id, cache):
         threading.Thread.__init__(self)
         self.daemon = True
         self.handler_id = handler_id
+        self.cache = cache
 
         self.library = library
         self.packages = []
 
 
     def run(self):
-        self.setName(f"handler_{self.handler_id}")
+        self.setName(f"{self.cache}_{self.handler_id}")
         self.library.tools.system_message(f"{self.getName()} is started", module = "package_handler")
 
         self.all_messages = self.library.tools.values.ALL_MESSAGES.value

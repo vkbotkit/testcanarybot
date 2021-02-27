@@ -2,15 +2,16 @@ from .. import exceptions
 from .. import objects
 from ..enums import values
 from ..enums import events
-from ..assets import _assets
 
 from ._api import api
 from ._threading import thread
-from ._library import library
+from ._library import library as _library
 from ._values import _ohr
 from ._values import global_expressions
 
 from datetime import datetime
+
+import logging
 
 import asyncio
 import aiohttp
@@ -20,8 +21,32 @@ import threading
 import time
 import typing
 import random
+logger_levels = {
+    'CRITICAL': 50,
+    'ERROR': 40,
+    'WARNING': 30,
+    'INFO': 20,
+    'DEBUG': 10,
+    'NOTSET': 0
+}
+class _assets:
+    def __init__(self, assets = os.getcwd() + '\\assets'):
+        self.__path = assets + '\\'
 
-assets = _assets()
+
+    def __call__(self, *args, **kwargs):
+        args = list(args)
+        if len(args) > 0:
+            args[0] = self.__path + args[0]
+        
+        elif 'file' in kwargs:
+            kwargs['file'] = self.__path + kwargs['file']
+        
+        return open(*args, **kwargs)
+
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
 
 class async_sessions():
@@ -87,7 +112,10 @@ class _app:
     __booted_once = False
 
 
-    def __init__(self, accessToken: str, groupId: int, serviceToken: str = "", apiVersion: str = "5.126", countThread: int = 1):
+    def __init__(self, 
+        accessToken: str, groupId: int, serviceToken: str = "", 
+        apiVersion: str = "5.126",  countThread: int = 1, 
+        assets = os.getcwd() + '\\assets\\', library = '', level: str = 'info', logg = logging.Logger(name = "testcanarybot")):
 
         """
         create a bot.
@@ -99,10 +127,21 @@ class _app:
         apiVersion [str] - set API version for your bot.
         countThread [int: 1] - set threads count for handlers.
         """
+        self.logger = logg
+        self.logger.setLevel(logger_levels[level.upper()])
+        handler = logging.FileHandler("log.txt")
+        self.logger.addHandler(handler)
 
-        _create_folders()
-        self.__loop = asyncio.get_event_loop()
 
+        if threading.current_thread() == threading.main_thread():
+            self.__loop = asyncio.get_event_loop()
+            
+        else:
+            self.__loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.__loop)
+        self.__loop
+
+        self.__thread = []
         self.__access = accessToken
         self.__service = serviceToken
         self.__group_id = groupId
@@ -111,14 +150,13 @@ class _app:
 
         self.__http = async_sessions(headers = self._headers)
         self.__api = api(self.__http, self.method)
-        self.__log = assets("log.txt", "a+", encoding="utf-8")
 
-        self.__tools = tools(self.__group_id, self.__api, self.__http, self.__log)
+        self.__tools = tools(self.__group_id, self.__api, self.__http, assets, self.logger)
         self.__tools.system_message(
             module = "session", 
             write = str(self.tools.values.SESSION_START))
             
-        self.__library = library(self.tools)
+        self.__library = _library(self.tools, library)
         atexit.register(self.__close)
 
 
@@ -132,7 +170,7 @@ class _app:
 
     @property
     def log(self):
-        return self.__log
+        return self.logger.handlers[0].baseFilename
 
     @property
     def tools(self):
@@ -149,16 +187,6 @@ class _app:
 
     def __close(self):
         self.__tools.system_message(module = "session", write = self.__tools.values.SESSION_CLOSE)
-
-        if self.__log.closed:
-            self.__log = assets("log.txt", "a+", encoding="utf-8")
-
-        for print_test in self.__tools.values.LOGGER_CLOSE.value:
-            print(print_test, 
-                file = self.__log
-                )
-
-        self.__log.close()
         
 
     async def method(self, method: str, data: dict = {}):
@@ -212,17 +240,19 @@ class _app:
         """  
           
         if len(self.__library.modules) == 0:
-            self.__library.upload()
+            self.__library.upload(self.__loop)
 
-        print(self.tools.values.LOGGER_START, file = self.log)
+        time.sleep(0.01)
+        self.logger.info(self.tools.values.LOGGER_START)
 
         if self.__countThread > len(self.__thread):
             for i in range(self.countThread):
-                thread_started = thread(self.__library, i)
+                thread_started = thread(self.__library, i, threading.currentThread().getName())
                 thread_started.start()
                 
                 self.__thread.append(thread_started)
-        time.sleep(1)
+
+        time.sleep(0.01)
 
         if not self.__booted_once:
             self.__booted_once = True
@@ -231,6 +261,7 @@ class _app:
                 if hasattr(i, "start"): self.__getThread().create_task(i.start)
 
         self.__loop.run_until_complete(self.__update_longpoll_server())                
+
 
     def start_polling(self) -> None:
         """
@@ -370,11 +401,13 @@ class tools:
     }
 
 
-    def __init__(self, group_id, api, http, log):
+    def __init__(self, group_id, api, http, assets, logger):
+        self.assets = _assets(assets)
+        self.logger = logger
         self.__http = http
         self.__api = api
         self.__group_id = group_id
-        self.__log = log
+        self.__log = self.assets("log.txt", "a+", encoding="utf-8")
         self.__group_mention = ""
 
         self.__waiting_replies = {}
@@ -426,22 +459,15 @@ class tools:
     def random_id(self):
         return int(random.random() * 999999)
 
-    def system_message(self, *args, write = None, module = None, newline = False):
+    def system_message(self, *args, write = None, module = None, newline = False, level = 'info'):
         if not module: module = self.__module
         if not write: write = " ".join([str(i) for i in list(args)])
         
         response = f'@{self.__group_address}.{module}: {write}'
 
-        if self.log.closed:
-            self.log = assets("log.txt", "a+", encoding="utf-8")
-
         newline_res = "\n" if newline else ""
-        print(newline_res + response)
 
-        response = f'{self.getDateTime()} {response}'
-        print(newline_res + response, file=self.log)
-
-        self.log.flush()
+        self.logger.log(logger_levels[level.upper()], response)
 
 
     def getDate(self, time = None) -> str:
