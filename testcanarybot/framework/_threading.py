@@ -77,7 +77,7 @@ class thread(threading.Thread):
 
             elif hasattr(package, 'payload'): 
                 package.params.payload = True
-                package.payload = json.loads(package.params)
+                package.payload = json.loads(package.payload)
             
             elif package.text != '':
                 message = package.text.split()
@@ -124,13 +124,12 @@ class thread(threading.Thread):
             
 
     async def handler(self, package: objects.package):
-        package.items.append(self.library.tools.values.ENDLINE)
         try:
+            package.items.append(self.library.tools.values.ENDLINE)
+            if self.library.tools.wait_check(package):
+                self.library.tools.add(package)
             if package.type == events.message_new:
-                if self.library.tools.wait_check(package):
-                    self.library.tools.add(package)
-
-                elif package.params.action:
+                if package.params.action:
                     for i in self.library.action_handlers[package.action.type]:
                         module = self.library.modules[i.__module__]
                         
@@ -153,9 +152,8 @@ class thread(threading.Thread):
                 for i in self.library.handlers['events'][package.type]:
                     module = self.library.modules[i.__module__]
                     self.thread_loop.create_task(i(module, self.library.tools, package))
-
         except Exception as e:
-            self.library.tools.system_message(module = "exception_handler", write = e)
+            print(e)
 
     
     def parse_mention(self, ment) -> objects.mention:

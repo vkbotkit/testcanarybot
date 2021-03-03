@@ -28,7 +28,7 @@ community_service = '' # optional
 apiVersion = '5.126' # optional
 countThread = 5 # optional
 
-bot_mentions = []
+mentions = []
 """
 
 packaet_manager_name = 'Packaet'
