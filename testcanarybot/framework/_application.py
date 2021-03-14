@@ -21,6 +21,7 @@ import threading
 import time
 import typing
 import random
+
 logger_levels = {
     'CRITICAL': 50,
     'ERROR': 40,
@@ -29,6 +30,7 @@ logger_levels = {
     'DEBUG': 10,
     'NOTSET': 0
 }
+
 class _assets:
     def __init__(self, assets = os.getcwd() + '\\assets'):
         self.__path = assets + '\\'
@@ -79,11 +81,6 @@ class async_sessions():
             return getattr(thread.session, name)
 
 
-def _create_folders():
-    if 'assets' not in os.listdir(os.getcwd()): os.mkdir(os.getcwd() + '\\assets\\')
-    if 'library' not in os.listdir(os.getcwd()): os.mkdir(os.getcwd() + '\\library\\')
-
-
 def _codenameToINT(int1: int, int2: int, int3: int) -> int:
     return int1 * 10000 + int2 * 1000 + int3
 
@@ -98,12 +95,6 @@ class _app:
             Gecko/20100101 Firefox/52.0"""
     }
 
-    __countThread = 5
-    __lastthread = 0
-    __thread = []
-
-    __longpoll_delay = 1 / 20  
-    __longpoll_last = 0.0
 
     __longpoll_url = ""
     __longpoll_ts = 0
@@ -146,7 +137,10 @@ class _app:
         self.__service = serviceToken
         self.__group_id = groupId
         self.__countThread = countThread
+        self.__lastthread = 0
         self.__av = apiVersion
+        self.__longpoll_delay = 1 / 20
+        self.__longpoll_last = 0.0  
 
         self.__http = async_sessions(headers = self._headers)
         self.__api = api(self.__http, self.method)
@@ -345,12 +339,12 @@ class _app:
     async def __polling(self):
         for event in await self.__check():
             if event['type'] == 'message_new':
-                package = objects.package(**event['object']['message'])
-                package.params.client_info = objects.data(**event['object']['client_info'])
+                package = objects.package(event['object']['message'])
+                package.params.client_info = objects.data(event['object']['client_info'])
                 package.params.from_chat = package.peer_id > 2000000000
 
             else:
-                package = objects.package(**event['object'])
+                package = objects.package(event['object'])
 
             package.type = getattr(events, event['type'])
             package.event_id = event['event_id']
@@ -426,10 +420,6 @@ class tools:
     @property
     def link(self):
         return self.__group_address
-
-    @property
-    def id(self):
-        return self.__group_id
 
     @property
     def mention(self):

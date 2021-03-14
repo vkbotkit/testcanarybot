@@ -15,17 +15,17 @@ Copyright 2021 andprokofieff
 packaet_root_raw = """'''
 
 This is raw created root file for testcanarybot project.
-fill all important info and try to run with python -m testcanarybot --run {packaet_project}
+fill all important info and try to run with python -m testcanarybot --run [packaet_project]
 
 '''
 
 community_name = '' # optional
-community_token = ''
-community_id = 0
+community_token = '{token}'
+community_id = {group_id}
 
 
 community_service = '' # optional
-apiVersion = '5.126' # optional
+apiVersion = '5.130' # optional
 countThread = 5 # optional
 
 mentions = []
@@ -81,6 +81,9 @@ class threadBot(threading.Thread):
         self.apiVersion = "5.126" if not hasattr(data, 'apiVersion') else data.apiVersion + ""
         self.countThread = 5 if not hasattr(data, 'countThread') else data.countThread + 0
 
+        self.all_messages = data.ALL_MESSAGES if hasattr(data, 'ALL_MESSAGES') else None
+        self.listitem = data.LISTITEM if hasattr(data, 'LISTITEM') else None
+
 
         if hasattr(testApp, 'mentions'):
             self.mentions = testApp.mentions[:]
@@ -104,26 +107,35 @@ class threadBot(threading.Thread):
             os.getcwd() + '\\' + self.botname + '\\' + packaet_project_assets, 
             self.botname + '\\')
         if len(self.mentions) != 0: self.bot.setMentions(self.mentions)
+        if self.all_messages: self.bot.tools.values.set("ALL_MESSAGES", self.all_messages)
+        if self.listitem: self.bot.tools.values.set("LISTITEM", self.listitem)
+        
         system_message(self.botname, "initialised, started")
         self.bot.start_polling()
 
 
 packaet_parser = argparse.ArgumentParser(description = "TestCanaryBot Packaet [preview 00.09.111 dev]")
 
-packaet_parser.add_argument("--run", type = str, default = "", help='Quick run')
+packaet_parser.add_argument("--run", type = str, default = "", help='Quick run one project')
+packaet_parser.add_argument("-mrun", dest = "mrun", action = 'store_true', help='Quick run a few projects')
+packaet_parser.add_argument("--projects", type = str, default = [], nargs='+', help='list of projects for -mrun')
 packaet_parser.add_argument("--create", type = str, default = "", help='Create project')
 packaet_parser.add_argument("--project", type = str, default = "", help='setting project')
+
+packaet_parser.add_argument("--token", type = str, default = "", help='project token (for --create)')
+packaet_parser.add_argument("--group", type = str, default = "", help='project community id (for --create)')
 
 packaet_parser.add_argument("--cm", type = str, default = "", help='[--project PROJECT] create module testcanarybot')
 packaet_parser.add_argument("-f", dest = "folder", action = 'store_true', help='[--project PROJECT] create module in a folder')
 args = packaet_parser.parse_args()
-packaet_project_directory = args.run + args.create + args.project
+packaet_project_directory = args.run + args.create + args.project + (lambda x: "true" if x else "")(args.mrun) 
+print(packaet_project_directory)
 
 if packaet_project_directory == '':
     system_message('Try to run command \"python testcanarybot -h\"')
     quit()
 
-elif packaet_project_directory not in [args.run, args.create, args.project]:
+elif packaet_project_directory not in [args.run, args.create, args.project, (lambda x: "true" if x else "")(args.mrun)]:
     raise RuntimeError('2 or more args! \nTry to run command \"python testcanarybot -h\"')
 
 projects = os.listdir(os.getcwd())
@@ -147,6 +159,12 @@ if args.run != '':
     else:
         raise ValueError(f"Incorrect project name. Run \"python testcanarybot --create {packaet_project_directory}\" to create project, and try again")
 
+elif args.mrun:
+    for i in args.projects:
+        testApp = importlib.import_module(i + '.root')
+        threadBot(testApp, i)
+        time.sleep(1)
+
 elif args.create != '':
     system_message('Creating project <<', packaet_project_directory, '>>')
     
@@ -160,7 +178,7 @@ elif args.create != '':
         system_message("Creating << root >>")
 
         with open(os.getcwd() + '\\' + packaet_project_directory + '\\' + 'root.py', 'w+') as root:
-            root.write(packaet_root_raw)
+            root.write(packaet_root_raw.format(token = args.token, group_id = args.group))
 
         system_message("Creating << readme >>")
 
@@ -204,7 +222,7 @@ elif args.project != '':
         else:
             system_message("created file <<", packaet_module_name, ">>")
             
-            with open(os.getcwd() + '\\' + packaet_project_directory + '\\library\\' + packaet_module_name + ".py") as module:
+            with open(os.getcwd() + '\\' + packaet_project_directory + '\\library\\' + packaet_module_name + ".py", 'w+') as module:
                 module.write(module_clear)
             
             system_message("Done! Results at ./" + packaet_project_directory + "/library/")

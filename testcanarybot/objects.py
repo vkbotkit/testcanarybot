@@ -2,12 +2,8 @@ from datetime import datetime
 from .enums import values as __values
 
 import abc
-import aiohttp
-import threading
-import asyncio
 import random
 import typing
-import sqlite3
 
 
 class expression:
@@ -38,14 +34,15 @@ class mention:
 
     def __str__(self):
         return self.call    
-    
+        
 
 class data:
-    def __init__(self, **entries):
+    def __init__(self, entries):
         self.__dict__.update(entries)
 
         for i in self.__dict__.keys():
             setattr(self, i, self.__convert(getattr(self, i)))
+
         self.raw = entries
             
 
@@ -53,13 +50,17 @@ class data:
         attr_type = type(attr)
 
         if attr_type == dict:
-            return key(**attr)
+            return key(attr)
 
         elif attr_type == list:
             return [self.__convert(i) for i in attr]
         
         else:
-            return attr    
+            return attr  
+
+    def __repr__(self):
+        return '<{}({})>'.format(type(self), self.raw)
+  
 
 
 class key(data):
@@ -80,6 +81,7 @@ class package(data):
     peer_id = 1
     from_id = 1
     items = []
+                
 
     class params:
         action = False
@@ -193,9 +195,9 @@ def ContextManager(
                         raise TypeError("Incorrect type!")
 
                     elif i not in self.event_handlers and i != enums_events.message_new:
-                        self.event_handlers[i] = []
-
-                    self.event_handlers[i].append(coro)
+                        self.event_handlers[i] = coro
+                    else:
+                        raise exceptions.LibraryRewriteError(f"{str(i)} is already registered event")
                 
                 return # coro(self, *args, **kwargs) 
 
@@ -212,9 +214,11 @@ def ContextManager(
                         raise TypeError("use testcanarybot.enums.action for this context!")
                     
                     if i not in self.action_handlers:
-                        self.action_handlers[i] = list()
-                        
-                    self.action_handlers[i].append(coro)
+                        self.action_handlers[i] = coro
+                    
+                    else:
+                        raise exceptions.LibraryRewriteError(f"{str(i)} is already registered action")
+
 
                 return # coro(self, *args, **kwargs)
 
@@ -275,11 +279,6 @@ class tools(abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def id(self):
-        pass
-
-    @property
-    @abc.abstractmethod
     def mention(self):
         pass
 
@@ -315,7 +314,7 @@ class tools(abc.ABCMeta):
 
 
     @abc.abstractmethod
-    def system_message(self, *args, write = None, module = None, newline = False):
+    def system_message(self, *args, write = None, module = None, newline = False) -> None:
         pass
 
 
@@ -340,38 +339,37 @@ class tools(abc.ABCMeta):
 
 
     @abc.abstractmethod
-    def wait_check(self, package):
+    def wait_check(self, package) -> bool:
         pass
 
 
     @abc.abstractmethod
-    async def wait_reply(self, package):
-        pass
-
-    
-
-    @abc.abstractmethod
-    async def getMention(self, page_id: int, name_case = "nom"):
+    async def wait_reply(self, package: package) -> package:
         pass
 
 
     @abc.abstractmethod
-    async def getManagers(self, group_id = None):
+    async def getMention(self, page_id: int, name_case = "nom") -> str:
         pass
 
 
     @abc.abstractmethod
-    async def isManager(self, from_id: int, group_id = None):
+    async def getManagers(self, group_id = None) -> list:
         pass
 
 
     @abc.abstractmethod
-    async def getChatManagers(self, peer_id: int):
+    async def isManager(self, from_id: int, group_id = None) -> bool:
+        pass
+
+
+    @abc.abstractmethod
+    async def getChatManagers(self, peer_id: int) -> list:
         pass
         
 
     @abc.abstractmethod
-    def isChatManager(self, from_id, peer_id: int):
+    def isChatManager(self, from_id, peer_id: int) -> bool:
         pass
 
 
@@ -381,7 +379,7 @@ class tools(abc.ABCMeta):
 
 
     @abc.abstractmethod
-    async def isMember(self, from_id: int, peer_id: int):
+    async def isMember(self, from_id: int, peer_id: int) -> bool:
         pass
 
 

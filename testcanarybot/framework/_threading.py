@@ -40,20 +40,18 @@ class thread(threading.Thread):
             raise context['exception']
 
         except exceptions.CallVoid as e:
-            for i in self.library.handlers['void']:
-                module = self.library.modules[i.__module__]
+            module = self.library.modules[i.__module__]
 
-                peer_id, from_id = str(e)[1:].split("_")
-                package = objects.package(**{
-                    'peer_id': int(peer_id), 
-                    'from_id': int(from_id), 
-                    'items': [self.library.tools.values.NOREPLY]
-                    })
-                task = self.thread_loop.create_task(i(module, self.library.tools, package))
+            peer_id, from_id = str(e)[1:].split("_")
+            package = objects.package({
+                'peer_id': int(peer_id), 
+                'from_id': int(from_id), 
+                'items': [self.library.tools.values.NOREPLY]
+                })
+            task = self.thread_loop.create_task(self.library.handlers['void'](module, self.library.tools, package))
 
         except Exception as e:
             print(traceback.format_exc())
-            quit()
 
     def create_task(self, package):
         if isinstance(package, objects.package):
@@ -126,32 +124,36 @@ class thread(threading.Thread):
     async def handler(self, package: objects.package):
         try:
             package.items.append(self.library.tools.values.ENDLINE)
+
             if self.library.tools.wait_check(package):
                 self.library.tools.add(package)
-            if package.type == events.message_new:
+
+            elif package.type == events.message_new:
                 if package.params.action:
-                    for i in self.library.action_handlers[package.action.type]:
-                        module = self.library.modules[i.__module__]
-                        
-                        self.thread_loop.create_task(i(module, self.library.tools, package))
+                    handler = self.library.action_handlers[package.action.type]
+                    module = self.library.modules[handler.__module__]
+                    
+                    self.thread_loop.create_task(handler(module, self.library.tools, package))
 
                 elif package.params.command and len(package.items) > 0 and package.items[0] in self.library.handlers['priority'].keys():
-                    for i in self.library.handlers['priority'][package.items[0]]:
-                        module = self.library.modules[i.__module__]
-                        
-                        self.thread_loop.create_task(i(module, self.library.tools, package))
+                    handler = self.library.handlers['priority'][package.items[0]]
+                    module = self.library.modules[handler.__module__]
+                    
+                    self.thread_loop.create_task(handler(module, self.library.tools, package))
 
                 elif self.library.void_react:
                     if self.all_messages or package.params.command:
-                        for i in self.library.handlers['void']:
-                            module = self.library.modules[i.__module__]
+                        handler = self.library.handlers['void']
+                        module = self.library.modules[handler.__module__]
 
-                            self.thread_loop.create_task(i(module, self.library.tools, package))
+                        self.thread_loop.create_task(handler(module, self.library.tools, package))
 
             elif package.type in self.library.handlers['events'].keys():
-                for i in self.library.handlers['events'][package.type]:
-                    module = self.library.modules[i.__module__]
-                    self.thread_loop.create_task(i(module, self.library.tools, package))
+                handler = self.library.handlers['events'][package.type]
+                module = self.library.modules[handler.__module__]
+
+                self.thread_loop.create_task(handler(module, self.library.tools, package))
+
         except Exception as e:
             print(e)
 

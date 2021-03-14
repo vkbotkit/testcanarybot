@@ -8,20 +8,20 @@ import os
 import sys
 
 class library:
-    modules = {}
-    handlers = {
-        'void': [], # [handler1, handler2]
-        'priority': {}, # {'test', 'hello', 'world'}: [handler1, handler2, ...]
-        'events': {}, # event.abstract_event: [handler1, handler2]
-        'action': {}
-    }
-
     def __init__(self, tools, library):
         self.botname = library
         self.tools = tools
         self.list = []
         self.void_react = False
         self.commands = []
+        
+        self.modules = {}
+        self.handlers = {
+            'void': [], # [handler1, handler2]
+            'priority': {}, # {'test', 'hello', 'world'}: [handler1, handler2, ...]
+            'events': {}, # event.abstract_event: [handler1, handler2]
+            'action': {}
+        }
             
 
     def upload(self, isReload = False, loop = asyncio.get_event_loop()):
@@ -89,31 +89,35 @@ class library:
 
             for i in moduleObj.handler_dict.values():
                 for j in i['commands']:
-                    if j not in self.handlers['priority']:
-                        self.handlers['priority'][j] = []
-
-                    self.handlers['priority'][j].append(i['handler'])
+                    if j in self.handlers['priority']:
+                        raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(j)}` is already registered command")
+                    else:
+                        self.handlers['priority'][j] = i['handler']
 
         if len(moduleObj.event_handlers.keys()) > 0:
             for event in moduleObj.event_handlers.keys():
                 message += self.tools.values.MODULE_INIT_EVENTS.value.format(event = str(event))
-                if not event in self.handlers['events']:
-                    self.handlers['events'][event] = []
-
-                self.handlers['events'][event].extend(moduleObj.event_handlers[event])
+                if event in self.handlers['events']:
+                    raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(action)}`is already registered void")
+                else:
+                    self.handlers['events'][event] = moduleObj.event_handlers[event]
         
         if len(moduleObj.action_handlers.keys()) > 0:
             for action in moduleObj.action_handlers.keys():
                 message += self.tools.values.MODULE_INIT_ACTION.value.format(event = str(action))
 
-                if not action in self.handlers['action']:
-                    self.handlers['action'][action] = []
-                self.handlers['action'][action].extend(moduleObj.action_handlers[action])
+                if action in self.handlers['action']:
+                    raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(action)}` is already registered action")
+                else:
+                    self.handlers['action'][action] = moduleObj.action_handlers[action]
 
         if moduleObj.void_react:
-            self.handlers['void'].append(moduleObj.void_react)
-            self.void_react = True
-            message += self.tools.values.MODULE_INIT_VOID.value
+            if 'void' in self.handlers:
+                self.handlers['void'] = moduleObj.void_react
+                self.void_react = True
+                message += self.tools.values.MODULE_INIT_VOID.value
+            else:
+                raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(action)}` is already registered void")
 
         self.modules[module_name] = moduleObj
         self.list = module_name

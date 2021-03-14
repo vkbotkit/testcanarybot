@@ -10,11 +10,10 @@ version_raw = {
     'sorted': {
         'stable': {},
 
-        'unstable': {
-            0: {9: [108]}},
+        'unstable': {},
 
         'dev': {
-            0: {9: [110]} 
+            1: {0: [1, 2]}
         }
     },
     'root': {
@@ -38,7 +37,7 @@ __version__ = version
 __title__ = 'TestCanaryBot, ' + version
 __author__ = 'Kensoi'
 __license__ = 'Apache v2'
-__copyright__ = 'Copyright 2021 by Kensoi'
+__copyright__ = 'Copyright 2021 Kensoi'
 
 __doc__ = "kensoi/testcanarybot, " + version + """
 Documentation is available at kensoi.github.io/testcanarybot
