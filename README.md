@@ -1,4 +1,4 @@
-![https://pypi.org/project/testcanarybot/0.10.002/](https://img.shields.io/badge/pypi-1.0.002-blue?style=flat-square)![](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue?style=flat-square)![](https://img.shields.io/badge/license-Apache%20License%202.0-green?style=flat-square)
+![https://pypi.org/project/testcanarybot/1.00.002/](https://img.shields.io/badge/pypi-1.0.002-blue?style=flat-square)![](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue?style=flat-square)![](https://img.shields.io/badge/license-Apache%20License%202.0-green?style=flat-square)
 
 Асинхронная библиотека с прекрасной структурой модульной библиотекой обработчиков для ВКонтакте API, написанная на Python 3.7 с aiohttp, asyncio и threading
 
