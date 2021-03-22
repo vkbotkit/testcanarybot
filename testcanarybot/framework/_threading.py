@@ -2,6 +2,9 @@ import threading
 import asyncio
 import json
 import traceback
+import re
+import os
+import sys
 
 from .. import objects
 from .. import exceptions
@@ -11,20 +14,22 @@ from ..enums import events, action
 class thread(threading.Thread):
     processing = False
 
-    def __init__(self, library, handler_id):
+    def __init__(self, library, handler_id, cache):
         threading.Thread.__init__(self)
         self.daemon = True
         self.handler_id = handler_id
+        self.cache = cache
 
         self.library = library
         self.packages = []
 
 
     def run(self):
-        self.setName(f"handler_{self.handler_id}")
+        self.setName(f"{self.cache}_{self.handler_id}")
         self.library.tools.system_message(f"{self.getName()} is started", module = "package_handler")
 
         self.all_messages = self.library.tools.values.ALL_MESSAGES.value
+        self.add_mentions = self.library.tools.values.ADD_MENTIONS.value
         self.mentions = self.library.tools.mentions
 
         self.thread_loop = asyncio.new_event_loop()
@@ -38,25 +43,33 @@ class thread(threading.Thread):
         try:
             raise context['exception']
 
-        except exceptions.CallVoid as e:
-            for i in self.library.handlers['void']:
-                module = self.library.modules[i.__module__]
+        except exceptions.Quit as a:
+            self.library.tools.system_message(a)
+            print(a)
+            
+            os._exit(1)
 
-                peer_id, from_id = str(e)[1:].split("_")
-                package = objects.package(**{
-                    'peer_id': int(peer_id), 
-                    'from_id': int(from_id), 
-                    'items': [self.library.tools.values.NOREPLY]
-                    })
-                task = self.thread_loop.create_task(i(module, self.library.tools, package))
+        except exceptions.LibraryReload as b:
+            self.library.upload()
+
+        except exceptions.CallVoid as e:
+            peer_id, from_id = str(e)[1:].split("_")
+            handler = self.library.handlers['void']
+            module = self.library.modules[handler.__module__]
+
+            package = objects.package({
+                'peer_id': int(peer_id), 
+                'from_id': int(from_id), 
+                'items': [self.library.tools.values.NOREPLY]
+                })
+            self.thread_loop.create_task(handler(module, self.library.tools, package))
 
         except Exception as e:
             print(traceback.format_exc())
-            quit()
 
     def create_task(self, package):
         if isinstance(package, objects.package):
-            if package.type == events.message_new or package.type in self.library.handlers['events']:
+            if package.type in [events.message_new, *self.library.handlers['events']]:
                 asyncio.run_coroutine_threadsafe(self.resolver(package), self.thread_loop)
 
         else:
@@ -76,7 +89,7 @@ class thread(threading.Thread):
 
             elif hasattr(package, 'payload'): 
                 package.params.payload = True
-                package.payload = json.loads(package.params)
+                package.payload = json.loads(package.payload)
             
             elif package.text != '':
                 message = package.text.split()
@@ -85,8 +98,12 @@ class thread(threading.Thread):
                     package.params.gment = message.pop(0)
                     package.params.command = True
 
-                package = await self.findMentions(package, message)
+                package.items = message
+                package.params.mentions = [self.parse_mention(i) for i in re.findall(r'\[(.*?)\]', package.text)]
 
+                if self.add_mentions:
+                    package.params.mentions.extend(list(set(message) & set(self.mentions)))
+                
             elif len(package.attachments) > 0: 
                 package.params.attachments = True
 
@@ -94,67 +111,43 @@ class thread(threading.Thread):
             
         else:
             await self.handler(package)
-
-
-    async def findMentions(self, package: objects.package, message: str) -> objects.package:
-        for count in range(len(message)):
-            if message[count][0] == '[' and message[count].count('|') == 1:
-                if message[count].count(']') > 0:
-                    mention = self.parse_mention(
-                            message[count][message[count].rfind('[') + 1:message[count].find(']')]
-                            )
-                    package.params.mentions.append(mention)
-                    package.items.append(
-                        mention
-                        )
-                else:
-                    for j in range(count, len(message)):
-                        if message[j].count(']') > 0:
-                            last_string, message[j] = message[j][0:message[j].find(']')], message[j][message[j].find(']') + 1:]
-                            mention = self.parse_mention(" ".join([*message[count:j], last_string])[1:])
-                            package.items.append(mention)
-                            package.params.mentions.append(mention)
-                            count = j
-                            break
-            else:
-                package.items.append(message[count])
-            count += 1
-        return package
             
 
     async def handler(self, package: objects.package):
-        package.items.append(self.library.tools.values.ENDLINE)
+        self.library.handlers['void']
         try:
-            if package.type == events.message_new:
-                if self.library.tools.wait_check(package):
-                    self.library.tools.add(package)
+            package.items.append(self.library.tools.values.ENDLINE)
+            if self.library.tools.wait_check(package):
+                self.library.tools.add(package)
 
-                elif package.params.action:
-                    for i in self.library.action_handlers[package.action.type]:
-                        module = self.library.modules[i.__module__]
-                        
-                        self.thread_loop.create_task(i(module, self.library.tools, package))
+            elif package.type == events.message_new:
+                if package.params.action:
+                    handler = self.library.action_handlers[package.action.type]
+                    module = self.library.modules[handler.__module__]
+                    
+                    self.thread_loop.create_task(handler(module, self.library.tools, package))
 
                 elif package.params.command and len(package.items) > 0 and package.items[0] in self.library.handlers['priority'].keys():
-                    for i in self.library.handlers['priority'][package.items[0]]:
-                        module = self.library.modules[i.__module__]
-                        
-                        self.thread_loop.create_task(i(module, self.library.tools, package))
+                    handler = self.library.handlers['priority'][package.items[0]]
+                    module = self.library.modules[handler.__module__]
+                    
+                    self.thread_loop.create_task(handler(module, self.library.tools, package))
 
                 elif self.library.void_react:
                     if self.all_messages or package.params.command:
-                        for i in self.library.handlers['void']:
-                            module = self.library.modules[i.__module__]
+                        handler = self.library.handlers['void']
+                        module = self.library.modules[handler.__module__]
 
-                            self.thread_loop.create_task(i(module, self.library.tools, package))
+                        self.thread_loop.create_task(handler(module, self.library.tools, package))
 
             elif package.type in self.library.handlers['events'].keys():
-                for i in self.library.handlers['events'][package.type]:
-                    module = self.library.modules[i.__module__]
-                    self.thread_loop.create_task(i(module, self.library.tools, package))
+                handler = self.library.handlers['events'][package.type]
+                module = self.library.modules[handler.__module__]
+
+                self.thread_loop.create_task(handler(module, self.library.tools, package))
 
         except Exception as e:
-            self.library.tools.system_message(module = "exception_handler", write = e)
+            print(e)
 
     
     def parse_mention(self, ment) -> objects.mention:
