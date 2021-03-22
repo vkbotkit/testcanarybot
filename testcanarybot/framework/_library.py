@@ -14,6 +14,7 @@ class library:
         self.list = []
         self.void_react = False
         self.commands = []
+        self.raw_modules = []
         
         self.modules = {}
         self.handlers = {
@@ -25,26 +26,29 @@ class library:
             
 
     def upload(self, isReload = False, loop = asyncio.get_event_loop()):
-        self.modules = {}
 
-        if os.path.isdir(self.botname + 'library\\'):
-            self.tools.system_message(str(self.tools.values.LIBRARY_GET), module = "library.uploader")
-            
-            listdir = [i for i in os.listdir(self.botname + 'library\\' + '\\') if i != "__pycache__" and (i.endswith('.py') or i.count(".") == 0)]
-
-            if len(listdir) == 0:
-                raise exceptions.LibraryError(
-                    self.tools.values.LIBRARY_ERROR)
-
-            loop.run_until_complete(asyncio.wait([loop.create_task(self.upload_handler(module)) for module in listdir]))
-            self.tools.system_message(
-                "Supporting event types: {event_types}".format(
-                    event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['events'].keys()], ""])
-                ), module = "library.uploader", newline = True)
-
+        if len(self.raw_modules) > 0:
+            for i in self.raw_modules:
+                importlib.reload(i)
         else:
-            raise RuntimeError("broken project.")
-    
+            self.modules = {}
+            if os.path.isdir(self.botname + 'library\\'):
+                self.tools.system_message(str(self.tools.values.LIBRARY_GET), module = "library.uploader")
+            
+                listdir = [i for i in os.listdir(self.botname + 'library\\' + '\\') if i != "__pycache__" and (i.endswith('.py') or i.count(".") == 0)]
+
+                if len(listdir) == 0:
+                    raise exceptions.LibraryError(
+                        self.tools.values.LIBRARY_ERROR)
+                loop.run_until_complete(asyncio.wait([loop.create_task(self.upload_handler(module)) for module in listdir]))
+                self.tools.system_message(
+                    "Supporting event types: {event_types}".format(
+                        event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['events'].keys()], ""])
+                    ), module = "library.uploader", newline = True)
+
+            else:
+                raise RuntimeError("broken project.")
+        
 
     async def upload_handler(self, module_name):
         module_direct = self.botname + 'library\\' + module_name
@@ -54,6 +58,7 @@ class library:
             module_direct += '\\main.py'
         module_name = module_direct[:-3].replace('\\', '.')
         module = importlib.import_module(module_name)
+        self.raw_modules.append(module)
 
         if hasattr(module, 'Main'):
             moduleObj = module.Main()

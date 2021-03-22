@@ -116,9 +116,12 @@ class threadBot(threading.Thread):
 
 packaet_parser = argparse.ArgumentParser(description = "TestCanaryBot Packaet [preview 00.09.111 dev]")
 
-packaet_parser.add_argument("--run", type = str, default = "", help='Quick run one project')
-packaet_parser.add_argument("-mrun", dest = "mrun", action = 'store_true', help='Quick run a few projects')
-packaet_parser.add_argument("--projects", type = str, default = [], nargs='+', help='list of projects for -mrun')
+packaet_parser.add_argument("--run", type = str, default = [], nargs='+', help='run a list of projects')
+    # python -m testcanarybot --run info
+    # python -m testcanarybot --run all
+    # python -m testcanarybot --run BotName1
+    # python -m testcanarybot --run BotName1 BotName2
+
 packaet_parser.add_argument("--create", type = str, default = "", help='Create project')
 packaet_parser.add_argument("--project", type = str, default = "", help='setting project')
 
@@ -128,42 +131,39 @@ packaet_parser.add_argument("--group", type = str, default = "", help='project c
 packaet_parser.add_argument("--cm", type = str, default = "", help='[--project PROJECT] create module testcanarybot')
 packaet_parser.add_argument("-f", dest = "folder", action = 'store_true', help='[--project PROJECT] create module in a folder')
 args = packaet_parser.parse_args()
-packaet_project_directory = args.run + args.create + args.project + (lambda x: "true" if x else "")(args.mrun) 
-print(packaet_project_directory)
+packaet_project_directory =  args.create + args.project
 
-if packaet_project_directory == '':
+if packaet_project_directory == '' and args.run == []:
     system_message('Try to run command \"python testcanarybot -h\"')
     quit()
 
-elif packaet_project_directory not in [args.run, args.create, args.project, (lambda x: "true" if x else "")(args.mrun)]:
+elif packaet_project_directory not in [args.create, args.project] and args.run == []:
     raise RuntimeError('2 or more args! \nTry to run command \"python testcanarybot -h\"')
 
 projects = os.listdir(os.getcwd())
-projects = [i for i in projects if i.count(".") == 0 and i not in ['testcanarybot', 'packaet', 'all', 'info']]
+projects = [i for i in projects if i.count(".") == 0 and i not in ['testcanarybot', 'packaet', 'all', 'info', 'assets', 'library']]
 
-if args.run != '':
+if len(args.run) > 0:
     sys.path.append(os.getcwd() + '\\')
-    if packaet_project_directory == 'info':
-        system_message('Projects at this directory:\n\t- ' + '\n\t- '.join(projects))
 
-    elif packaet_project_directory == 'all':
-        for i in projects:
-            testApp = importlib.import_module(i + '.root')
-            threadBot(testApp, i)
-            time.sleep(1)
+    if args.run in [['info'], ['all']]:
+        if args.run[0] == 'info':
+            system_message('Projects at this directory:\n\t- ' + '\n\t- '.join(projects))
 
-    elif packaet_project_directory in projects:
-        testApp = importlib.import_module(packaet_project_directory + '.root')
-        threadBot(testApp, packaet_project_directory)
+        elif args.run[0] == 'all':
+            for i in projects:
+                testApp = importlib.import_module(i + '.root')
+                threadBot(testApp, i)
+                time.sleep(1)
 
     else:
-        raise ValueError(f"Incorrect project name. Run \"python testcanarybot --create {packaet_project_directory}\" to create project, and try again")
-
-elif args.mrun:
-    for i in args.projects:
-        testApp = importlib.import_module(i + '.root')
-        threadBot(testApp, i)
-        time.sleep(1)
+        for i in args.run:
+            if i in projects:
+                testApp = importlib.import_module(i + '.root')
+                threadBot(testApp, i)
+                time.sleep(1)
+            else:
+                raise ValueError(f"Incorrect project name. Run \"python testcanarybot --create {i}\" to create project, and try again")
 
 elif args.create != '':
     system_message('Creating project <<', packaet_project_directory, '>>')

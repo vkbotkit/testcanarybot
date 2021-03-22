@@ -6,31 +6,31 @@ from .framework._application import (
     )
 
 
-version_raw = {
-    'sorted': {
-        'stable': {},
+# version_raw = {
+#     'sorted': {
+#         'stable': {},
 
-        'unstable': {},
+#         'unstable': {},
 
-        'dev': {
-            1: {0: [1, 2]}
-        }
-    },
-    'root': {
-        #convertedINT: currentCodeName
-    }
-}
-
-
-for i in version_raw['sorted'].keys():
-    for j in version_raw['sorted'][i].keys():
-        for k in version_raw['sorted'][i][j].keys():
-            for l in version_raw['sorted'][i][j][k]:
-                version_raw['root'][codenameToINT(j,k,l)] = correctCodeName(j,k,l) + " " + i
+#         'dev': {
+#             1: {0: [1, 2]}
+#         }
+#     },
+#     'root': {
+#         #convertedINT: currentCodeName
+#     }
+# }
 
 
-version = version_raw['root'][max(version_raw['root'].keys())]
+# for i in version_raw['sorted'].keys():
+#     for j in version_raw['sorted'][i].keys():
+#         for k in version_raw['sorted'][i][j].keys():
+#             for l in version_raw['sorted'][i][j][k]:
+#                 version_raw['root'][codenameToINT(j,k,l)] = correctCodeName(j,k,l) + " " + i
 
+
+# version = version_raw['root'][max(version_raw['root'].keys())]
+version = '01.00.003'
 
 __version__ = version
 
