@@ -18,6 +18,9 @@ class LibraryError(Exception):
 class LibraryException(LibraryError):
     pass
 
+class LibraryRewriteError(LibraryError):
+    pass
+
 class LibraryReload(LibraryException):
     pass
 

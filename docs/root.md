@@ -24,7 +24,7 @@ bot.start_polling() # infinite polling
 bot.log # -> bot log with all messages
 bot.api # VK API
 bot.tools # tools that handlers get to parse packages
-bot.testparse(package) #parse package that was created by objects.package(**dict()) 
+bot.testparse(package) #parse package that was created by objects.package(dict()) 
 
 
 ```

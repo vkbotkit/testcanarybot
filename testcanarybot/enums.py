@@ -2,6 +2,7 @@ from enum import Enum
 
 class events(Enum):
     message_new = 'message_new'
+    message_edit = 'message_edit'
     message_allow = 'message_allow'
     message_typing_state = 'message_typing_state'
     message_reply = 'message_reply'

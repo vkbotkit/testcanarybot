@@ -1,14 +1,19 @@
 import random
 from testcanarybot import objects
 
+# Copyright 2021 kensoi
+# Test module
+# Special for vk.com/screambot
+
 class Main(objects.libraryModule):
     async def start(self, tools: objects.tools):
         self.codename = "ScreamReact"
         self.description = """
-        {listitem} {mention} помощь - выслать инструкции в беседу
-        {listitem} {mention} генерировать [число] - сгенерировать смех в указанном количестве сообщений
-        {listitem} {mention} спам [число] - созвать всех в беседу указанном числом сообщений
-        Примечание: бот реагирует на любое сообщение, содержащее в себе "ору" вне учёта регистра
+        {listitem} @{mention} помощь - выслать инструкции в беседу
+        {listitem} @{mention} генерировать [число] - сгенерировать смех в указанном количестве сообщений
+        {listitem} @{mention} спам [число] - созвать всех в беседу указанном числом сообщений
+
+        {listitem} @{mention} клички - посмотреть, на какие упоминания реагирует бот
         """.format(
             listitem = tools.values.LISTITEM,
             mention = tools.link
@@ -31,7 +36,7 @@ class Main(objects.libraryModule):
 
     @objects.void # незарегистрированные команды или обычные сообщения
     async def scream(self, tools: objects.tools, package: objects.package):
-        if tools.group_id in package.params.mentions:
+        if set(tools.mentions) & set(package.params.mentions) != set():
             await tools.api.messages.send(
                 random_id = tools.random_id,
                 peer_id = package.peer_id,
@@ -46,6 +51,14 @@ class Main(objects.libraryModule):
             random_id = tools.random_id,
             peer_id = package.peer_id,
             message = self.description
+        )
+
+    @objects.priority(commands = ['клички']) # @testcanarybot помощь
+    async def helpy(self, tools: objects.tools, package: objects.package):
+        await tools.api.messages.send(
+            random_id = tools.random_id,
+            peer_id = package.peer_id,
+            message = ("Допустимые клички: \n{listitem} " + "\n{listitem} ".join(tools.mentions)).format(listitem = tools.values.LISTITEM)
         )
 
     @objects.priority(commands = ['спам', 'генерировать'])
