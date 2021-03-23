@@ -29,8 +29,7 @@ $ python -m testcanarybot --project BotName --create HandlerName
 ## Способы запустить бота
 
 ```bash
-$ python -m testcanarybot --run BotName
-$ python -m testcanarybot -mrun --projects BotName1 BotName2 # для запуска нескольких проектов
+$ python -m testcanarybot --run BotName1 BotName2 BotName3 # для запуска нескольких проектов
 $ python -m testcanarybot --run all # для запуска всех проектов в директории
 ```
 
