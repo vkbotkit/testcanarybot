@@ -27,7 +27,7 @@ class Main(objects.libraryModule):
     @objects.ContextManager(commands = ['клавиатура'])
     async def KeyboardTest(self, tools, package):
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = "Пример клавиатуры",
             keyboard = self.keyboardTest.get_keyboard()
@@ -36,7 +36,7 @@ class Main(objects.libraryModule):
     @objects.ContextManager(commands = ['клавиатура2'])
     async def KeyboardTest2(self, tools, package):
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = "Пример клавиатуры",
             keyboard = self.keyboardTest2.get_keyboard()
@@ -44,7 +44,7 @@ class Main(objects.libraryModule):
         while True:
             test = await tools.wait_reply(package)
             await tools.api.messages.send(
-                random_id = tools.random_id,
+                random_id = tools.gen_random(),
                 peer_id = package.peer_id,
                 message = "Кнопка сработала", 
             )

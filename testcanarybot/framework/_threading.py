@@ -26,11 +26,11 @@ class thread(threading.Thread):
 
     def run(self):
         self.setName(f"{self.cache}_{self.handler_id}")
-        self.library.tools.system_message(f"{self.getName()} is started", module = "package_handler")
+        self.library.tools.system_message(f"{self.getName()} is started", module = "package_handler", level = "debug")
 
         self.all_messages = self.library.tools.values.ALL_MESSAGES.value
         self.add_mentions = self.library.tools.values.ADD_MENTIONS.value
-        self.mentions = self.library.tools.mentions
+        self.mentions = self.library.tools.getBotMentions()
 
         self.thread_loop = asyncio.new_event_loop()
         self.thread_loop.set_exception_handler(self.exception_handler)
@@ -65,6 +65,7 @@ class thread(threading.Thread):
             self.thread_loop.create_task(handler(module, self.library.tools, package))
 
         except Exception as e:
+            self.library.tools.system_message("e", level = "error", module = self.name)
             print(traceback.format_exc())
 
     def create_task(self, package):
@@ -118,7 +119,7 @@ class thread(threading.Thread):
         try:
             package.items.append(self.library.tools.values.ENDLINE)
             if self.library.tools.wait_check(package):
-                self.library.tools.add(package)
+                self.library.tools._tools__waiting_replies[f"${package.peer_id}_{package.from_id}"] = package
 
             elif package.type == events.message_new:
                 if package.params.action:

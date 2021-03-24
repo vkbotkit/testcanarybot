@@ -1,42 +1,19 @@
 import abc
-from .data import package
+import typing
+from . import mention, package
 
 class tools(abc.ABCMeta):
-    __module = "system"
-    
-    @property
-    @abc.abstractmethod
-    def name_cases(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        raise RuntimeError("Incorrect usage")
 
     @property
     @abc.abstractmethod
-    def mentions_self(self):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def mentions_unknown(self):
+    def assets(self):
         pass
 
     @property
     @abc.abstractmethod
     def values(self):
-        return self.__values
-
-    @property
-    @abc.abstractmethod
-    def link(self):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def mention(self):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def mentions(self):
         pass
 
     @property
@@ -46,47 +23,43 @@ class tools(abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def groupId(self):
-        pass
-        
-    @property
-    @abc.abstractmethod
     def http(self):
         pass
-        
-    @property
+
     @abc.abstractmethod
-    def log(self):
+    def gen_random(self) -> int:
         pass
 
-    @property
     @abc.abstractmethod
-    def random_id(self):
+    def system_message(self, *args, write: typing.Optional[str] = None, module: str = "system", level:str = 'info') -> None:
         pass
 
-
     @abc.abstractmethod
-    def system_message(self, *args, write = None, module = None, newline = False) -> None:
+    def getLog(self):
+        "get bot log"
         pass
 
-
     @abc.abstractmethod
-    def getDate(self, time = None) -> str:
-        pass
-    
-    
-    @abc.abstractmethod
-    def getTime(self, time = None) -> str:
+    def getBotId(self) -> int:
         pass
 
-
     @abc.abstractmethod
-    def getDateTime(self, time = None) -> str:
+    def getBotLink(self) -> str:
         pass
-    
 
     @abc.abstractmethod
-    def ischecktype(self, checklist, checktype) -> bool:
+    def getBotDogMention(self) -> mention:
+        """
+        Get Mention as testcanarybot.objects.mention
+        To get mention at format [id|string] use repr(tools.getBotDogMention())
+        """
+        pass
+
+    @abc.abstractmethod
+    def getBotMentions(self) -> list:
+        """
+        get all mentions that you set as bot mentions at commands
+        """
         pass
 
 
@@ -98,7 +71,6 @@ class tools(abc.ABCMeta):
     @abc.abstractmethod
     async def wait_reply(self, package: package) -> package:
         pass
-
 
     @abc.abstractmethod
     async def getMention(self, page_id: int, name_case = "nom") -> str:
@@ -126,12 +98,10 @@ class tools(abc.ABCMeta):
 
 
     @abc.abstractmethod
-    async def getMembers(self, peer_id: int):
+    async def getMembers(self, peer_id: int) -> list:
         pass
 
 
     @abc.abstractmethod
     async def isMember(self, from_id: int, peer_id: int) -> bool:
         pass
-
-

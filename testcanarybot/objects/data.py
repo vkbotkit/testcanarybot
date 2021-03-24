@@ -16,6 +16,9 @@ class expression:
     def __list__(self):
         return self.value
 
+    def __repr__(self):
+        return self.value
+
 def task(package):
     return f"${package.peer_id}_{package.from_id}"
 
@@ -30,6 +33,12 @@ class mention:
 
     def __str__(self):
         return self.call
+
+    def __repr__(self):
+        if id > 0:
+            return f"[id{self.id}|{self.call}]"
+        else:
+            return f"[club{-self.id}|{self.call}]"
 
 class data:
     def __init__(self, entries):

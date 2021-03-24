@@ -9,7 +9,7 @@ class Main(objects.libraryModule):
     @objects.ContextManager(commands = ['пончики']) # commands
     async def ContextCommands(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = "А чё"
         )
@@ -17,7 +17,7 @@ class Main(objects.libraryModule):
     @objects.priority(commands = ['пончики2']) # commands
     async def SimilarCommands(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = "А чё"
         )

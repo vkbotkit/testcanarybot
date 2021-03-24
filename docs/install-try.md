@@ -1,12 +1,14 @@
-# Install and try testcanarybot 0.09.110
+# Install and try testcanarybot 1.0.004
 ## Requirements
 
-- Python 3.7
+- Python > 3.7
 - VK Community
 - Access token (group auth)
 - **[OPTIONAL] Service token**
 
 ## Install
+
+**[NOTE]** If you need to create a few of bots, please read [the TPPM usage article](./tppm.md)
 
 You can install testcanarybot with PYPI or GitHub:
 
@@ -102,7 +104,7 @@ Results at ./library/testHandler.py:
 from testcanarybot import objects
 from testcanarybot import exceptions #handling and raising errors
 """
-(c) kensoi.github.io, since 2020
+Copyright 2021 andprokofieff
 """
 class Main(objects.libraryModule):
 	async def start(self, tools: objects.tools):

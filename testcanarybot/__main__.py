@@ -1,6 +1,6 @@
 import argparse
 import importlib
-import typing
+import traceback
 import threading
 import os
 import sys
@@ -9,29 +9,55 @@ import string
 from .framework._application import _app as app
 
 """
-testcanarybot Packaet (pocket manager) PREVIEW
+testcanarybot project package manager
 Copyright 2021 andprokofieff
 """
 packaet_root_raw = """'''
 
 This is raw created root file for testcanarybot project.
-fill all important info and try to run with python -m testcanarybot --run [packaet_project]
+fill all important info and try to run with "$ python testcanarybot --run [LIST OF PROJECT DIRECTORIES]"
 
 '''
+import os
+import testcanarybot
 
-community_name = '' # optional
-community_token = '{token}'
-community_id = {group_id}
+community_name = ''     #optional
+community_token = ''
+community_id = 0
 
 
-community_service = '' # optional
-apiVersion = '5.130' # optional
-countThread = 5 # optional
+community_service = ''  # optional
+apiVersion = '5.130'    # optional
+countThread = 10        # optional
 
 mentions = []
+ALL_MESSAGES = False
+ADD_MENTIONS = False
+LISTITEM = '*'
+
+LOGLEVEL = "INFO"       # CRITICAL/ERROR/WARNING/INFO/DEBUG/NOTSET
+
+
+if __name__ == '__main__':
+    if os.path.abspath(__file__)[:len(os.getcwd())] == os.getcwd():
+        pass
+    else:
+        os.chdir(__file__[:__file__.rfind("/")])
+    
+    bot = testcanarybot.app(
+        accessToken = community_token,
+        groupId = community_id,
+        serviceToken = community_service, apiVersion = apiVersion, countThread = countThread, level = LOGLEVEL)
+    bot.setMentions(mentions)
+
+    bot.tools.values.set("ALL_MESSAGES", ALL_MESSAGES)
+    bot.tools.values.set("ADD_MENTIONS", ADD_MENTIONS)
+    bot.tools.values.set("LISTITEM", LISTITEM)
+
+    bot.start_polling()
 """
 
-packaet_manager_name = 'Packaet'
+packaet_manager_name = 'tppm'
 packaet_project_assets = 'assets'
 packaet_project_library = 'library'
 module_clear = "from testcanarybot import objects\nfrom testcanarybot import exceptions #handling and raising errors\n\"\"\"\n(c) kensoi.github.io, since 2020\n\"\"\"\nclass Main(objects.libraryModule):\n\tasync def start(self, tools: objects.tools):\n\t\tpass # create task at start\n\n\t@objects.ContextManager(commands = [\"check\"])\n\tasync def ContextManagerHandler(self, tools: objects.tools, package: objects.package):\n\t\tawait tools.api.message.send(random_id = tools.random_id, peer_id = package.peer_id, message = \"handler is working!\")"
@@ -110,7 +136,7 @@ class threadBot(threading.Thread):
         if self.all_messages: self.bot.tools.values.set("ALL_MESSAGES", self.all_messages)
         if self.listitem: self.bot.tools.values.set("LISTITEM", self.listitem)
         
-        system_message(self.botname, "initialised, started")
+        system_message("@" + self.bot.tools.getBotLink(), "initialised, started")
         self.bot.start_polling()
 
 
@@ -164,6 +190,10 @@ if len(args.run) > 0:
                 time.sleep(1)
             else:
                 raise ValueError(f"Incorrect project name. Run \"python testcanarybot --create {i}\" to create project, and try again")
+
+    while True:
+        pass
+
 
 elif args.create != '':
     system_message('Creating project <<', packaet_project_directory, '>>')
@@ -226,3 +256,17 @@ elif args.project != '':
                 module.write(module_clear)
             
             system_message("Done! Results at ./" + packaet_project_directory + "/library/")
+
+# while True:
+#     a = input("\rPackaet >> ")
+#     test = "%%%%%%%%"
+#     while a.endswith(" "):
+#         a = a[:-1]
+#     if a.endswith(":"):
+#         while test != "":
+#             test = input("\rPackaet >> ")
+#             a += "\n" + test 
+#     try:
+#         exec(a)
+#     except Exception as e:
+#         print(traceback.format_exc())

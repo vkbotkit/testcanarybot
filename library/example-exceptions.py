@@ -10,7 +10,7 @@ class Main(objects.libraryModule):
     @objects.priority(commands = ['quit']) # @testcanarybot quit
     async def second2(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = 'выхожу из фреймворка...'
         )
@@ -19,7 +19,7 @@ class Main(objects.libraryModule):
     @objects.priority(commands = ['lib_reload']) # @testcanarybot lib_reload
     async def second2(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = 'старт перезагрузки...'
         )

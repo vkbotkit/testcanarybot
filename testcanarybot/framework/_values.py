@@ -110,8 +110,6 @@ class global_expressions:
 
         self.__values["ENDLINE"] = expr(values.workspace, ":::ENDLINE:::")
         self.__values["NOREPLY"] = expr(values.workspace, ":::NOREPLY:::")
-        self.__values["TEST"] = expr(values.tumbler, ":::TEST:::")
-        self.__values["BEEPA_PAPASA"] = expr(values.hidden, ":::NYASHKA:NYASHKA:::")
         self.__values["LISTITEM"] = expr(values.expr, "\u2022")
 
 
@@ -140,6 +138,14 @@ class global_expressions:
 
             else:
                 raise TypeError("Incorrect exp_type")
+    
+    def get(self, name: str):
+        name = name.upper()
+        if name in self.__values.keys():
+            return self.__values[name]
+            
+        return expr(values.empty, f":::{name}:UNKNOWN:::")
+
 
 
 class _ohr:

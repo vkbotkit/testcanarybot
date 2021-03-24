@@ -2,7 +2,6 @@ from .data import *
 from .decorators import *
 from .tools import tools
 
-
 class libraryModule:
     codename = "testcanarybot_module"
     name = "testcanarybot sample module"

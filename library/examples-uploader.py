@@ -15,7 +15,7 @@ class Main(objects.libraryModule):
         )
         
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = "Пример с фото",
             attachment = f"photo{test[0].owner_id}_{test[0].id}"
@@ -28,7 +28,7 @@ class Main(objects.libraryModule):
         )
         
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = "Пример с фото",
             attachment = f"doc{test.doc.owner_id}_{test.doc.id}"

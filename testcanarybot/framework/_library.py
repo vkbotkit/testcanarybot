@@ -44,7 +44,7 @@ class library:
                 self.tools.system_message(
                     "Supporting event types: {event_types}".format(
                         event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['events'].keys()], ""])
-                    ), module = "library.uploader", newline = True)
+                    ), module = "library.uploader", level = "info")
 
             else:
                 raise RuntimeError("broken project.")
