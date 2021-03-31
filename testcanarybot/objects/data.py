@@ -3,35 +3,57 @@ import typing
 class expression:
     __slots__ = ('type', 'value')
 
+
     def __init__(self):
         self.type = None
         self.value = None
 
+
     def __str__(self):
         return self.value
+
 
     def __int__(self):
         return self.value
     
+
     def __list__(self):
         return self.value
+
+
+    def __repr__(self):
+        return '<{}(:::{}:{}:::)>'.format(type(self), self.value, self.value)
+
 
 def task(package):
     return f"${package.peer_id}_{package.from_id}"
 
+
 class mention:
     __slots__ = ('id', 'call') 
+
+
     def __init__(self, page_id, mention = ""):
         self.id = page_id
         self.call = mention
 
+
     def __int__(self):
         return self.id 
+
 
     def __str__(self):
         return self.call
 
-class data:
+
+    def __repr__(self):
+        if id > 0:
+            return f"[id{self.id}|{self.call}]"
+        else:
+            return f"[club{-self.id}|{self.call}]"
+
+
+class response:
     def __init__(self, entries):
         self.__dict__.update(entries)
 
@@ -53,16 +75,17 @@ class data:
         else:
             return attr  
 
+
     def __repr__(self):
         return '<{}({})>'.format(type(self), self.raw)
   
 
 
-class key(data):
+class key(response):
     pass
 
 
-class package(data):
+class package(response):
     __item = "$item"
     __items = "$items"
     __mention = "$mention"
@@ -89,7 +112,7 @@ class package(data):
         key_start = 0
 
 
-    type = ''
+    type = None
 
 
     def getItems(self):
@@ -120,6 +143,7 @@ class package(data):
             elif command[i] == self.__item:
                 if not isinstance(self.items[i], str):
                     return False
+
                 continue
 
             elif command[i] == self.__items:
@@ -128,16 +152,19 @@ class package(data):
             elif command[i] == self.__expr:
                 if not isinstance(self.items[i], (expression, str)):
                     return False
+
                 continue
 
             elif command[i] == self.__mention:
                 if not isinstance(self.items[i], mention):
                     return False
+
                 continue
 
             elif command[i] == self.__exprs:
                 if not isinstance(j, expression):
                     return False
+
                 return self.items[i:-1]
 
             elif command[i] == self.__mentions:
@@ -149,6 +176,7 @@ class package(data):
 
                 if mentions > 1:
                     return self.items[i:-1]
+
                 else:
                     return False
 

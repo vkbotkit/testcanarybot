@@ -1,44 +1,36 @@
-import os
 from .framework._application import (
-    _app as app, 
-    _codenameToINT as codenameToINT, 
-    _correctCodeName as correctCodeName
+    _app as app,
     )
 
+version = '01.00.005'
 
-# version_raw = {
-#     'sorted': {
-#         'stable': {},
+def root_init(name: str, file) -> bool:
+    import os
 
-#         'unstable': {},
+    if name != "__main__":
+        return False
 
-#         'dev': {
-#             1: {0: [1, 2]}
-#         }
-#     },
-#     'root': {
-#         #convertedINT: currentCodeName
-#     }
-# }
+    elif os.path.abspath(file) == os.getcwd():
+        pass
 
+    else:
+        test = file[:file.rfind("\\") + 1]
+        os.chdir(test)
 
-# for i in version_raw['sorted'].keys():
-#     for j in version_raw['sorted'][i].keys():
-#         for k in version_raw['sorted'][i][j].keys():
-#             for l in version_raw['sorted'][i][j][k]:
-#                 version_raw['root'][codenameToINT(j,k,l)] = correctCodeName(j,k,l) + " " + i
+    from .packaet import system_message
+    system_message("launching the project directly...")
 
-
-# version = version_raw['root'][max(version_raw['root'].keys())]
-version = '01.00.003'
+    return True
 
 __version__ = version
 
-__title__ = 'TestCanaryBot, ' + version
+__title__ = 'TestCanaryBot ' + version
 __author__ = 'Kensoi'
 __license__ = 'Apache v2'
-__copyright__ = 'Copyright 2021 Kensoi'
+__copyright__ = 'Copyright 2021 kensoi'
 
 __doc__ = "kensoi/testcanarybot, " + version + """
 Documentation is available at kensoi.github.io/testcanarybot
 """
+
+__all__ = ['version', 'app', 'root_init']

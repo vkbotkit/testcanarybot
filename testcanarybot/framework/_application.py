@@ -106,23 +106,29 @@ class _app:
     def __init__(self, 
         accessToken: str, groupId: int, serviceToken: str = "", 
         apiVersion: str = "5.126",  countThread: int = 1, 
-        assets = os.getcwd() + '\\assets\\', library = '', level: str = 'info', logg = logging.Logger(name = "testcanarybot")):
-
+        assets = 'assets', library = 'library', level: str = 'info', print_log:bool = False, logg = logging.Logger(name = "testcanarybot")):
         """
-        create a bot.
+        testcanarybot project object
+
+        # VK Bots API:
 
         accessToken [str] - token for community access [login/password for userbot is not supported]
         groupId [int] - group identificator
         serviceToken [str] - token for service access *Optional
-
         apiVersion [str] - set API version for your bot.
+
+        # TESTCANARYBOT ADDITIONAL SETTINGS:
+
         countThread [int: 1] - set threads count for handlers.
+        assets [str: "assets"] - current assets directory name (only name without path)
+        library [str: "library"] - current library directory name (only name without path)
+        logg [logging.Logger] - your logger
+        level [str] - logging level [CRITICAL/ERROR/WARNING/INFO/DEBUG/NOTSET]
         """
         self.logger = logg
         self.logger.setLevel(logger_levels[level.upper()])
         handler = logging.FileHandler("log.txt")
         self.logger.addHandler(handler)
-
 
         if threading.current_thread() == threading.main_thread():
             self.__loop = asyncio.get_event_loop()
@@ -145,10 +151,11 @@ class _app:
         self.__http = async_sessions(headers = self._headers)
         self.__api = api(self.__http, self.method)
 
-        self.__tools = tools(self.__group_id, self.__api, self.__http, assets, self.logger)
+        self.__tools = tools(self.__group_id, self.__api, self.__http, assets, self.logger, level, print_log)
         self.__tools.system_message(
             module = "session", 
-            write = str(self.tools.values.SESSION_START))
+            level = "info",
+            write = self.tools.values.SESSION_START)
             
         self.__library = _library(self.tools, library)
         atexit.register(self.__close)
@@ -180,7 +187,10 @@ class _app:
 
 
     def __close(self):
-        self.__tools.system_message(module = "session", write = self.__tools.values.SESSION_CLOSE)
+        self.__tools.system_message(
+            module = "session", 
+            level = "info",
+            write = self.__tools.values.SESSION_CLOSE)
         
 
     async def method(self, method: str, data: dict = {}):
@@ -264,7 +274,9 @@ class _app:
 
         self.setup()
         self.__library.tools.system_message(
-            str(self.tools.values.LONGPOLL_START), module = 'longpoll', newline=True)
+            module = "longpoll",
+            level = "debug",
+            write = self.tools.values.LONGPOLL_START)
         self.__loop.run_until_complete(
             self.__pollingCycle())
 
@@ -277,15 +289,18 @@ class _app:
         """
 
         self.setup()
-        self.__library.tools.system_message(
-            module = 'longpoll', newline = True,
-            write = str(self.tools.values.LONGPOLL_CHECK))
+        self.tools.system_message(
+            module = 'longpoll',
+            level = "debug",
+            write = self.tools.values.LONGPOLL_START)
         
         while times != 0:
             times -= 1
             self.__loop.run_until_complete(self.__polling())
         
-        self.tools.system_message(module = 'longpoll',
+        self.tools.system_message(
+            module = 'longpoll',
+            level = "debug",
             write = self.tools.values.LONGPOLL_CLOSE)
 
 
@@ -297,9 +312,9 @@ class _app:
 
         if self.tools.values.DEBUG_MESSAGES:
             self.tools.system_message( 
-                module="longpoll",
-                write = self.tools.values.LONGPOLL_UPDATE.value
-                )
+                module = "longpoll",
+                level = "debug",
+                write = self.tools.values.LONGPOLL_UPDATE)
 
 
     async def __check(self):
@@ -368,40 +383,16 @@ class _app:
 
 
 class tools:
-    __module = "system"
-    name_cases = [
-        'nom', 'gen', 
-        'dat', 'acc', 
-        'ins', 'abl'
-        ]
+    def __init__(self, group_id, api, http, assets, logger, level, print_log):
+        self.__assets = _assets(os.getcwd() + '\\' + assets)
+        
+        self.__logger = logger
+        self.__log_level = level
+        self.__print_log = print_log
 
-    mentions_self = {
-        'nom': 'я', 
-        'gen': ['меня', 'себя'],
-        'dat': ['мне', 'себе'],
-        'acc': ['меня', 'себя'],
-        'ins': ['мной', 'собой'],
-        'abl': ['мне','себе'],
-    }
-    mentions_unknown = {
-        'all': 'всех',
-        'him': 'его',
-        'her': 'её',
-        'it': 'это',
-        'they': 'их',
-        'them': 'их',
-        'us': 'нас',
-        'everyone': ['@everyone', '@all', '@все']
-    }
-
-
-    def __init__(self, group_id, api, http, assets, logger):
-        self.assets = _assets(assets)
-        self.logger = logger
         self.__http = http
         self.__api = api
         self.__group_id = group_id
-        self.__log = self.assets("log.txt", "a+", encoding="utf-8")
         self.__group_mention = ""
 
         self.__waiting_replies = {}
@@ -412,98 +403,74 @@ class tools:
         
         self.__values = global_expressions()
 
+    @property
+    def assets(self):
+        return self.__assets
 
     @property
     def values(self):
         return self.__values
 
     @property
-    def link(self):
-        return self.__group_address
-
-    @property
-    def mention(self):
-        return self.__group_mention
-
-    @property
-    def mentions(self):
-        return self.__mentions
-
-    @property
     def api(self):
         return self.__api
 
     @property
-    def groupId(self):
-        return self.__group_id
-        
-    @property
     def http(self):
         return self.__http
-        
-    @property
-    def log(self):
-        return self.__log
 
-    @property
-    def random_id(self):
+    def gen_random(self):
         return int(random.random() * 999999)
 
-    def system_message(self, *args, write = None, module = None, newline = False, level = 'info'):
-        if not module: module = self.__module
-        if not write: write = " ".join([str(i) for i in list(args)])
-        
-        response = f'@{self.__group_address}.{module}: {write}'
+    def system_message(self, *args, write: typing.Optional[str] = None, module: str = "system", level:str = 'info'):
+        if not write: 
+            write = " ".join([str(i) for i in list(args)])
 
-        newline_res = "\n" if newline else ""
+        self.__logger.log(logger_levels[level.upper()], f'[{level.upper()}]\t@{self.__group_address}.{module}: {write}')
 
-        self.logger.log(logger_levels[level.upper()], response)
-
-
-    def getDate(self, time = None) -> str:
-        if not time: time = datetime.now()
-        return f'{"%02d" % time.day}.{"%02d" % time.month}.{time.year}'
-    
-    
-    def getTime(self, time = None) -> str:
-        if not time: time = datetime.now()
-        return f'{"%02d" % time.hour}:{"%02d" % time.minute}:{"%02d" % time.second}.{time.microsecond}'
-
-
-    def getDateTime(self, time = None) -> str:
-        if not time: time = datetime.now()
-        return self.getDate(time) + ' ' + self.getTime(time)
-    
-
-    def ischecktype(self, checklist, checktype) -> bool:
-        for i in checklist:
-            if isinstance(checktype, list) and type(i) in checktype:
-                return True
-                
-            elif isinstance(checktype, type) and isinstance(i, checktype): 
-                return True
+        if self.__print_log and level.upper() == self.__log_level:
+            print(f'[{level.upper()}]\t@{self.__group_address}.{module}: {write}')
             
-        return False
+    def getBotId(self):
+        return self.__group_id + 0
 
+    def getBotLink(self):
+        return self.__group_address
+
+    def getBotDogMention(self):
+        """
+        Get Mention as testcanarybot.objects.mention
+        To get mention at format [id|string] use repr(tools.getBotDogMention())
+        """
+        return objects.mention(self.__group_id, "@" + self.__group_address)
+
+    def getBotMentions(self):
+        """
+        get all mentions that you set as bot mentions at commands
+        """
+        return self.__mentions[:]
+    
 
     def wait_check(self, package):
-        return f"${package.peer_id}_{package.from_id}" in self.__waiting_replies.keys()
-
-    def add(self, package):
-        self.__waiting_replies[f"${package.peer_id}_{package.from_id}"] = package
+        if package.type == events.message_new:
+            return f"${package.peer_id}_{package.from_id}" in self.__waiting_replies.keys()
+        else:
+            raise TypeError("Only message_new")
 
 
     async def wait_reply(self, package):
-        wait = f"${package.peer_id}_{package.from_id}"
-        self.__waiting_replies[wait] = False
+        if package.type == events.message_new:
+            wait = f"${package.peer_id}_{package.from_id}"
+            self.__waiting_replies[wait] = False
 
-        while True:
-            if self.__waiting_replies[wait]: 
-                return self.__waiting_replies.pop(wait)
-            
-            await asyncio.sleep(0)
+            while True:
+                if self.__waiting_replies[wait]: 
+                    return self.__waiting_replies.pop(wait)
+                
+                await asyncio.sleep(0)
+        else:
+            raise TypeError("Only message_new")
 
-    
 
     async def getMention(self, page_id: int, name_case = "nom"):
         if name_case == 'link':
@@ -573,7 +540,7 @@ class tools:
 
     async def getMembers(self, peer_id: int):
         response = await self.__api.messages.getConversationMembers(peer_id = peer_id)
-        return [i['member_id'] for i in response['items']]
+        return [i.member_id for i in response.items]
 
 
     async def isMember(self, from_id: int, peer_id: int):

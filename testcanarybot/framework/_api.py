@@ -29,11 +29,11 @@ class api:
         result = await self._method(self._string, kwargs)
         if isinstance(result, list):
             return [
-                objects.data(i) for i in result
+                objects.response(i) for i in result
             ]
         
         elif isinstance(result, dict):
-            return objects.data(result)
+            return objects.response(result)
 
         else:
             return result

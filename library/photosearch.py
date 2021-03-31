@@ -14,7 +14,7 @@ class Main(objects.libraryModule):
         ], response.count
         
         await tools.api.messages.send(
-            random_id = tools.random_id,
+            random_id = tools.gen_random(),
             peer_id = package.peer_id,
             message = f"Вот ваша коллекция фотографий [5/{count}]",
             attachment = ",".join(sorted(results, key=lambda results: random.random())[:5]),

@@ -1,3 +1,4 @@
-(c) kensoi.github.io, since 2020
-=======create sampled module========
-"python -m new_tcb -cm [--name {module_name_without_space}] [-f]
+testcanarybot library
+Copyright 2021 kensoi
+
+Create module: python testcanarybot --project {tppm_project_directory} --cm MODULENAME
