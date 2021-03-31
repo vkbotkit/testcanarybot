@@ -1,26 +1,27 @@
-# Root parameters and methods
+# Корневой файл проекта (root.py)
 
-root example:
+Пример корня:
 ```python
 '''
+testcanarybot project root
+Copyright 2021 kensoi
 
 This is raw created root file for testcanarybot project.
 fill all important info and try to run with "$ python testcanarybot --run [LIST OF PROJECT DIRECTORIES]"
 
 '''
-import os
+
 import testcanarybot
 
-community_name = 'Канарейка-чан'     #optional
-community_token = '2f206dfb5c7c4aeaff6e55e64c54ae86eb8b6e9ccab09dfa244563fd5c85277bafdac45e2bf4d06e18165'
-community_id = 195675828
+community_name = 'Канарейка чан'
+community_token = '{token}'
+community_id = {group}
 
-
-community_service = '4b982af44b982af44b982af4044bea70b544b984b982af4154d123d6075b06ad58a362a'  # optional
+community_service = '4b982af44b982af44b982af4044bea70b544b984b982af4154d123d6075b06ad58a362a' # optional
 apiVersion = '5.130'    # optional
 countThread = 10        # optional
 
-mentions = ['канари', 'каня', 'canarybot', 'canary']
+mentions = []
 ALL_MESSAGES = False
 ADD_MENTIONS = False
 LISTITEM = '*'
@@ -28,16 +29,12 @@ LISTITEM = '*'
 LOGLEVEL = "INFO"       # CRITICAL/ERROR/WARNING/INFO/DEBUG/NOTSET
 
 
-if __name__ == '__main__':
-    if os.path.abspath(__file__)[:len(os.getcwd())] == os.getcwd():
-        pass
-    else:
-        os.chdir(__file__[:__file__.rfind("/")])
-    
+if testcanarybot.root_init(__name__, __file__): # False -> it was launched through tppm
     bot = testcanarybot.app(
         accessToken = community_token,
         groupId = community_id,
         serviceToken = community_service, apiVersion = apiVersion, countThread = countThread, level = LOGLEVEL)
+
     bot.setMentions(mentions)
 
     bot.tools.values.set("ALL_MESSAGES", ALL_MESSAGES)

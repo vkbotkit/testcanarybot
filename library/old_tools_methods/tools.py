@@ -23,7 +23,7 @@ def getTime(time = datetime.now()) -> str:
 
 
 def getDateTime(time = datetime.now()) -> str:
-    return self.getDate(time) + ' ' + self.getTime(time)
+    return getDate(time) + ' ' + getTime(time)
 
 
 def ischecktype(checklist, checktype) -> bool:

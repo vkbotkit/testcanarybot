@@ -9,7 +9,7 @@ import sys
 
 class library:
     def __init__(self, tools, library):
-        self.botname = library
+        self.libdir = library
         self.tools = tools
         self.list = []
         self.void_react = False
@@ -32,26 +32,42 @@ class library:
                 importlib.reload(i)
         else:
             self.modules = {}
-            if os.path.isdir(self.botname + 'library\\'):
-                self.tools.system_message(str(self.tools.values.LIBRARY_GET), module = "library.uploader")
+            if os.path.isdir(os.getcwd() + '\\' + self.libdir):
+                self.tools.system_message(
+                    module = "library.uploader",
+                    level = "debug",
+                    write = str(self.tools.values.LIBRARY_GET))
             
-                listdir = [i for i in os.listdir(self.botname + 'library\\' + '\\') if i != "__pycache__" and (i.endswith('.py') or i.count(".") == 0)]
+                listdir = [i for i in os.listdir(os.getcwd() + '\\' + self.libdir) if i != "__pycache__" and (i.endswith('.py') or i.count(".") == 0)]
 
                 if len(listdir) == 0:
-                    raise exceptions.LibraryError(
-                        self.tools.values.LIBRARY_ERROR)
+                    self.tools.system_message(
+                        module = "library.uploader", 
+                        level = "error", 
+                        write = self.tools.values.IMPORTERROR)
+                        
+                    raise ImportError(
+                        self.tools.values.IMPORTERROR)
+                
                 loop.run_until_complete(asyncio.wait([loop.create_task(self.upload_handler(module)) for module in listdir]))
+
                 self.tools.system_message(
-                    "Supporting event types: {event_types}".format(
+                    module = "library.uploader", 
+                    level = "debug", 
+                    write = "Supporting event types: {event_types}".format(
                         event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['events'].keys()], ""])
-                    ), module = "library.uploader", level = "info")
+                    ))
 
             else:
-                raise RuntimeError("broken project.")
+                self.tools.system_message(
+                    module = "library.uploader", 
+                    level = "error", 
+                    write = "Module Library is not exists. Their directory should be here: " + os.getcwd() + '\\' + self.libdir)
+                raise ImportError("Module Library is not exists. Their directory should be here: " + os.getcwd() + '\\' + self.libdir)
         
 
     async def upload_handler(self, module_name):
-        module_direct = self.botname + 'library\\' + module_name
+        module_direct = self.libdir + '\\' + module_name
         if module_direct.endswith('.py'):
             pass
         else:
@@ -65,12 +81,18 @@ class library:
             moduleObj.module_name = module_name
                     
             if not issubclass(type(moduleObj), objects.libraryModule):
-                return self.tools.system_message(self.tools.values.MODULE_FAILED_SUBCLASS.value.format(
-                    module = module_name), module = "library.uploader")
+                return self.tools.system_message(
+                    module = "library.uploader",
+                    level = "error",
+                    write = self.tools.values.MODULE_FAILED_SUBCLASS.value.format(
+                        module = module_name))
 
         else:
-            return self.tools.system_message(self.tools.values.MODULE_FAILED_BROKEN.value.format(
-                module = module_name), module = "library.uploader")
+            return self.tools.system_message(
+                module = "library.uploader",
+                level = "error",
+                write = self.tools.values.MODULE_FAILED_BROKEN.format(
+                module = module_name), )
                 
         for coro_name in set(dir(moduleObj)) - set(dir(objects.libraryModule)):
             coro = getattr(moduleObj, coro_name)
@@ -82,37 +104,58 @@ class library:
                 except:
                     pass
 
-        message = self.tools.values.MODULE_INIT.value.format(
+        message = self.tools.values.MODULE_INIT.format(
             module = module_name)
 
         if len(moduleObj.commands) == 0 and len(moduleObj.event_handlers.keys()) == 0 and not moduleObj.void_react:
-            return self.tools.system_message(self.tools.values.MODULE_FAILED_HANDLERS.value.format(
-                module = module_name), module = "library.uploader")
+            return self.tools.system_message(
+                module = "library.uploader",
+                level = "error",
+                write = self.tools.values.MODULE_FAILED_HANDLERS.format(
+                    module = module_name))
         
         if len(moduleObj.commands) > 0:
-            message += self.tools.values.MODULE_INIT_PRIORITY.value.format(count = len(moduleObj.commands))
+            message += self.tools.values.MODULE_INIT_PRIORITY.format(count = len(moduleObj.commands))
 
             for i in moduleObj.handler_dict.values():
                 for j in i['commands']:
                     if j in self.handlers['priority']:
+                        self.tools.system_message(
+                            module = "library.uploader",
+                            level = "error",
+                            write = f"[{module_name}] `{str(j)}` is already registered command")
+
                         raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(j)}` is already registered command")
+
                     else:
                         self.handlers['priority'][j] = i['handler']
 
         if len(moduleObj.event_handlers.keys()) > 0:
             for event in moduleObj.event_handlers.keys():
-                message += self.tools.values.MODULE_INIT_EVENTS.value.format(event = str(event))
+                message += self.tools.values.MODULE_INIT_EVENTS.format(event = str(event))
                 if event in self.handlers['events']:
-                    raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(action)}`is already registered void")
+                    self.tools.system_message(
+                        module = "library.uploader",
+                        level = "error",
+                        write = f"[{module_name}] `{str(event)}` is already registered event")
+
+                    raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(event)}` is already registered event")
+
                 else:
                     self.handlers['events'][event] = moduleObj.event_handlers[event]
         
         if len(moduleObj.action_handlers.keys()) > 0:
             for action in moduleObj.action_handlers.keys():
-                message += self.tools.values.MODULE_INIT_ACTION.value.format(event = str(action))
+                message += self.tools.values.MODULE_INIT_ACTION.format(event = str(action))
 
                 if action in self.handlers['action']:
+                    self.tools.system_message(
+                        module = "library.uploader",
+                        level = "error",
+                        write = f"[{module_name}] `{str(action)}` is already registered action")
+                    
                     raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(action)}` is already registered action")
+
                 else:
                     self.handlers['action'][action] = moduleObj.action_handlers[action]
 
@@ -120,10 +163,18 @@ class library:
             if 'void' in self.handlers:
                 self.handlers['void'] = moduleObj.void_react
                 self.void_react = True
-                message += self.tools.values.MODULE_INIT_VOID.value
+                message += self.tools.values.MODULE_INIT_VOID
+
             else:
-                raise exceptions.LibraryRewriteError(f"[{module_name}] `{str(action)}` is already registered void")
+                self.tools.system_message(
+                    module = "library.uploader",
+                    level = "error",
+                    write = f"[{module_name}] `void is already registered")
+                raise exceptions.LibraryRewriteError(f"[{module_name}] `void is already registered")
 
         self.modules[module_name] = moduleObj
         self.list = module_name
-        return self.tools.system_message(write = message, module = "library.uploader")
+        return self.tools.system_message(
+            module = "library.uploader",
+            level = "debug",
+            write = message)

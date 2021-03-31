@@ -16,6 +16,7 @@ class Main(objects.libraryModule):
         )
         raise exceptions.Quit("test") # -> to finish your framework (closing all projects that was runned by packaet)
 
+
     @objects.priority(commands = ['lib_reload']) # @testcanarybot lib_reload
     async def second2(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(

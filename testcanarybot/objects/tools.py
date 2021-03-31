@@ -35,11 +35,6 @@ class tools(abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def getLog(self):
-        "get bot log"
-        pass
-
-    @abc.abstractmethod
     def getBotId(self) -> int:
         pass
 

@@ -21,11 +21,13 @@ class Main(objects.libraryModule):
         self.mention = "@all го орать"
         self.err = "Использование: \"{mention} спам/генерировать [целое число больше 0]\""
 
+
     def gen(self):   
         result = ""
 
         if random.randint(0,2) == 0:
             result = "ОРУ" + "У" * random.randint(5,253)
+            
         else:
             lenght = random.randint(8, 256)
 
@@ -33,6 +35,7 @@ class Main(objects.libraryModule):
                 result += random.choice(['А', 'Х'])
 
         return result
+
 
     @objects.void # незарегистрированные команды или обычные сообщения
     async def scream(self, tools: objects.tools, package: objects.package):
@@ -42,6 +45,7 @@ class Main(objects.libraryModule):
                 peer_id = package.peer_id,
                 message = self.gen()
             )
+
             return None
 
 
@@ -53,6 +57,7 @@ class Main(objects.libraryModule):
             message = self.description
         )
 
+
     @objects.priority(commands = ['клички']) # @testcanarybot помощь
     async def helpy(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(
@@ -60,6 +65,7 @@ class Main(objects.libraryModule):
             peer_id = package.peer_id,
             message = ("Допустимые клички: \n{listitem} " + "\n{listitem} ".join(tools.mentions)).format(listitem = tools.values.LISTITEM)
         )
+
 
     @objects.priority(commands = ['спам', 'генерировать'])
     async def generate(self, tools: objects.tools, package: objects.package):

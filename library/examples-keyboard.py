@@ -16,13 +16,11 @@ class Main(objects.libraryModule):
         self.keyboardTest.add_button("Test2")
         self.keyboardTest.add_line()
         self.keyboardTest.add_button("Test3")
-
         
         self.keyboardTest2.add_button("тесто", keyboardcolor.PRIMARY)
         self.keyboardTest2.add_line()
         self.keyboardTest2.add_location_button()
         
-
 
     @objects.ContextManager(commands = ['клавиатура'])
     async def KeyboardTest(self, tools, package):
@@ -33,6 +31,7 @@ class Main(objects.libraryModule):
             keyboard = self.keyboardTest.get_keyboard()
         )
 
+
     @objects.ContextManager(commands = ['клавиатура2'])
     async def KeyboardTest2(self, tools, package):
         await tools.api.messages.send(
@@ -41,6 +40,7 @@ class Main(objects.libraryModule):
             message = "Пример клавиатуры",
             keyboard = self.keyboardTest2.get_keyboard()
         )
+
         while True:
             test = await tools.wait_reply(package)
             await tools.api.messages.send(

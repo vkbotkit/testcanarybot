@@ -106,18 +106,22 @@ class _app:
     def __init__(self, 
         accessToken: str, groupId: int, serviceToken: str = "", 
         apiVersion: str = "5.126",  countThread: int = 1, 
-        assets = os.getcwd() + '\\assets\\', library = os.getcwd() + '\\library\\', level: str = 'info', print_log:bool = False, logg = logging.Logger(name = "testcanarybot")):
-
+        assets = 'assets', library = 'library', level: str = 'info', print_log:bool = False, logg = logging.Logger(name = "testcanarybot")):
         """
-        bot object
+        testcanarybot project object
+
+        # VK Bots API:
 
         accessToken [str] - token for community access [login/password for userbot is not supported]
         groupId [int] - group identificator
         serviceToken [str] - token for service access *Optional
-
         apiVersion [str] - set API version for your bot.
+
+        # TESTCANARYBOT ADDITIONAL SETTINGS:
+
         countThread [int: 1] - set threads count for handlers.
-        
+        assets [str: "assets"] - current assets directory name (only name without path)
+        library [str: "library"] - current library directory name (only name without path)
         logg [logging.Logger] - your logger
         level [str] - logging level [CRITICAL/ERROR/WARNING/INFO/DEBUG/NOTSET]
         """
@@ -150,7 +154,8 @@ class _app:
         self.__tools = tools(self.__group_id, self.__api, self.__http, assets, self.logger, level, print_log)
         self.__tools.system_message(
             module = "session", 
-            write = str(self.tools.values.SESSION_START))
+            level = "info",
+            write = self.tools.values.SESSION_START)
             
         self.__library = _library(self.tools, library)
         atexit.register(self.__close)
@@ -182,7 +187,10 @@ class _app:
 
 
     def __close(self):
-        self.__tools.system_message(module = "session", write = self.__tools.values.SESSION_CLOSE)
+        self.__tools.system_message(
+            module = "session", 
+            level = "info",
+            write = self.__tools.values.SESSION_CLOSE)
         
 
     async def method(self, method: str, data: dict = {}):
@@ -266,7 +274,9 @@ class _app:
 
         self.setup()
         self.__library.tools.system_message(
-            str(self.tools.values.LONGPOLL_START), module = 'longpoll')
+            module = "longpoll",
+            level = "debug",
+            write = self.tools.values.LONGPOLL_START)
         self.__loop.run_until_complete(
             self.__pollingCycle())
 
@@ -279,15 +289,18 @@ class _app:
         """
 
         self.setup()
-        self.__library.tools.system_message(
-            module = 'longpoll', newline = True,
-            write = str(self.tools.values.LONGPOLL_CHECK))
+        self.tools.system_message(
+            module = 'longpoll',
+            level = "debug",
+            write = self.tools.values.LONGPOLL_START)
         
         while times != 0:
             times -= 1
             self.__loop.run_until_complete(self.__polling())
         
-        self.tools.system_message(module = 'longpoll',
+        self.tools.system_message(
+            module = 'longpoll',
+            level = "debug",
             write = self.tools.values.LONGPOLL_CLOSE)
 
 
@@ -299,9 +312,9 @@ class _app:
 
         if self.tools.values.DEBUG_MESSAGES:
             self.tools.system_message( 
-                module="longpoll",
-                write = self.tools.values.LONGPOLL_UPDATE.value
-                )
+                module = "longpoll",
+                level = "debug",
+                write = self.tools.values.LONGPOLL_UPDATE)
 
 
     async def __check(self):
@@ -371,7 +384,7 @@ class _app:
 
 class tools:
     def __init__(self, group_id, api, http, assets, logger, level, print_log):
-        self.__assets = _assets(assets)
+        self.__assets = _assets(os.getcwd() + '\\' + assets)
         
         self.__logger = logger
         self.__log_level = level
@@ -417,10 +430,7 @@ class tools:
 
         if self.__print_log and level.upper() == self.__log_level:
             print(f'[{level.upper()}]\t@{self.__group_address}.{module}: {write}')
-
-    def getLog(self):
-        return self.assets("log.txt", "a+", encoding="utf-8")
-
+            
     def getBotId(self):
         return self.__group_id + 0
 
@@ -432,7 +442,7 @@ class tools:
         Get Mention as testcanarybot.objects.mention
         To get mention at format [id|string] use repr(tools.getBotDogMention())
         """
-        return objects.mention(self.__group_id, self.__group_address)
+        return objects.mention(self.__group_id, "@" + self.__group_address)
 
     def getBotMentions(self):
         """
@@ -442,18 +452,24 @@ class tools:
     
 
     def wait_check(self, package):
-        return f"${package.peer_id}_{package.from_id}" in self.__waiting_replies.keys()
+        if package.type == events.message_new:
+            return f"${package.peer_id}_{package.from_id}" in self.__waiting_replies.keys()
+        else:
+            raise TypeError("Only message_new")
 
 
     async def wait_reply(self, package):
-        wait = f"${package.peer_id}_{package.from_id}"
-        self.__waiting_replies[wait] = False
+        if package.type == events.message_new:
+            wait = f"${package.peer_id}_{package.from_id}"
+            self.__waiting_replies[wait] = False
 
-        while True:
-            if self.__waiting_replies[wait]: 
-                return self.__waiting_replies.pop(wait)
-            
-            await asyncio.sleep(0)
+            while True:
+                if self.__waiting_replies[wait]: 
+                    return self.__waiting_replies.pop(wait)
+                
+                await asyncio.sleep(0)
+        else:
+            raise TypeError("Only message_new")
 
 
     async def getMention(self, page_id: int, name_case = "nom"):
@@ -524,7 +540,7 @@ class tools:
 
     async def getMembers(self, peer_id: int):
         response = await self.__api.messages.getConversationMembers(peer_id = peer_id)
-        return [i['member_id'] for i in response['items']]
+        return [i.member_id for i in response.items]
 
 
     async def isMember(self, from_id: int, peer_id: int):

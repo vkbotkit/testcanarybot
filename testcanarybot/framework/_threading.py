@@ -26,7 +26,10 @@ class thread(threading.Thread):
 
     def run(self):
         self.setName(f"{self.cache}_{self.handler_id}")
-        self.library.tools.system_message(f"{self.getName()} is started", module = "package_handler", level = "debug")
+        self.library.tools.system_message(
+            module = "package_handler", 
+            level = "debug",
+            write = f"{self.getName()} is started")
 
         self.all_messages = self.library.tools.values.ALL_MESSAGES.value
         self.add_mentions = self.library.tools.values.ADD_MENTIONS.value
@@ -43,30 +46,57 @@ class thread(threading.Thread):
         try:
             raise context['exception']
 
-        except exceptions.Quit as a:
-            self.library.tools.system_message(a)
-            print(a)
+        except exceptions.Quit as message:
+            self.library.tools.system_message(
+                module = "framework",
+                level = "debug",
+                write = "Attached message: " + message
+            )
             
             os._exit(1)
 
-        except exceptions.LibraryReload as b:
+        except exceptions.LibraryReload as message:
+            self.library.tools.system_message(
+                module = "framework",
+                level = "debug",
+                write = "Attached message: " + message
+            )
+
             self.library.upload()
 
         except exceptions.CallVoid as e:
-            peer_id, from_id = str(e)[1:].split("_")
-            handler = self.library.handlers['void']
-            module = self.library.modules[handler.__module__]
+            if e[0] == "$" and e.count("_") == 1:
+                peer_id, from_id = str(e)[1:].split("_")
+                handler = self.library.handlers['void']
+                module = self.library.modules[handler.__module__]
 
-            package = objects.package({
-                'peer_id': int(peer_id), 
-                'from_id': int(from_id), 
-                'items': [self.library.tools.values.NOREPLY]
-                })
-            self.thread_loop.create_task(handler(module, self.library.tools, package))
+                package = objects.package({
+                    'peer_id': int(peer_id), 
+                    'from_id': int(from_id), 
+                    'items': [self.library.tools.values.NOREPLY]
+                    })
+                self.thread_loop.create_task(handler(module, self.library.tools, package))
+
+            else:
+                self.library.tools.system_message(
+                    module = "framework",
+                    level = "debug",
+                    write = "Attempted to call void with incorrect task: " + e
+                )
+
 
         except Exception as e:
-            self.library.tools.system_message("e", level = "error", module = self.name)
             print(traceback.format_exc())
+            
+            self.library.tools.system_message(
+                module = "traceback",
+                level = "debug",
+                write = traceback.format_exc())
+
+            self.library.tools.system_message(
+                module = self.name,
+                level = "error", 
+                write = "Appeared exception: " + e)
 
     def create_task(self, package):
         if isinstance(package, objects.package):

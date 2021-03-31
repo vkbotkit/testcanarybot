@@ -5,6 +5,7 @@ class Main(objects.libraryModule):
     async def start(self, tools):
         pass
 
+
     @objects.ContextManager(commands = ['ассеты'])
     async def assetsExample(self, tools, package):
         with tools.assets("readme.txt") as log: # %assets%/readme.txt

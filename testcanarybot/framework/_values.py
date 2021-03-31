@@ -7,18 +7,17 @@ import string
 
 
 class expr(expression):
-    def __init__(self, stype: values, value: typing.Optional[str] = None):
-        self.type = stype
-        self.value = value if value else None
+    def __init__(self, type: values, value: str):
+        self.type = type
+        self.value = value
 
 
 def parsename(name: str):
     name = name.lower()
     test, i = len(name), 0
+
     while i< test:
-        if name[i] not in [
-                *string.ascii_lowercase,
-                *string.digits]:
+        if name[i] not in [*string.ascii_lowercase, *string.digits]:
             name = name[:i] + name[i+1:]
             test -= 1
 
@@ -57,94 +56,111 @@ def gen_str(test = None):
 
 
 class global_expressions:
-    __types = {
-        values.workspace: [],
-        values.log: [],
-        values.expr: [],
-        values.tumbler: [],
-        values.hidden: ["BEEPA_PAPASA"]
-    }
-    __values = {}
+    def clear(self):
+        self.__types = {
+            values.workspace: [],
+            values.log: [],
+            values.tumbler: []
+            values.expr: [],
+        }
+        self.__values = {}
 
-    def __init__(self):
-        self.__values["ALL_MESSAGES"] = expr(values.tumbler, False)
-        self.__values["DEBUG_MESSAGES"] = expr(values.tumbler, False)
-        self.__values["MENTIONS"] = expr(values.tumbler, False)
-
-        self.__values["LOGGER_START"] = expr(values.log, """testcanarybot started here""")
-        self.__values["LOGGER_CLOSE"] = expr(values.log, ["","$$$",""])
-
-        self.__values["SESSION_START"] = expr(values.log, "started")
-        self.__values["SESSION_CLOSE"] = expr(values.log, "closed")
-
-        self.__values["LONGPOLL_START"] = expr(values.log, "polling is started \n")
-        self.__values["LONGPOLL_CLOSE"] = expr(values.log, "polling is finished")
-        self.__values["LONGPOLL_CHECK"] = expr(values.log, "checking...")
-        self.__values["LONGPOLL_UPDATE"] = expr(values.log, "server updated")
-        self.__values["LONGPOLL_ERROR"] = expr(values.log, "have not been connected")
-
-        self.__values["LIBRARY_GET"] = expr(values.log, "library directory is listed")
-        self.__values["LIBRARY_ERROR"] = expr(values.log, "library directory is broken")
-
-        self.__values["MODULE_INIT"] = expr(values.log, "{module} is loaded")
-
-        self.__values["MODULE_INIT"] = expr(values.log, "{module} is loaded")
-        self.__values["MODULE_INIT_VOID"] = expr(values.log, "\n\t\t + void coroutine")
-        self.__values["MODULE_INIT_PRIORITY"] = expr(values.log, "\n\t\t + registered {count} commands")
-        self.__values["MODULE_INIT_EVENTS"] = expr(values.log, "\n\t\t with {event}")
+        self.set(name = "ALL_MESSAGES", value = False, type = values.tumbler)
+        self.set(name = "DEBUG_MESSAGES", value = False, type = values.tumbler)
+        self.set(name = "MENTIONS", value = False, type = values.tumbler)
         
-        self.__values["MODULE_FAILED_BROKEN"] = expr(values.log, "{module} is broken: no 'Main' class")
-        self.__values["MODULE_FAILED_VERSION"] = expr(values.log, "{module} is broken: unsupported version of that")
-        self.__values["MODULE_FAILED_SUBCLASS"] = expr(values.log, "{module} is broken: is not inherited from testcanarybot.objects.libraryModule")
-        self.__values["MODULE_FAILED_HANDLERS"] = expr(values.log, """{module} is broken: no any handlers at module, write coroutine with these decorators:
+        self.set(name = "LOGGER_START", value = ":::LOGGER_START:::", type = values.log)
+        self.set(name = "LOGGER_CLOSE", value = ":::LOGGER_END:::", type = values.log)
+        
+        self.set(name = "SESSION_START", value = "started", type = values.log)
+        self.set(name = "SESSION_CLOSE", value = "closed", type = values.log)
+        
+        self.set(name = "LONGPOLL_START", value = "polling...", type = values.log)
+        self.set(name = "LONGPOLL_CLOSE", value = "polling is finished", type = values.log)
+        self.set(name = "LONGPOLL_CHECK", value = "polling...", type = values.log)
+        self.set(name = "LONGPOLL_UPDATE", value = "server updated", type = values.log)
+        self.set(name = "LONGPOLL_ERROR", value = "is not connected", type = values.log)
+
+        self.set(name = "LIBRARY_GET", value = "library directory is listed", type = values.log)
+        self.set(name = "IMPORTERROR", value = "library directory is broken", type = values.log)
+
+        self.set(name = "MODULE_INIT", value = "{module} is loaded", type = values.log)
+        self.set(name = "MODULE_INIT_VOID", value = "\n\t\t + void coroutine", type = values.log)
+        self.set(name = "MODULE_INIT_PRIORITY", value = "\n\t\t + registered {count} commands", type = values.log)
+        self.set(name = "MODULE_INIT_EVENTS", value = "\n\t\t with {event}", type = values.log)
+
+        self.set(name = "MODULE_FAILED_BROKEN", value = "{module} is broken: no 'Main' class", type = values.log)
+        self.set(name = "MODULE_FAILED_VERSION", value = "{module} is broken: unsupported version of that", type = values.log)
+        self.set(name = "MODULE_FAILED_SUBCLASS", value = "{module} is broken: is not inherited from testcanarybot.objects.libraryModule", type = values.log)
+        self.set(name = "MODULE_FAILED_HANDLERS", value = """{module} is broken: no any handlers at module, write coroutine with these decorators:
             @objects.libraryModule.priority(commands = [])
             @objects.libraryModule.event(events = [])
-            @objects.libraryModule.void""")
+            @objects.libraryModule.void""", type = values.log)
 
 
-        self.__values["MESSAGE_HANDLER_ITEMS"] = expr(values.log, "\t\titems: {items}")
-        self.__values["MESSAGE_HANDLER_TYPE"] = expr(values.log, "{event_type}")
-        self.__values["MESSAGE_HANDLER_CHAT"] = expr(values.log, "\t\tpeer id: {peer_id}")
-        self.__values["MESSAGE_HANDLER_USER"] = expr(values.log, "\t\tfrom id: {from_id}")
-        self.__values["MESSAGE_HANDLER_IT"] = expr(values.log, "\t\ttext: {text}")
+        self.set(name = "MESSAGE_HANDLER_ITEMS", value = "\t\titems: {items}", type = values.log)
+        self.set(name = "MESSAGE_HANDLER_TYPE", value = "{event_type}", type = values.log)
+        self.set(name = "MESSAGE_HANDLER_CHAT", value = "\t\tpeer id: {peer_id}", type = values.log)
+        self.set(name = "MESSAGE_HANDLER_USER", value = "\t\tfrom id: {from_id}", type = values.log)
+        self.set(name = "MESSAGE_HANDLER_IT", value = "\t\ttext: {text}", type = values.log)
 
-        self.__values["ENDLINE"] = expr(values.workspace, ":::ENDLINE:::")
-        self.__values["NOREPLY"] = expr(values.workspace, ":::NOREPLY:::")
-        self.__values["LISTITEM"] = expr(values.expr, "\u2022")
+        self.set(name = "ENDLINE", type = values.workspace)
+        self.set(name = "NOREPLY", type = values.workspace)
+        self.set(name = "LISTITEM", value = "\u2022", type = values.expr)
 
 
     def __getattr__(self, name: str):
-        if name in self.__values.keys():
-            return self.__values[name]
-            
-        return expr(values.empty, f":::{name}:UNKNOWN:::")
-
-    @property
-    def keys(self):
-        return self.__values.keys()
-
-    
-    def set(self, name: str, value: typing.Any = None, stype: typing.Optional[values] = None):
-        value = value if value else f":::{name}:::"
-        stype = stype if stype else values.expr
-
-        if name in self.__values.keys() and name not in self.__types[values.hidden]:
-            self.__values[name].value = value
-
-        else:
-            if stype in self.__types.keys():
-                self.__types[stype].append(name)
-                self.__values[name] = expr(stype, value)
-
-            else:
-                raise TypeError("Incorrect exp_type")
-    
-    def get(self, name: str):
         name = name.upper()
         if name in self.__values.keys():
             return self.__values[name]
+
+        else:
+            raise AttributeError(f"Unknown key: \"{name}\"")
+    
+    
+    def type(self, name):
+        for i in self.__types.keys():
+            if name in self.__types[i]:
+                return i
+        raise NameError("\"{name}\" is not exists")
+        
+
+    def getKeys(self):
+        return list(self.__values.keys())
+
+    
+    def set(self, name: str, value: typing.Optional[str] = None, type: typing.Optional[values] = None):
+        name = name.upper()
+
+        if not value: 
+            value = expr(type, name)
+
+        if name not in self.__values.keys():
+            if not type: 
+                type = values.expr
             
-        return expr(values.empty, f":::{name}:UNKNOWN:::")
+            self.__types[type].append(name)
+        
+        self.__values[name] = value
+
+
+    def switch(self, name: str, value: typing.Optional[bool] = None):
+        name = name.upper()
+
+        if name in self.__values[values.tumbler]: 
+            if not isinstance(value, bool):
+                value = not self.get(name)
+
+            self.set(name = name, value = value)
+            
+        else:
+            raise TypeError(f"\"{name}\" is not values.tumbler")
+
+    
+    __types: dict
+    __values: dict
+    __init__ = clear
+    get = __getattr__
 
 
 
