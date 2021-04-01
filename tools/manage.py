@@ -21,4 +21,4 @@
 import subprocess
 
 projects = ['kyokou', 'kyokou2'] # list of projects by project folder name
-subprocess.run(f'python -m testcanarybot -mrun --projects {" ".join(projects)}'.split())
+subprocess.run(f'python -m testcanarybot --run {" ".join(projects)}'.split())
