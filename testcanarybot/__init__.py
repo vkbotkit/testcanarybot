@@ -2,7 +2,7 @@ from .framework._application import (
     _app as app,
     )
 
-version = '01.00.005'
+version = '01.00.006'
 
 def root_init(name: str, file) -> bool:
     import os
