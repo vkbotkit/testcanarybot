@@ -16,10 +16,9 @@ python -m testcanarybot --project project_name --cm module_name [-f] # create mo
 ```bash
 $ python -m testcanarybot --create BotProjectDirName --token 7a6fa4dff77a228eeda56603b8f53806c883f011c40b72630bb50df056f6479e52a --group 123123
 ```
-| **BotProjectDirName** | название директории, в которой будет создан чатбот     |
-| --------------------- | ------------------------------------------------------ |
-| **--token**           | ваш токен (ключ доступа сообщества)                    |
-| **--group**           | идентификатор сообщества, в котором будет работать бот |
+* **BotProjectDirName** - название директории, в которой будет создан чатбот
+* **--token** - ваш токен (ключ доступа сообщества)
+* **--group** - идентификатор сообщества, в котором будет работать бот
 
 ## Создание модуля с обработчиками
 
@@ -30,10 +29,9 @@ tppm >> manager for << BotProjectDirName >>
 tppm >> created folder << ModuleName >>
 tppm >> Done! Results at ./BotProjectDirName/library/
 ```
-| BotProjectDirName | название директории, в которой расположены данные чатбота |
-| ----------------- | --------------------------------------------------------- |
-| **ModuleName**    | название создаваемого модуля                              |
-| **-f**            | флаг: создать в **ModuleName**/main.py                    |
+* **BotProjectDirName** - название директории, в которой расположены данные чатбота
+* **ModuleName** - название создаваемого модуля                              
+* **-f**  - флаг: создать в **ModuleName**/main.py                    
 
 ## Способы запустить бота
 
@@ -67,6 +65,6 @@ tppm >> @bot2 initialised, started #BotName2 folder
 
 Фильтр обработки рабочей папки:
 
-* наличие root.py (не папка)
-* наличие assets (папка) (может называться как в аргументе --assets)
-* наличие library (папка) (может называться как в аргументе --library)
+* наличие **root.py** (не папка)
+* наличие **assets** (папка) (= --assets)
+* наличие **library** (папка) (= --library)
