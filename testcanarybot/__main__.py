@@ -82,7 +82,7 @@ if len(args.run) > 0:
 elif args.create != '':
     system_message('Creating project <<', packaet_project_directory, '>>')
     
-    if packaet_project_directory not in projects:
+    if packaet_project_directory not in os.listdir(args.path):
         system_message("Creating directories")
 
         os.mkdir(args.path + '\\' + packaet_project_directory)

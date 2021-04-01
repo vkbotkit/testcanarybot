@@ -60,7 +60,7 @@ class global_expressions:
         self.__types = {
             values.workspace: [],
             values.log: [],
-            values.tumbler: []
+            values.tumbler: [],
             values.expr: [],
         }
         self.__values = {}
