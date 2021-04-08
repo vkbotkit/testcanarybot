@@ -29,6 +29,7 @@ MANIFEST
 
 #testing stuff
 kyokou/
+canarybot/
 log.txt
 
 # PyInstaller

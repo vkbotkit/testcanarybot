@@ -1,6 +1,9 @@
 import typing
 from .. import exceptions
 
+from ..enums import events as enums_events
+from ..enums import action as enums_action
+
 
 def ContextManager(
         events: typing.Optional[list] = None, 
@@ -12,26 +15,27 @@ def ContextManager(
     def decorator(coro: typing.Callable):
         def registerCommand(self):
             if events:
-                from .enums import events as enums_events
                 for i in events:
                     if not isinstance(i, enums_events):
                         raise TypeError("Incorrect type!")
 
                     elif i not in self.event_handlers and i != enums_events.message_new:
                         self.event_handlers[i] = coro
+
                     else:
-                        raise exceptions.LibraryRewriteError(f"{str(i)} is already registered event")
+                        raise exceptions.LibraryRewriteError(f"\"{str(i)}\" is already registered event")
                 
                 return # coro(self, *args, **kwargs) 
 
             if commands:
+                response = {'handler': coro, 'commands': commands}
+
                 self.commands.extend(commands)
-                self.handler_dict[coro.__name__] = {'handler': coro, 'commands': commands}
+                self.handler_dict[coro.__name__] = response
 
                 return # coro(self, *args, **kwargs)
 
             if action:
-                from .enums import action as enums_action
                 for i in action:
                     if not isinstance(i, enums_action):
                         raise TypeError("use testcanarybot.enums.action for this context!")
@@ -42,7 +46,6 @@ def ContextManager(
                     else:
                         raise exceptions.LibraryRewriteError(f"{str(i)} is already registered action")
 
-
                 return # coro(self, *args, **kwargs)
 
             if not (events or commands or action):
@@ -50,9 +53,11 @@ def ContextManager(
                     raise NameError("Void handler is already created")
 
                 self.void_react = coro
+
                 return # coro(self, *args, **kwargs)
         
         return registerCommand
+        
     return decorator
     
 def event(events: list):

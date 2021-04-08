@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class events(Enum):
     message_new = 'message_new'
     message_edit = 'message_edit'

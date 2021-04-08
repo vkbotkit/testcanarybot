@@ -22,11 +22,11 @@ class expression:
 
 
     def __repr__(self):
-        return '<{}(:::{}:{}:::)>'.format(type(self), self.value, self.value)
+        return '<{}(:::{}:{}:::)>'.format(repr(type(self))[1:-1], self.value, self.value)
 
 
 def task(package):
-    return f"${package.peer_id}_{package.from_id}"
+    return "$" + str(package.peer_id)+ "_" + str(package.from_id)
 
 
 class mention:
@@ -47,7 +47,7 @@ class mention:
 
 
     def __repr__(self):
-        if id > 0:
+        if self.id > 0:
             return f"[id{self.id}|{self.call}]"
         else:
             return f"[club{-self.id}|{self.call}]"
@@ -110,6 +110,7 @@ class package(response):
         gment = ""
         mentions = []
         key_start = 0
+        bot_mentioned = False
 
 
     type = None
