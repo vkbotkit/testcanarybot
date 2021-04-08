@@ -54,7 +54,7 @@ if len(args.run) > 0:
         elif args.run[0] == 'all':
             for i in getProjects(args.path):
                 testApp = importlib.import_module(i + '.root')
-                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library)
+                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library, args.path)
                 workingProjects.append(testBot)
                 time.sleep(1)
 
@@ -62,7 +62,7 @@ if len(args.run) > 0:
         for i in args.run:
             if i in getProjects(args.path):
                 testApp = importlib.import_module(i + '.root')
-                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library)
+                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library, args.path + '\\' + i)
                 workingProjects.append(testBot)
                 time.sleep(1)
             else:

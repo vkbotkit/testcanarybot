@@ -65,10 +65,6 @@ class global_expressions:
         }
         self.__values = {}
 
-        self.set(name = "ALL_MESSAGES", value = False, type = values.tumbler)
-        self.set(name = "DEBUG_MESSAGES", value = False, type = values.tumbler)
-        self.set(name = "MENTIONS", value = False, type = values.tumbler)
-        
         self.set(name = "LOGGER_START", value = ":::LOGGER_START:::", type = values.log)
         self.set(name = "LOGGER_CLOSE", value = ":::LOGGER_END:::", type = values.log)
         
@@ -88,15 +84,15 @@ class global_expressions:
         self.set(name = "MODULE_INIT_VOID", value = "\n\t\t + void coroutine", type = values.log)
         self.set(name = "MODULE_INIT_PRIORITY", value = "\n\t\t + registered {count} commands", type = values.log)
         self.set(name = "MODULE_INIT_EVENTS", value = "\n\t\t with {event}", type = values.log)
+        self.set(name = "MODULE_INIT_ACTION", value = "\n\t\t with {action}", type = values.log)
 
         self.set(name = "MODULE_FAILED_BROKEN", value = "{module} is broken: no 'Main' class", type = values.log)
         self.set(name = "MODULE_FAILED_VERSION", value = "{module} is broken: unsupported version of that", type = values.log)
         self.set(name = "MODULE_FAILED_SUBCLASS", value = "{module} is broken: is not inherited from testcanarybot.objects.libraryModule", type = values.log)
         self.set(name = "MODULE_FAILED_HANDLERS", value = """{module} is broken: no any handlers at module, write coroutine with these decorators:
-            @objects.libraryModule.priority(commands = [])
-            @objects.libraryModule.event(events = [])
-            @objects.libraryModule.void""", type = values.log)
-
+            @objects.priority(commands = [])
+            @objects.event(events = [])
+            @objects.void""", type = values.log)
 
         self.set(name = "MESSAGE_HANDLER_ITEMS", value = "\t\titems: {items}", type = values.log)
         self.set(name = "MESSAGE_HANDLER_TYPE", value = "{event_type}", type = values.log)
@@ -106,7 +102,13 @@ class global_expressions:
 
         self.set(name = "ENDLINE", type = values.workspace)
         self.set(name = "NOREPLY", type = values.workspace)
+
+        self.set(name = "ALL_MESSAGES", value = False, type = values.tumbler)
+        self.set(name = "ADD_MENTIONS", value = False, type = values.tumbler)
+        self.set(name = "DEBUG_MESSAGES", value = False, type = values.tumbler)
+
         self.set(name = "LISTITEM", value = "\u2022", type = values.expr)
+        self.set(name = "ADDITIONAL_MENTIONS", value = [], type = values.expr)
 
 
     def __getattr__(self, name: str):
@@ -140,7 +142,12 @@ class global_expressions:
                 type = values.expr
             
             self.__types[type].append(name)
-        
+        elif type:
+            for i in self.__types:
+                if name in i and i != type:
+                    pass
+                else:
+                    raise TypeError("Incorrect type for value:", type)
         self.__values[name] = value
 
 

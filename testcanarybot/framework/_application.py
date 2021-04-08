@@ -4,12 +4,13 @@ from ..enums import values
 from ..enums import events
 
 from ._api import api
-from ._threading import thread
+from ._threading import thread as handlering_thread
 from ._library import library as _library
 from ._values import _ohr
 from ._values import global_expressions
 
 from datetime import datetime
+from enum import Enum
 
 import logging
 
@@ -103,30 +104,49 @@ class _app:
     __booted_once = False
 
 
-    def __init__(self, 
-        accessToken: str, groupId: int, serviceToken: str = "", 
-        apiVersion: str = "5.126",  countThread: int = 1, 
-        assets = 'assets', library = 'library', level: str = 'info', print_log:bool = False, logg = logging.Logger(name = "testcanarybot")):
+    def __init__(self, accessToken: str, groupId: typing.Union[str, int], apiVersion: str = "5.126", serviceToken: str = "", 
+                    logg = logging.Logger(name = "testcanarybot"), level: str = 'info', 
+                    print_log: bool = False, path = os.getcwd(), countThread: int = 1, assets = 'assets', library = 'library'):
         """
-        testcanarybot project object
+        testcanarybot project core (application)
 
-        # VK Bots API:
+        # VK Bots API
+        accessToken     [str]                       community access token
+        groupId         [str, int]                  community identificator
+        apiVersion      [str: "5.130"]              set API version for your bot.
+        serviceToken    [str]                       token for service access
 
-        accessToken [str] - token for community access [login/password for userbot is not supported]
-        groupId [int] - group identificator
-        serviceToken [str] - token for service access *Optional
-        apiVersion [str] - set API version for your bot.
+        # Logger
+        logg            [object: logging.Logger()]  your logger
+        level           [str, int: "info"]          logging level [CRITICAL/ERROR/WARNING/INFO/DEBUG/NOTSET]
 
-        # TESTCANARYBOT ADDITIONAL SETTINGS:
-
-        countThread [int: 1] - set threads count for handlers.
-        assets [str: "assets"] - current assets directory name (only name without path)
-        library [str: "library"] - current library directory name (only name without path)
-        logg [logging.Logger] - your logger
-        level [str] - logging level [CRITICAL/ERROR/WARNING/INFO/DEBUG/NOTSET]
+        # Core settings
+        print_log       [bool: False]               print log to console
+        path            [str: os.getcwd()]          project path
+        countThread     [int: 1]                    set threads count for handlers.
+        assets          [str: "assets"]             current assets directory name (only name without path)
+        library         [str: "library"]            current library directory name (only name without path)
         """
+        self.__thread = []
+        self.__access = accessToken
+        self.__service = serviceToken
+        self.__group_id = int(groupId)
+        self.__countThread = countThread
+        self.__lastthread = 0
+        self.__av = apiVersion
+        self.__longpoll_delay = 1 / 20
+        self.__longpoll_last = 0.0  
+
+        self.__http = async_sessions(headers = self._headers)
+        self.__api = api(self.__http, self.method)
         self.logger = logg
-        self.logger.setLevel(logger_levels[level.upper()])
+
+        if isinstance(level, str):
+            level = level.upper()
+            level = logger_levels[level]
+
+        self.logger.setLevel(level)
+
         handler = logging.FileHandler("log.txt")
         self.logger.addHandler(handler)
 
@@ -136,26 +156,10 @@ class _app:
         else:
             self.__loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.__loop)
-        self.__loop
 
-        self.__thread = []
-        self.__access = accessToken
-        self.__service = serviceToken
-        self.__group_id = groupId
-        self.__countThread = countThread
-        self.__lastthread = 0
-        self.__av = apiVersion
-        self.__longpoll_delay = 1 / 20
-        self.__longpoll_last = 0.0  
 
-        self.__http = async_sessions(headers = self._headers)
-        self.__api = api(self.__http, self.method)
-
-        self.__tools = tools(self.__group_id, self.__api, self.__http, assets, self.logger, level, print_log)
-        self.__tools.system_message(
-            module = "session", 
-            level = "info",
-            write = self.tools.values.SESSION_START)
+        self.__tools = tools(self.__group_id, self.__api, self.__http, os.getcwd() + '\\' + assets, self.logger, level, print_log)
+        self.__tools.system_message(module = "session", level = "info", write = self.tools.values.SESSION_START)
             
         self.__library = _library(self.tools, library)
         atexit.register(self.__close)
@@ -165,21 +169,26 @@ class _app:
     def countThread(self):
         return self.__countThread
 
+
     @property
     def http(self):
         return self.__http
+
 
     @property
     def log(self):
         return self.logger.handlers[0].baseFilename
 
+
     @property
     def tools(self):
         return self.__tools
 
+
     @property
     def api(self):
         return self.__api
+
 
     @property
     def api_url(self):
@@ -187,10 +196,7 @@ class _app:
 
 
     def __close(self):
-        self.__tools.system_message(
-            module = "session", 
-            level = "info",
-            write = self.__tools.values.SESSION_CLOSE)
+        self.__tools.system_message(module = "session", level = "info", write = self.__tools.values.SESSION_CLOSE)
         
 
     async def method(self, method: str, data: dict = {}):
@@ -218,13 +224,13 @@ class _app:
         else:
             data['access_token'] = self.__access
 
-
         if delay > 0: await asyncio.sleep(delay)
 
         response = await self.http.post(self.api_url + method, data = data)
         response = await response.json()
 
         self.last_request = time.time()
+
         if 'error' in response: 
             raise exceptions.MethodError(f"[{response['error']['error_code']}] {response['error']['error_msg']}")
 
@@ -233,9 +239,15 @@ class _app:
 
     def setMentions(self, mentions: list):
         """
-        Setup custom mentions instead "@{groupadress}"
+        Setup custom mentions instead "@{group_address}"
         """
-        self.tools._tools__mentions = [self.tools._tools__group_mention, *[str(i).lower() for i in mentions]]
+        resource = []
+        resource.append(self.tools._tools__group_mention)
+        mentions = map(str, mentions)
+        mentions = map(lambda value: value.lower(), mentions)
+        mentions = list(mentions)
+
+        self.tools._tools__mentions = mentions  
 
 
     def setup(self):  
@@ -243,26 +255,26 @@ class _app:
         [Optional] Install components to work with longpoll and your handlers.
         """  
           
-        if len(self.__library.modules) == 0:
-            self.__library.upload(self.__loop)
+        self.__library.upload()
 
-        time.sleep(0.01)
         self.logger.info(self.tools.values.LOGGER_START)
 
         if self.__countThread > len(self.__thread):
+            current_thread = threading.currentThread()
+
             for i in range(self.countThread):
-                thread_started = thread(self.__library, i, threading.currentThread().getName())
+                thread_started = handlering_thread(self.__library, i, current_thread.getName())
                 thread_started.start()
                 
                 self.__thread.append(thread_started)
-
-        time.sleep(0.01)
 
         if not self.__booted_once:
             self.__booted_once = True
 
             for i in self.__library.modules.values():
-                if hasattr(i, "start"): self.__getThread().create_task(i.start)
+                if hasattr(i, "start"): 
+                    thread = self.__getThread()
+                    thread.create_task(i.start)
 
         self.__loop.run_until_complete(self.__update_longpoll_server())                
 
@@ -273,12 +285,8 @@ class _app:
         """
 
         self.setup()
-        self.__library.tools.system_message(
-            module = "longpoll",
-            level = "debug",
-            write = self.tools.values.LONGPOLL_START)
-        self.__loop.run_until_complete(
-            self.__pollingCycle())
+        self.__library.tools.system_message(module = "longpoll", level = "debug", write = self.tools.values.LONGPOLL_START)
+        self.__loop.run_until_complete(self.__pollingCycle())
 
 
     def check(self, times: int = 1) -> None:
@@ -289,26 +297,24 @@ class _app:
         """
 
         self.setup()
-        self.tools.system_message(
-            module = 'longpoll',
-            level = "debug",
-            write = self.tools.values.LONGPOLL_START)
+
+        self.tools.system_message(module = 'longpoll', level = "debug", write = self.tools.values.LONGPOLL_START)
         
         while times != 0:
-            times -= 1
             self.__loop.run_until_complete(self.__polling())
+
+            times -= 1
         
-        self.tools.system_message(
-            module = 'longpoll',
-            level = "debug",
-            write = self.tools.values.LONGPOLL_CLOSE)
+        self.tools.system_message(module = 'longpoll', level = "debug", write = self.tools.values.LONGPOLL_CLOSE)
 
 
     async def __update_longpoll_server(self, update_ts: bool = True) -> None:
         response = await self.method('groups.getLongPollServer', {'group_id': self.__group_id})
 
-        if update_ts: self.__ts = response['ts']
-        self.__longpoll_key, self.__longpoll_url = response['key'], response['server']
+        if update_ts: 
+            self.__ts = response['ts']
+        self.__longpoll_key = response['key']
+        self.__longpoll_url = response['server']
 
         if self.tools.values.DEBUG_MESSAGES:
             self.tools.system_message( 
@@ -318,21 +324,18 @@ class _app:
 
 
     async def __check(self):
-        values = {
-            'act': 'a_check',
-            'key': self.__longpoll_key,
-            'ts': self.__longpoll_ts,
-            'wait': 25,
-        }
+        values = {'act': 'a_check',
+                'key': self.__longpoll_key,
+                'ts': self.__longpoll_ts,
+                'wait': 25,
+                }
         
-        response = await self.http.get(
-            self.__longpoll_url,
-            params = values
-        )
+        response = await self.http.get(self.__longpoll_url, params = values)
         response = await response.json(content_type = None)
 
         if 'failed' not in response:
             self.__longpoll_ts = response['ts']
+
             return response['updates']
 
         elif response['failed'] == 1:
@@ -355,7 +358,8 @@ class _app:
         for event in await self.__check():
             if event['type'] == 'message_new':
                 package = objects.package(event['object']['message'])
-                package.params.client_info = objects.data(event['object']['client_info'])
+
+                package.params.client_info = objects.response(event['object']['client_info'])
                 package.params.from_chat = package.peer_id > 2000000000
 
             else:
@@ -364,11 +368,15 @@ class _app:
             package.type = getattr(events, event['type'])
             package.event_id = event['event_id']
             package.items = []
-            self.__getThread().create_task(package)
 
+            self.__getThread().create_task(package)
         
     def __getThread(self):
-        self.__lastthread = 0 if self.__lastthread + 1 == len(self.__thread) else self.__lastthread + 1
+        self.__lastthread += 1
+        
+        if self.__lastthread == len(self.__thread):
+            self.__lastthread = 0
+        
         return self.__thread[self.__lastthread]
 
 
@@ -384,7 +392,7 @@ class _app:
 
 class tools:
     def __init__(self, group_id, api, http, assets, logger, level, print_log):
-        self.__assets = _assets(os.getcwd() + '\\' + assets)
+        self.__assets = _assets(assets)
         
         self.__logger = logger
         self.__log_level = level
@@ -393,7 +401,6 @@ class tools:
         self.__http = http
         self.__api = api
         self.__group_id = group_id
-        self.__group_mention = ""
 
         self.__waiting_replies = {}
         self.__group_address = asyncio.get_event_loop().run_until_complete(self.api.groups.getById(group_id=self.__group_id))[0].screen_name
@@ -403,147 +410,205 @@ class tools:
         
         self.__values = global_expressions()
 
+
+    class name_cases:
+        nom = 'nom'
+        gen = 'gen'
+        dat = 'dat'
+        acc = 'acc'
+        ins = 'ins'
+        abl = 'abl'
+
+
     @property
     def assets(self):
         return self.__assets
+
 
     @property
     def values(self):
         return self.__values
 
+
     @property
     def api(self):
         return self.__api
+
 
     @property
     def http(self):
         return self.__http
 
+
     def gen_random(self):
         return int(random.random() * 999999)
 
-    def system_message(self, *args, write: typing.Optional[str] = None, module: str = "system", level:str = 'info'):
-        if not write: 
-            write = " ".join([str(i) for i in list(args)])
 
-        self.__logger.log(logger_levels[level.upper()], f'[{level.upper()}]\t@{self.__group_address}.{module}: {write}')
+    def system_message(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = 'info', sep = " "):
+        if not write:
+            write = list(map(str, args))
+            write = sep.join()
 
-        if self.__print_log and level.upper() == self.__log_level:
-            print(f'[{level.upper()}]\t@{self.__group_address}.{module}: {write}')
+        write = "[" + level.upper() + "]\t" + "@" + self.__group_address + "." + module + ': ' + write
+        if self.__print_log and logger_levels[level.upper()] >= self.__log_level:
+            print(write)
+
+        self.__logger.log(logger_levels[level.upper()], write)
+
             
     def getBotId(self):
-        return self.__group_id + 0
+        return -self.__group_id
+
 
     def getBotLink(self):
-        return self.__group_address
+        return self.__group_address + ""
+
 
     def getBotDogMention(self):
         """
         Get Mention as testcanarybot.objects.mention
         To get mention at format [id|string] use repr(tools.getBotDogMention())
         """
+
         return objects.mention(self.__group_id, "@" + self.__group_address)
+
 
     def getBotMentions(self):
         """
         get all mentions that you set as bot mentions at commands
         """
+
         return self.__mentions[:]
     
 
     def wait_check(self, package):
         if package.type == events.message_new:
-            return f"${package.peer_id}_{package.from_id}" in self.__waiting_replies.keys()
+            return objects.task(package) in self.__waiting_replies.keys()
+
         else:
             raise TypeError("Only message_new")
 
 
     async def wait_reply(self, package):
         if package.type == events.message_new:
-            wait = f"${package.peer_id}_{package.from_id}"
+            wait = objects.task(package)
             self.__waiting_replies[wait] = False
 
-            while True:
-                if self.__waiting_replies[wait]: 
-                    return self.__waiting_replies.pop(wait)
+            while not self.__waiting_replies[wait]:
+                await asyncio.sleep()
                 
-                await asyncio.sleep(0)
+            return self.__waiting_replies.pop(wait)
+
         else:
             raise TypeError("Only message_new")
 
 
-    async def getMention(self, page_id: int, name_case = "nom"):
+    async def getMention(self, page_id: int, name_case: str = "nom", name: bool = True, last_name: bool = False):
         if name_case == 'link':
-            if page_id > 0:
-                return f'[id{page_id}|@id{page_id}]'
+            name_case = 'nom'
+            name = False
+            last_name = False
+            
+        call = ""
 
-            elif page_id == self.__group_id:
-                return self.__group_mention
+        if page_id > 0:
+            request = await self.__api.users.get(user_ids = page_id, name_case = name_case, fields = "screen_name")
+
+            if name or second_name:
+
+                if name:
+                    call += request[0].first_name               # [id1|Павел]
+
+                if name and second_name:                        # [id1|Павел Дуров]
+                    call += " "
+
+                if second_name:
+                    call += request[0].first_name               # [id1|Дуров]
 
             else:
-                test = await self.__api.groups.getById(group_id = -page_id)
-                return f'[club{-page_id}|@{test[0].screen_name}]'
+                if hasattr(request[0], 'screen_name'):
+                    call = "@" + str(request[0].screen_name)    # [id1|@durov]
+
+                else:
+                    call = "@id" + str(page_id)                 # [id1|@id1]
+            
+            return f'[id{page_id}|{call}]'
+        
+        elif page_id == self.__group_id:
+            return self.mentions_self[name_case]
         
         else:
-            if page_id > 0:
-                request = await self.__api.users.get(
-                    user_ids = page_id, 
-                    name_case = name_case
-                    )
-                first_name = request[0].first_name
-                
-                return f'[id{page_id}|{first_name}]'
-            
-            elif page_id == self.__group_id:
-                return self.mentions_self[name_case]
-            
+            request = await self.__api.groups.getById(group_id = -page_id)
+
+            if name:
+                call += request[0].name
+
             else:
-                request = await self.__api.groups.getById(
-                    group_id = -page_id
-                    )
-                name = request[0].name
-                
-                return f'[club{-page_id}|{name}]' 
+                call += request[0].screen_name
+            
+            return f'[club{-page_id}|{call}]' 
 
 
     async def getManagers(self, group_id = None):
+        response = []
+
         if not group_id:
             group_id = self.__group_id
 
-        elif not isinstance(group_id, int):
-            raise TypeError('Group ID should be integer')
+        else:
+            group_id = int(group_id)
 
-        lis = await self.__api.groups.getMembers(group_id = group_id, sort = 'id_asc', filter='managers')
-        return [i.id for i in lis.items if i.role in ['administrator', 'creator', 'moderator']]
+        resource = await self.__api.groups.getMembers(group_id = group_id, sort = 'id_asc', filter='managers')
+
+        for item in resource.items:
+            if item.role in ['administrator', 'creator', 'moderator']:
+                response.append(item)
+
+        return response
 
 
     async def isManager(self, from_id: int, group_id = None):
         if not group_id:
             group_id = self.__group_id
             
-        elif not isinstance(group_id, int):
-            raise TypeError('Group ID should be integer')
+        else:
+            group_id = int(group_id)
 
-        return from_id in await self.getManagers(group_id)
+        response = await self.getManagers(group_id)
+
+        return from_id in response
 
 
     async def getChatManagers(self, peer_id: int):
-        res = await self.__api.messages.getConversationsById(peer_ids = peer_id)
-        res = res.items[0].chat_settings
-        response = [*res.admin_ids, res.owner_id]
+        resource = await self.__api.messages.getConversationsById(peer_ids = peer_id)
+        resource = resource.items[0].chat_settings
+        
+        response = []
+        
+        response.extend(resource.admin_ids)
+        response.append(resource.owner_id)
+
         return response
         
 
-    def isChatManager(self, from_id, peer_id: int):
-        return from_id in self.getChatManagers(peer_id)
+    async def isChatManager(self, from_id, peer_id: int):
+        response = await self.getChatManagers(peer_id)
+        return from_id in response
 
 
     async def getMembers(self, peer_id: int):
-        response = await self.__api.messages.getConversationMembers(peer_id = peer_id)
-        return [i.member_id for i in response.items]
+        response = []
+        resource = await self.__api.messages.getConversationMembers(peer_id = peer_id)
+
+        for item in resource.items:
+            response.append(item.member_id)
+
+        return response
 
 
     async def isMember(self, from_id: int, peer_id: int):
-        return from_id in await self.getMembers(peer_id)
+        response = await self.getMembers(peer_id)
+
+        return from_id in response
 
 
