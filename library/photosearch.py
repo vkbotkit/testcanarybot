@@ -1,6 +1,8 @@
 import random
 from testcanarybot import objects
 
+# Copyright 2021 kensoi
+
 class Main(objects.libraryModule):
     @objects.priority(commands = ["картинка"])
     async def photo_search(self, tools, package):

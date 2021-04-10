@@ -1,16 +1,4 @@
-class LoopStateError(Exception):
-    pass
-    
-    
-class DBError(Exception):
-    pass
-
-
 class MethodError(Exception):
-    pass
-
-
-class LongpollError(MethodError):
     pass
 
 
@@ -31,6 +19,7 @@ class LibraryReload(LibraryException):
 
 
 class CallVoid(LibraryException):
+    # raise exceptions.CallVoid(objects.task(package))
     pass
 
 

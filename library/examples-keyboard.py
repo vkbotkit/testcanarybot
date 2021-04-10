@@ -3,6 +3,7 @@ from testcanarybot import exceptions
 from testcanarybot.keyboard import keyboard
 from testcanarybot.keyboard import keyboardcolor
 
+# Copyright 2021 kensoi
 
 class Main(objects.libraryModule):
     

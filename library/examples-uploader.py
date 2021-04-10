@@ -1,12 +1,12 @@
 from testcanarybot import objects
 from testcanarybot import exceptions
 from testcanarybot.uploader import Uploader
-from testcanarybot.assets import assets
+
+# Copyright 2021 kensoi
 
 class Main(objects.libraryModule):
-	# Заглушка для чатбота при добавлении в беседу
     async def start(self, tools):
-        self.upload = Uploader(tools.api)
+        self.upload = Uploader(tools)
 
     @objects.ContextManager(commands = ["уплоадер"])
     async def uploaderTest(self, tools, package):

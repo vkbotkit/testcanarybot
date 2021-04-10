@@ -2,6 +2,7 @@ import random
 from testcanarybot import objects
 
 # Copyright 2021 kensoi
+
 # Test module
 # Special for vk.com/screambot
 
@@ -21,18 +22,21 @@ class Main(objects.libraryModule):
         self.mention = "@all го орать"
         self.err = "Использование: \"{mention} спам/генерировать [целое число больше 0]\""
 
+        self.laugh_dict = "ОРУУ"
+        self.rofl_dict = list("АХ")
+
 
     def gen(self):   
         result = ""
 
         if random.randint(0,2) == 0:
-            result = "ОРУ" + "У" * random.randint(5,253)
+            result = self.laugh_dict[:-1] + self.laugh_dict[-1] * random.randint(5,253)
             
         else:
             lenght = random.randint(8, 256)
 
             for i in range(lenght):
-                result += random.choice(['А', 'Х'])
+                result += random.choice(self.rofl_dict)
 
         return result
 

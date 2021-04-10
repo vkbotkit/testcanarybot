@@ -39,7 +39,7 @@ class thread(threading.Thread):
 
         thread_name = f"{self.cache}_{self.handler_id}"
         self.setName(thread_name)
-        self.library.tools.system_message(module = "core", level = "debug", write = f"{self.getName()} is started")
+        self.library.tools.system_message(module = "framework", level = "debug", write = f"{self.getName()} is started")
         self.thread_loop.run_forever()
 
 
@@ -47,17 +47,14 @@ class thread(threading.Thread):
         typed = type(context['exception'])
         reason = str(context['exception'])
         if typed == exceptions.Quit:
-            self.library.tools.system_message(
-                module = "framework",
-                level = "debug",
-                write = "Attached message: " + message
-            )
+            self.library.tools.system_message(module = "framework", level = "debug", write = "Attached message: " + message)
             
             os._exit(1)
 
         elif typed == exceptions.LibraryReload:
             self.library.reload()
-            self.library.tools.system_message( module = "framework", level = "debug", write = "Attached message: " + message)
+            self.library.upload()
+            self.library.tools.system_message(module = "framework", level = "debug", write = "Attached message: " + message)
 
         elif typed == exceptions.CallVoid:
             if reason[0] == "$" and reason.count("_") == 1:
@@ -81,7 +78,7 @@ class thread(threading.Thread):
 
         else:
             self.library.tools.system_message(module = "traceback", level = "debug", write = traceback.format_exc())
-            self.library.tools.system_message(module = self.name, level = "error", write = "Appeared exception: " + e)
+            self.library.tools.system_message(module = "framework", level = "error", write = "Appeared exception: " + e)
 
     def supportingEvents(self):
         response = []
@@ -231,4 +228,5 @@ class thread(threading.Thread):
             self.thread_loop.create_task(handler(module, self.library.tools, package))
 
         except Exception as e:
-            print(e)
+            self.library.tools.system_message(module = "traceback", level = "debug", write = traceback.format_exc())
+            self.library.tools.system_message(module = "framework", level = "error", write = "Appeared exception: " + e)

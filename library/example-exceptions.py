@@ -2,11 +2,9 @@ import random
 from testcanarybot import objects
 from testcanarybot import exceptions
 
+# Copyright 2021 kensoi
+
 class Main(objects.libraryModule):
-    async def start(self, tools: objects.tools):
-        pass
-
-
     @objects.priority(commands = ['quit']) # @testcanarybot quit
     async def second(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(
