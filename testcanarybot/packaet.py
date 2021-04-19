@@ -33,7 +33,7 @@ community_id = {group}
 
 community_service = '{service_token}' # optional
 apiVersion = '5.130'    # optional
-countThread = 10        # optional
+countThread = 0         # optional
 
 
 MENTIONS = []

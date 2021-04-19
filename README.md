@@ -1,4 +1,4 @@
-![https://pypi.org/project/testcanarybot/1.1.1/](https://img.shields.io/badge/pypi-1.01.001-blue?style=flat-square) ![](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue?style=flat-square) ![](https://img.shields.io/badge/license-Apache%20License%202.0-green?style=flat-square)
+![https://pypi.org/project/testcanarybot/1.1.2/](https://img.shields.io/badge/pypi-1.01.002-blue?style=flat-square) ![](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue?style=flat-square) ![](https://img.shields.io/badge/license-Apache%20License%202.0-green?style=flat-square)
 
 Asynchronous bot framework with perfect module library for VK API on Python 3.9 with aiohttp, asyncio and threading.
 
@@ -22,6 +22,6 @@ $ pip3 install testcanarybot
 
 |               | TESTCANARYBOT DEV                      |
 | :------------ | :------------------------------------- |
-| Version       | 01.01.001                              |
+| Version       | 01.01.002                              |
 | Channel       | DEV                                    |
 | Documentation | https://kensoi.github.io/testcanarybot |

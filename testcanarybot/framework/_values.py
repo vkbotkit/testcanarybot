@@ -60,7 +60,7 @@ class global_expressions:
         self.__types = {
             values.workspace: [],
             values.log: [],
-            values.tumbler: []
+            values.tumbler: [],
             values.expr: [],
         }
         self.__values = {}
@@ -77,12 +77,14 @@ class global_expressions:
         self.set(name = "LONGPOLL_UPDATE", value = "server updated", type = values.log)
         self.set(name = "LONGPOLL_ERROR", value = "is not connected", type = values.log)
 
+        self.set(name = "NO_THREAD", value = "launched with disabled threading", type = values.log)
+
         self.set(name = "LIBRARY_GET", value = "library directory is listed", type = values.log)
         self.set(name = "IMPORTERROR", value = "library directory is broken", type = values.log)
 
         self.set(name = "MODULE_INIT", value = "{module} is loaded", type = values.log)
-        self.set(name = "MODULE_INIT_VOID", value = "\n\t\t + void coroutine", type = values.log)
-        self.set(name = "MODULE_INIT_PRIORITY", value = "\n\t\t + registered {count} commands", type = values.log)
+        self.set(name = "MODULE_INIT_VOID", value = "\n\t\t + void", type = values.log)
+        self.set(name = "MODULE_INIT_PRIORITY", value = "\n\t\t + {count} commands", type = values.log)
         self.set(name = "MODULE_INIT_EVENTS", value = "\n\t\t with {event}", type = values.log)
         self.set(name = "MODULE_INIT_ACTION", value = "\n\t\t with {action}", type = values.log)
 
@@ -134,7 +136,7 @@ class global_expressions:
     def set(self, name: str, value: typing.Optional[str] = None, type: typing.Optional[values] = None):
         name = name.upper()
 
-        if not value: 
+        if not value and not isinstance(value, bool): 
             value = expr(type, name)
 
         if name not in self.__values.keys():
