@@ -33,6 +33,8 @@ class library:
         for i in self.raw_modules:
             importlib.reload(i)
 
+        self.upload()
+
 
     def upload(self):
         self.clear()

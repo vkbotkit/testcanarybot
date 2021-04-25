@@ -90,7 +90,11 @@ class packageHandler:
 
         elif typed == exceptions.LibraryReload:
             self.library.reload()
-            self.library.upload()
+
+            for i in self.library.modules.values():
+                if hasattr(i, "start"): 
+                    self.thread_loop.create_task(i.start)
+
             self.library.tools.system_message(module = "framework", level = "debug", write = "Reloaded with message: " + reason)
 
         elif typed == exceptions.CallVoid:
