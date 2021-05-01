@@ -519,16 +519,16 @@ class tools:
         if page_id > 0:
             request = await self.__api.users.get(user_ids = page_id, name_case = name_case, fields = "screen_name")
 
-            if name or second_name:
+            if name or last_name:
 
                 if name:
                     call += request[0].first_name               # [id1|Павел]
 
-                if name and second_name:                        # [id1|Павел Дуров]
+                if name and last_name:                        # [id1|Павел Дуров]
                     call += " "
 
-                if second_name:
-                    call += request[0].first_name               # [id1|Дуров]
+                if last_name:
+                    call += request[0].last_name               # [id1|Дуров]
 
             else:
                 if hasattr(request[0], 'screen_name'):
@@ -586,16 +586,20 @@ class tools:
 
 
     async def getChatManagers(self, peer_id: int):
-        resource = await self.__api.messages.getConversationsById(peer_ids = peer_id)
-        resource = resource.items[0].chat_settings
-        
         response = []
-        
-        response.extend(resource.admin_ids)
-        response.append(resource.owner_id)
+        resource = await self.__api.messages.getConversationMembers(peer_id = peer_id)
+
+        for item in resource.items:
+            if hasattr(item, 'is_admin'):
+                if item.is_admin:
+                    response.append(item.member_id)
+            elif hasattr(item, 'is_owner'):
+                if item.is_owner:
+                    response.append(item.member_id)
 
         return response
-        
+
+
 
     async def isChatManager(self, from_id, peer_id: int):
         response = await self.getChatManagers(peer_id)
