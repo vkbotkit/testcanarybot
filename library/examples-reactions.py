@@ -1,11 +1,9 @@
 from testcanarybot import objects
 from testcanarybot.enums import events
 
-class Main(objects.libraryModule):
-	# Заглушка для чатбота при добавлении в беседу
-    async def start(self, tools: objects.tools):
-        pass
+# Copyright 2021 kensoi
 
+class Main(objects.libraryModule):
     @objects.ContextManager(commands = ['пончики']) # commands
     async def ContextCommands(self, tools: objects.tools, package: objects.package):
         await tools.api.messages.send(

@@ -54,7 +54,7 @@ if len(args.run) > 0:
         elif args.run[0] == 'all':
             for i in getProjects(args.path):
                 testApp = importlib.import_module(i + '.root')
-                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library)
+                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library, args.path)
                 workingProjects.append(testBot)
                 time.sleep(1)
 
@@ -62,7 +62,7 @@ if len(args.run) > 0:
         for i in args.run:
             if i in getProjects(args.path):
                 testApp = importlib.import_module(i + '.root')
-                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library)
+                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library, args.path + '\\' + i)
                 workingProjects.append(testBot)
                 time.sleep(1)
             else:
@@ -82,7 +82,7 @@ if len(args.run) > 0:
 elif args.create != '':
     system_message('Creating project <<', packaet_project_directory, '>>')
     
-    if packaet_project_directory not in projects:
+    if packaet_project_directory not in os.listdir(args.path):
         system_message("Creating directories")
 
         os.mkdir(args.path + '\\' + packaet_project_directory)

@@ -3,7 +3,8 @@ import threading
 import string
 import os
 
-packaet_manager_name = 'tppm'
+packaet_manager_name = '[tppm]'
+packaet_manager_separator = '\t'
 
 packaet_readme_assets = """testcanarybot assets
 Copyright 2021 kensoi
@@ -13,7 +14,7 @@ Usage: with tools.assets(*args) as file: #like open(*args, **kwargs)
 packaet_readme_library = """testcanarybot library
 Copyright 2021 kensoi
 
-Create module: python testcanarybot --project {packaet_project_directory} --cm {MODULENAME}"""
+Create module: python testcanarybot --project {packaet_project_directory} --cm HandlerName"""
 
 packaet_root_raw = """'''
 testcanarybot project root
@@ -26,20 +27,26 @@ fill all important info and try to run with "$ python testcanarybot --run [LIST 
 
 import testcanarybot
 
-community_name = 'Канарейка чан'
+community_name = 'testcanary chan'
 community_token = '{token}'
 community_id = {group}
 
 community_service = '{service_token}' # optional
 apiVersion = '5.130'    # optional
-countThread = 10        # optional
+countThread = 0         # optional
 
-mentions = []
+
+MENTIONS = []
+ADDITIONAL_MENTIONS = []
 ALL_MESSAGES = False
 ADD_MENTIONS = False
 LISTITEM = '*'
 
+PRINT_LOG = False
 LOGLEVEL = "INFO"       # CRITICAL/ERROR/WARNING/INFO/DEBUG/NOTSET
+
+assets = 'assets'
+library = 'library'
 
 
 if testcanarybot.root_init(__name__, __file__): # False -> it was launched through tppm
@@ -48,11 +55,12 @@ if testcanarybot.root_init(__name__, __file__): # False -> it was launched throu
         groupId = community_id,
         serviceToken = community_service, apiVersion = apiVersion, countThread = countThread, level = LOGLEVEL)
 
-    bot.setMentions(mentions)
+    bot.setMentions(MENTIONS)
 
     bot.tools.values.set("ALL_MESSAGES", ALL_MESSAGES)
     bot.tools.values.set("ADD_MENTIONS", ADD_MENTIONS)
     bot.tools.values.set("LISTITEM", LISTITEM)
+    bot.tools.values.set('ADDITIONAL_MENTIONS', ADDITIONAL_MENTIONS)
 
     bot.start_polling()
 """
@@ -67,9 +75,10 @@ from testcanarybot import objects
 class Main(objects.libraryModule):
     async def start(self, tools: objects.tools):
         pass # create task at start
-        @objects.ContextManager(commands = [\"check\"])
-
-
+    
+    
+    
+    @objects.ContextManager(commands = [\"check\"])
     async def ContextManagerHandler(self, tools: objects.tools, package: objects.package):
         await tools.api.message.send(
             random_id = tools.gen_random(), 
@@ -80,7 +89,7 @@ class Main(objects.libraryModule):
 
 
 def system_message(*args):
-    print(packaet_manager_name, '>>', *args)
+    print(packaet_manager_name, packaet_manager_separator, *args)
 
 def gen_str(test = None):
     result, num = "", random.randint(5, 25)
@@ -125,8 +134,9 @@ def getProjects(path: str):
     return projects
 
 class threadBot(threading.Thread):
-    def __init__(self, data, botname, assets, library):
+    def __init__(self, data, botname, assets, library, path = os.getcwd()):
         threading.Thread.__init__(self)
+        self.path = path
         self.botname = botname
         self.accessToken = data.community_token + ""
         self.groupId = data.community_id + 0
@@ -137,21 +147,15 @@ class threadBot(threading.Thread):
         self.all_messages = data.ALL_MESSAGES if hasattr(data, 'ALL_MESSAGES') else None
         self.listitem = data.LISTITEM if hasattr(data, 'LISTITEM') else None
 
-
-        if hasattr(data, 'mentions'):
-            self.mentions = data.mentions[:]
-        else:
-            self.mentions = []
-
-        if hasattr(data, 'assets'):
-            self.assets = data.assets
-        else:
-            self.assets = assets
-
-        if hasattr(data, 'library'):
-            self.library = data.library
-        else:
-            self.library = library
+        self.mentions = data.MENTIONS[:] if hasattr(data, 'MENTIONS') else []
+        self.mentions = data.mentions[:] if hasattr(data, 'mentions') else []
+        self.print_log = data.PRINT_LOG if hasattr(data, 'PRINT_LOG') else False
+        self.addt = data.ADDITIONAL_MENTIONS if hasattr(data, 'ADDITIONAL_MENTIONS') else []
+        self.level = data.LOGLEVEL if hasattr(data, 'LOGLEVEL') else "info"
+        self.assets = data.assets if hasattr(data, 'assets') else assets
+        self.library = data.library if hasattr(data, 'library') else library
+        self.assets = data.ASSETS if hasattr(data, 'ASSETS') else assets
+        self.library = data.LIBRARY if hasattr(data, 'LIBRARY') else library
 
         self.start()
 
@@ -161,16 +165,10 @@ class threadBot(threading.Thread):
 
 
     def run(self):
-        self.bot = app(
-            self.accessToken, 
-            self.groupId, 
-            self.serviceToken, 
-            self.apiVersion, 
-            self.countThread, 
-            self.botname + '\\' + self.assets, 
-            self.botname + '\\' + self.library
-            )
+        self.bot = app(accessToken = self.accessToken, groupId = self.groupId, apiVersion = self.apiVersion, serviceToken = self.serviceToken, level = self.level, print_log = self.print_log, path = self.path, countThread = self.countThread, assets = self.botname + '\\' + self.assets, library = self.botname + '\\' + self.library)
+        
         if len(self.mentions) != 0: self.bot.setMentions(self.mentions)
+        if len(self.addt) != 0: self.bot.tools.values.set('ADDITIONAL_MENTIONS', self.addt)
         if self.all_messages: self.bot.tools.values.set("ALL_MESSAGES", self.all_messages)
         if self.listitem: self.bot.tools.values.set("LISTITEM", self.listitem)
         
