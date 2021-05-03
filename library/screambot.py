@@ -2,11 +2,14 @@ import random
 from testcanarybot import objects
 
 # Copyright 2021 kensoi
-# Test module
-# Special for vk.com/screambot
+
+# testing testcanarybot via spamming messages
+# special for vk.com/screambot
 
 class Main(objects.libraryModule):
-    async def start(self, tools: objects.tools):
+    def __init__(self):
+        objects.libraryModule.__init__(self)
+
         self.codename = "ScreamReact"
         self.description = """
         {listitem} @{mention} помощь - выслать инструкции в беседу
@@ -14,27 +17,28 @@ class Main(objects.libraryModule):
         {listitem} @{mention} спам [число] - созвать всех в беседу указанном числом сообщений
 
         {listitem} @{mention} клички - посмотреть, на какие упоминания реагирует бот
-        """.format(
-            listitem = tools.values.LISTITEM,
-            mention = tools.getBotLink()
-        )
+        """
         self.mention = "@all го орать"
         self.err = "Использование: \"{mention} спам/генерировать [целое число больше 0]\""
 
+        self.laugh_dict = "ОРУУ"
+        self.rofl_dict = list("АХ")
 
-    def gen(self):   
-        result = ""
 
-        if random.randint(0,2) == 0:
-            result = "ОРУ" + "У" * random.randint(5,253)
+    async def start(self, tools: objects.tools):
+        self.description = self.description.format(listitem = tools.values.LISTITEM, mention = tools.getBotLink())
+        self.err = self.err.format(mention = tools.getBotLink())
+
+
+    def gen(self, lenght = None, choice = None):
+        if not lenght: lenght = random.randint(5,256)
+        if not choice: choice = bool(random.getrandbits(1))
+        
+        if choice:
+            return self.laugh_dict[:-1] + self.laugh_dict[-1] * lenght
             
         else:
-            lenght = random.randint(8, 256)
-
-            for i in range(lenght):
-                result += random.choice(['А', 'Х'])
-
-        return result
+            return "".join([random.choice(self.rofl_dict) for i in range(lenght)])
 
 
     @objects.void # незарегистрированные команды или обычные сообщения

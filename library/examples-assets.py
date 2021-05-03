@@ -1,11 +1,8 @@
 from testcanarybot import objects
 
+# Copyright 2021 kensoi
+
 class Main(objects.libraryModule):
-	# Заглушка для чатбота при добавлении в беседу
-    async def start(self, tools):
-        pass
-
-
     @objects.ContextManager(commands = ['ассеты'])
     async def assetsExample(self, tools, package):
         with tools.assets("readme.txt") as log: # %assets%/readme.txt

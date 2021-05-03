@@ -8,10 +8,10 @@ from io import BytesIO
 class Uploader:
     __slots__ = ('__api', '__http', '__assets')
 
-    def __init__(self, api):
-        self.__api = api
-        self.__http = api.http
-        self.__assets = assets
+    def __init__(self, tools):
+        self.__api = tools.api
+        self.__http = tools.api.http
+        self.__assets = tools.assets
 
 
     async def photo_messages(self, photos):
@@ -61,18 +61,14 @@ class Uploader:
 
 
     async def audio_message(self, audio, peer_id=None):
-        return await self.document(
-            audio,
-            doc_type = 'audio_message',
-            peer_id = peer_id
-            )
+        return await self.document(audio, doc_type = 'audio_message', peer_id = peer_id)
 
 
     async def story(self, file, file_type,
               reply_to_story=None, link_text=None,
               link_url=None):
-        # переписал функцию для историй, так как адаптированная версия с VK_api под aiohttp 
-        # выдавала тупо сам результат запроса. Сделал как фреймворку нужно :3
+        # remade function from VK_API
+        # fixed it, now it works at framework :3
 
         if file_type == 'photo':
             method = self.__api.stories.getPhotoUploadServer

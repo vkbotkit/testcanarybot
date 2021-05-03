@@ -4,7 +4,7 @@ from ..enums import values
 from ..enums import events
 
 from ._api import api
-from ._threading import thread as handlering_thread
+from ._threading import (thread as handlering_thread, packageHandler as handler)
 from ._library import library as _library
 from ._values import _ohr
 from ._values import global_expressions
@@ -106,7 +106,7 @@ class _app:
 
     def __init__(self, accessToken: str, groupId: typing.Union[str, int], apiVersion: str = "5.126", serviceToken: str = "", 
                     logg = logging.Logger(name = "testcanarybot"), level: str = 'info', 
-                    print_log: bool = False, path = os.getcwd(), countThread: int = 1, assets = 'assets', library = 'library'):
+                    print_log: bool = False, path = os.getcwd(), countThread: int = 0, assets = 'assets', library = 'library'):
         """
         testcanarybot project core (application)
 
@@ -147,8 +147,8 @@ class _app:
 
         self.logger.setLevel(level)
 
-        handler = logging.FileHandler("log.txt")
-        self.logger.addHandler(handler)
+        handlerfile = logging.FileHandler("log.txt")
+        self.logger.addHandler(handlerfile)
 
         if threading.current_thread() == threading.main_thread():
             self.__loop = asyncio.get_event_loop()
@@ -258,15 +258,17 @@ class _app:
         self.__library.upload()
 
         self.logger.info(self.tools.values.LOGGER_START)
+        if self.__countThread > 0:
+            if len(self.__thread) <= self.__countThread:
+                current_thread = threading.currentThread()
 
-        if self.__countThread > len(self.__thread):
-            current_thread = threading.currentThread()
-
-            for i in range(self.countThread):
-                thread_started = handlering_thread(self.__library, i, current_thread.getName())
-                thread_started.start()
-                
-                self.__thread.append(thread_started)
+                for i in range(self.countThread):
+                    thread_started = handlering_thread(self.__library, i, current_thread.getName())
+                    
+                    self.__thread.append(thread_started)
+        else:
+            self.tools.system_message(module = "framework", level = "debug", write = self.tools.values.NO_THREAD)
+            self.handler = handler(self.__library)
 
         if not self.__booted_once:
             self.__booted_once = True
@@ -372,12 +374,15 @@ class _app:
             self.__getThread().create_task(package)
         
     def __getThread(self):
-        self.__lastthread += 1
-        
-        if self.__lastthread == len(self.__thread):
-            self.__lastthread = 0
-        
-        return self.__thread[self.__lastthread]
+        if len(self.__thread) > 0:
+            self.__lastthread += 1
+            
+            if self.__lastthread == len(self.__thread):
+                self.__lastthread = 0
+            
+            return self.__thread[self.__lastthread]
+        else:
+            return self.handler
 
 
     def test_parse(self, event: objects.package):
@@ -495,7 +500,7 @@ class tools:
             self.__waiting_replies[wait] = False
 
             while not self.__waiting_replies[wait]:
-                await asyncio.sleep()
+                await asyncio.sleep(0)
                 
             return self.__waiting_replies.pop(wait)
 
@@ -514,16 +519,16 @@ class tools:
         if page_id > 0:
             request = await self.__api.users.get(user_ids = page_id, name_case = name_case, fields = "screen_name")
 
-            if name or second_name:
+            if name or last_name:
 
                 if name:
                     call += request[0].first_name               # [id1|Павел]
 
-                if name and second_name:                        # [id1|Павел Дуров]
+                if name and last_name:                        # [id1|Павел Дуров]
                     call += " "
 
-                if second_name:
-                    call += request[0].first_name               # [id1|Дуров]
+                if last_name:
+                    call += request[0].last_name               # [id1|Дуров]
 
             else:
                 if hasattr(request[0], 'screen_name'):
@@ -575,21 +580,26 @@ class tools:
             group_id = int(group_id)
 
         response = await self.getManagers(group_id)
+        response = [i.id for i in response]
 
         return from_id in response
 
 
     async def getChatManagers(self, peer_id: int):
-        resource = await self.__api.messages.getConversationsById(peer_ids = peer_id)
-        resource = resource.items[0].chat_settings
-        
         response = []
-        
-        response.extend(resource.admin_ids)
-        response.append(resource.owner_id)
+        resource = await self.__api.messages.getConversationMembers(peer_id = peer_id)
+
+        for item in resource.items:
+            if hasattr(item, 'is_admin'):
+                if item.is_admin:
+                    response.append(item.member_id)
+            elif hasattr(item, 'is_owner'):
+                if item.is_owner:
+                    response.append(item.member_id)
 
         return response
-        
+
+
 
     async def isChatManager(self, from_id, peer_id: int):
         response = await self.getChatManagers(peer_id)

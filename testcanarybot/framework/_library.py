@@ -33,6 +33,8 @@ class library:
         for i in self.raw_modules:
             importlib.reload(i)
 
+        self.upload()
+
 
     def upload(self):
         self.clear()
@@ -45,8 +47,14 @@ class library:
             if len(listdir) == 0:
                 self.tools.system_message(module = "library", level = "error", write = self.tools.values.IMPORTERROR)
                 raise ImportError(self.tools.values.IMPORTERROR)
-            
-            self.loop.run_until_complete(asyncio.wait([self.loop.create_task(self.upload_handler(module)) for module in listdir]))
+
+            tasklist = [self.loop.create_task(self.upload_handler(module)) for module in listdir]
+
+            if self.loop.is_running():
+                pass
+            else:
+                self.loop.run_until_complete(asyncio.wait(tasklist))
+                
             self.tools.system_message(module = "library", level = "debug", write = "Supporting event types: {event_types}".format(event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['events'].keys()], ""])))
 
         else:
