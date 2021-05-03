@@ -20,8 +20,8 @@ bot.start_polling()
 $ pip3 install testcanarybot 
 ```
 
-|               | TESTCANARYBOT UNSTABLE                 |
+|               | TESTCANARYBOT STABLE                   |
 | :------------ | :------------------------------------- |
 | Version       | 01.01.003                              |
-| Channel       | UNSTABLE                               |
+| Channel       | STABLE                                 |
 | Documentation | https://kensoi.github.io/testcanarybot |
