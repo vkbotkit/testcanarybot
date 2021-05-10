@@ -30,6 +30,8 @@ MANIFEST
 #testing stuff
 kyokou/
 canarybot/
+testcanarybot-example/
+betabot/
 log.txt
 
 # PyInstaller
