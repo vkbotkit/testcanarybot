@@ -29,11 +29,11 @@ class Main(objects.libraryModule):
 Это базовый декоратор для objects.libraryModule, который позволяет регистрировать обработчики для дальнейшей рассылки событий
 
 ```python
-@objects.ContextManager(commands: list, events: list, action: enums.action)
+@objects.ContextManager(commands:list, events:list, action:list, private:bool)
 async def HandlerName(self, tools: objects.tools, package: objects: package):
 ```
 
-* **commands**: списки команд, например для ['hello', 'привет']. Обработчик будет получать сообщения @вашбот привет или @вашбот hello world, т.е. по первому ключевому слову после упоминания.
+* **commands**: списки команд, например для ['привет', ['я', 'люблю', 'пончики']]. Обработчик будет получать сообщения "@вашбот привет всем" или "@вашбот я люблю пончики", т.е. по указанному ключу.
   
   * **Альтернатива**: декоратор ```objects.priority(commands: list)```
 * **events**: для событий, см testcanarybot.enums.events
@@ -47,7 +47,7 @@ async def HandlerName(self, tools: objects.tools, package: objects: package):
 * если ни один из данных аргументов не был определён, то весь обработчик будет зарегистрирован как **Void**, который получает оповещения в следующих случаях:
 
   * если вы настроили ALL_MESSAGES = True в root.py проекта, т.е. бот отправляет на обработку все сообщения. При значении False обрабатываются сообщения, в которых нулевое ключевое слово является упоминанием бота, а первое не зарегистрировано в проекте. Например:
-    * "@apiclub hawo", если hawo не был найден в словаре команд
+    * "@apiclub hawo", если "hawo" не был найден в словаре команд
   * если в обработчиках для команд была вызвана ошибка exceptions.CallVoid(objects.task(package)), которая перенаправляет peer_id и from_id из события в Void обработчик
   * **Альтернатива**: декоратор ```objects.void```
 

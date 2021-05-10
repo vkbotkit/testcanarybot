@@ -17,12 +17,13 @@ community_name = 'Канарейка чан'
 community_token = 'ABCDEF' # https://vk.com/yourbot?act=tokens
 community_id = 0
 
-community_service = '4b982af44b982af44b982af4044bea70b544b984b982af4154d123d6075b06ad58a362a' # to make requests via standalone application
+community_service = 'ABCDEF' # to make requests via standalone application (TAKE FROM https://vk.com/editapp?id=YOURAPPID&section=options)
 apiVersion = '5.130'    # optional
 countThread = 10        # optional
 
 MENTIONS = []
 ADDITIONAL_MENTIONS = []
+PRIVATELIST = [] # for private events
 ALL_MESSAGES = False
 ADD_MENTIONS = False
 LISTITEM = '*'
@@ -39,9 +40,10 @@ if testcanarybot.root_init(__name__, __file__): # False -> it was launched throu
     bot = testcanarybot.app(
         accessToken = community_token,
         groupId = community_id,
-        serviceToken = community_service, apiVersion = apiVersion, countThread = countThread, level = LOGLEVEL)
+        serviceToken = community_service, apiVersion = apiVersion, countThread = countThread, print_log=PRINT_LOG, level = LOGLEVEL)
 
     bot.setMentions(MENTIONS)
+    bot.setPrivateList(PRIVATELIST)
 
     bot.tools.values.set("ALL_MESSAGES", ALL_MESSAGES)
     bot.tools.values.set("ADD_MENTIONS", ADD_MENTIONS)
