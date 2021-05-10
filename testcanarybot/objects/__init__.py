@@ -2,17 +2,10 @@ from .data import *
 from .decorators import *
 from .tools import tools
 
+import typing
+
 class libraryModule:
-    codename = ""
-    name = ""
-    description = ""
-
-    void_react = False
-    event_handlers = {}
-    action_handlers = {}
-
-    def __init__(self):
-        self.commands = []
-        self.handler_dict = {}
-        self.void_react = False
-        self.event_handlers = {} # event.abstract_event: []
+    """
+    Library Module object that contains handlers for events from chats
+    """
+    start: typing.Coroutine

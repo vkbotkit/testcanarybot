@@ -159,15 +159,15 @@ class _app:
 
 
         self.__tools = tools(self.__group_id, self.__api, self.__http, os.getcwd() + '\\' + assets, self.logger, level, print_log)
-        self.__tools.system_message(module = "session", level = "info", write = self.tools.values.SESSION_START)
+        self.__tools.system_message(module = "session", level = "info", write = self.__tools.values.SESSION_START)
             
-        self.__library = _library(self.tools, library)
+        self.__library = _library(self.__tools, library)
         atexit.register(self.__close)
 
 
     @property
     def countThread(self):
-        return self.__countThread
+        return self.__countThread + 0
 
 
     @property
@@ -234,6 +234,8 @@ class _app:
         if 'error' in response: 
             raise exceptions.MethodError(f"[{response['error']['error_code']}] {response['error']['error_msg']}")
 
+        # if hasattr(self, "_app__tools"):
+        #     self.__tools.system_message(module = "vk-api", level = "DEBUG", write = self.__tools.values.API_DEBUG.format(method = method, values = values))
         return response['response']     
 
 
@@ -242,12 +244,49 @@ class _app:
         Setup custom mentions instead "@{group_address}"
         """
         resource = []
-        resource.append(self.tools._tools__group_mention)
+        resource.append(self.__tools._tools__group_mention)
         mentions = map(str, mentions)
         mentions = map(lambda value: value.lower(), mentions)
-        mentions = list(mentions)
+        self.__tools._tools__mentions = list(mentions)  
 
-        self.tools._tools__mentions = mentions  
+
+    def appendMentions(self, mentions: list): # test
+        response = [*self.self.__tools._tools__mentions, *mentions]
+        self.setMentions(response)
+
+
+    def substractMentions(self, mentions: list): # test
+        a = set(self.self.__tools._tools__mentions)
+        
+        resource = []
+        resource.append(self.__tools._tools__group_mention)
+        mentions = map(str, mentions)
+        mentions = map(lambda value: value.lower(), mentions)
+
+        self.setMentions(list(a - set(mentions)))
+
+
+    def setPrivateList(self, mentions: list):
+        if len(mentions) > 10:
+            raise ValueError("Too much users")
+        
+        else:
+            self.__library.private_list = list(set(mentions))
+
+
+    def appendPrivateList(self, mentions: list): # test
+        response = [*self.private_list, *set(mentions)]
+        self.setPrivateList(response)
+
+
+    def removeFromPrivateList(self, mentions: list): # test
+        a = set(self.private_list)
+        b = set(mentions)
+        self.setPrivateList(list(a-b))
+
+
+    def run(self, task):
+        self.__loop.run_until_complete(task)
 
 
     def setup(self):  
@@ -256,8 +295,9 @@ class _app:
         """  
           
         self.__library.upload()
+        # self.__library.private_list = self.private_list
 
-        self.logger.info(self.tools.values.LOGGER_START)
+        self.logger.info(self.__tools.values.LOGGER_START)
         if self.__countThread > 0:
             if len(self.__thread) <= self.__countThread:
                 current_thread = threading.currentThread()
@@ -267,7 +307,7 @@ class _app:
                     
                     self.__thread.append(thread_started)
         else:
-            self.tools.system_message(module = "framework", level = "debug", write = self.tools.values.NO_THREAD)
+            self.__tools.system_message(module = "framework", level = "debug", write = self.__tools.values.NO_THREAD)
             self.handler = handler(self.__library)
 
         if not self.__booted_once:
@@ -287,7 +327,7 @@ class _app:
         """
 
         self.setup()
-        self.__library.tools.system_message(module = "longpoll", level = "debug", write = self.tools.values.LONGPOLL_START)
+        self.__library.tools.system_message(module = "longpoll", level = "debug", write = self.__tools.values.LONGPOLL_START)
         self.__loop.run_until_complete(self.__pollingCycle())
 
 
@@ -300,14 +340,14 @@ class _app:
 
         self.setup()
 
-        self.tools.system_message(module = 'longpoll', level = "debug", write = self.tools.values.LONGPOLL_START)
+        self.__tools.system_message(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_START)
         
         while times != 0:
             self.__loop.run_until_complete(self.__polling())
 
             times -= 1
         
-        self.tools.system_message(module = 'longpoll', level = "debug", write = self.tools.values.LONGPOLL_CLOSE)
+        self.__tools.system_message(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_CLOSE)
 
 
     async def __update_longpoll_server(self, update_ts: bool = True) -> None:
@@ -318,11 +358,11 @@ class _app:
         self.__longpoll_key = response['key']
         self.__longpoll_url = response['server']
 
-        if self.tools.values.DEBUG_MESSAGES:
-            self.tools.system_message( 
+        if self.__tools.values.DEBUG_MESSAGES:
+            self.__tools.system_message( 
                 module = "longpoll",
                 level = "debug",
-                write = self.tools.values.LONGPOLL_UPDATE)
+                write = self.__tools.values.LONGPOLL_UPDATE)
 
 
     async def __check(self):

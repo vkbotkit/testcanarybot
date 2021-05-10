@@ -37,6 +37,8 @@ packaet_project_assets = args.assets
 packaet_project_library = args.library
 workingProjects = []
 
+projects = os.listdir(args.path + '\\')
+
 if packaet_project_directory == '' and args.run == []:
     system_message('Try to run command \"python testcanarybot -h\"')
     quit()
@@ -76,7 +78,6 @@ if len(args.run) > 0:
         if len(workingProjects) == 0:
             quit()
         time.sleep(3)
-
 
 
 elif args.create != '':
