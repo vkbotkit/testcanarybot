@@ -50,3 +50,19 @@ class Main(objects.libraryModule):
     @objects.action(action = []) #actions like chat title edit or user kick (ONLY CHATS, eg peer_id > 2000000000) 
     async def SimilarAction(self, tools: objects.tools, package: objects.package):
         pass
+
+    @objects.ContextManager(commands = ["first"], private=True) # "test check" is a private command
+    async def PrivateCommandHandler(self, tools: objects.tools, package: objects.package):
+        await tools.api.messages.send(
+            random_id = tools.gen_random(), 
+            peer_id = package.peer_id, 
+            message = "Hello world!"
+            )
+    
+    @objects.ContextManager(commands = [["i", "love", "you"]]) # "test you me" is a public command
+    async def ContextManagerHandler2(self, tools: objects.tools, package: objects.package):
+        await tools.api.messages.send(
+            random_id = tools.gen_random(), 
+            peer_id = package.peer_id, 
+            message = "Oh.. I did not know about that!"
+            )
