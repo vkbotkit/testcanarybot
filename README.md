@@ -22,6 +22,6 @@ $ pip3 install testcanarybot
 
 |               | TESTCANARYBOT DEV                      |
 | :------------ | :------------------------------------- |
-| Version       | 01.01.007                              |
+| Version       | 1.1.8                                  |
 | Channel       | DEV                                    |
 | Documentation | https://kensoi.github.io/testcanarybot |

@@ -44,7 +44,7 @@ class tools(abc.ABCMeta):
 
 
     @abc.abstractmethod
-    def system_message(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = "info", sep = " ") -> None:
+    def log(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = "info", sep = " ") -> None:
         """
         log message
         write [str] - instead of args

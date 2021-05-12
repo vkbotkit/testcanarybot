@@ -115,9 +115,9 @@ tools.gen_random()
 **Сделать запись в лог**
 
 ```python
-tools.system_message(*args, write: typing.Optional[str] = None, module: str = "system", level:str = 'info') # -> None	
+tools.log(*args, write: typing.Optional[str] = None, module: str = "system", level:str = 'info') # -> None	
 ```
-args - строки через запятую (tools.system_message("a", "b", "c") -> "a b c") 
+args - строки через запятую (tools.log("a", "b", "c") -> "a b c") 
 
 ```write``` - целой строкой
 

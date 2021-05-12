@@ -49,10 +49,10 @@ class library:
         if os.path.isdir(os.getcwd() + '\\' + self.libdir):
             listdir = os.listdir(os.getcwd() + '\\' + self.libdir)
             listdir = [i for i in listdir if i != "__pycache__" and (i.endswith('.py') or i.count(".") == 0)]
-            self.tools.system_message(module = "library", level = "debug", write = str(self.tools.values.LIBRARY_GET))
+            self.tools.log(module = "library", level = "debug", write = str(self.tools.values.LIBRARY_GET))
 
             if len(listdir) == 0:
-                self.tools.system_message(module = "library", level = "error", write = self.tools.values.IMPORTERROR)
+                self.tools.log(module = "library", level = "error", write = self.tools.values.IMPORTERROR)
                 raise ImportError(self.tools.values.IMPORTERROR)
 
             tasklist = [self.loop.create_task(self.upload_handler(module)) for module in listdir]
@@ -62,10 +62,10 @@ class library:
             else:
                 self.loop.run_until_complete(asyncio.wait(tasklist))
                 
-            self.tools.system_message(module = "library", level = "debug", write = "Supporting event types: {event_types}".format(event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['private']['events']['all']], ""])))
-            print(self.handlers)
+            self.tools.log(module = "library", level = "debug", write = "Supporting event types: {event_types}".format(event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['private']['events']['all']], ""])))
+
         else:
-            self.tools.system_message(module = "library", level = "error", write = "Module Library is not exists. Their directory should be here: " + os.getcwd() + '\\' + self.libdir)
+            self.tools.log(module = "library", level = "error", write = "Module Library is not exists. Their directory should be here: " + os.getcwd() + '\\' + self.libdir)
             raise ImportError("Module Library is not exists. Their directory should be here: " + os.getcwd() + '\\' + self.libdir)
 
 
@@ -83,7 +83,7 @@ class library:
             moduleObj.module_name = module_name
 
         else:
-            self.tools.system_message(module = "library", level = "error", write = self.tools.values.MODULE_FAILED_NOMAIN.format(module = module_name))
+            self.tools.log(module = "library", level = "error", write = self.tools.values.MODULE_FAILED_NOMAIN.format(module = module_name))
             return
             
         moduleObj_set = set(dir(moduleObj))
@@ -125,14 +125,13 @@ class library:
                 except Exception as e:
                     pass
 
-        print(moduleObj.handlers)
         message = self.tools.values.MODULE_INIT.format(module = module_name)
         commands_count = len(moduleObj.handlers['private']['commands'].keys())
         events_count = len(moduleObj.handlers['private']['events'].keys())
         action_count = len(moduleObj.handlers['private']['action'].keys())
 
         if commands_count == 0 and events_count == 0 and events_count == 0 and 'action_count' not in moduleObj.handlers['private']:
-            return self.tools.system_message(module = "library", level = "warning", write = self.tools.values.MODULE_FAILED_HANDLERS.format(module = module_name))
+            return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_FAILED_HANDLERS.format(module = module_name))
         
         if commands_count > 0:
             message += self.tools.values.MODULE_INIT_PRIORITY.format(count = commands_count)
@@ -140,26 +139,26 @@ class library:
             for i in moduleObj.handlers['public']['commands'].values():
                 check = set(handlers['private']['commands']['all']) & set(i)
                 if check != set():
-                    return self.tools.system_message(
+                    return self.tools.log(
                         module = "library", 
                         level = "warning", 
-                        write =  self.tools.values.MODULE_ALREADY.format(module = module_name, handler_type = "commands", type_list = "\n\t{listitem}".format(self.tools.values.LISTITEM).join(list(check_commands))))
+                        write =  self.tools.values.MODULE_ALREADY.format(module = module_name, handler_type = "commands", type_list = "\n\t{listitem}".format(self.tools.values.LISTITEM).join(list(check))))
 
                 for j in i['commands']:
-                    test = ":::".join(j)
+                    test = "&#13;".join(j)
                     handlers['public']['commands']['all'].append(test)
                     handlers['public']['commands']['coros'][test] = i
 
             for i in moduleObj.handlers['private']['commands'].values():
                 check = set(handlers['private']['commands']['all']) & set(i)
                 if check != set():
-                    return self.tools.system_message(
+                    return self.tools.log(
                         module = "library", 
                         level = "warning", 
-                        write =  self.tools.values.MODULE_ALREADY.format(module = module_name, handler_type = "commands", type_list = "\n\t{listitem}".format(self.tools.values.LISTITEM).join(list(check_commands))))
+                        write =  self.tools.values.MODULE_ALREADY.format(module = module_name, handler_type = "commands", type_list = "\n\t{listitem}".format(self.tools.values.LISTITEM).join(list(check))))
 
                 for j in i['commands']:
-                    test = ":::".join(j)
+                    test = "&#13;".join(j)
                     handlers['private']['commands']['all'].append(test)
                     handlers['private']['commands']['coros'][test] = i
                 
@@ -167,7 +166,7 @@ class library:
         if events_count > 0:
             for key, value in moduleObj.handlers['public']['events'].items():
                 if key in handlers['public']['events']['all']:
-                    return self.tools.system_message(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = str(key)))
+                    return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = str(key)))
                     
                 else:
                     handlers['public']['events']['all'].append(key)
@@ -175,7 +174,7 @@ class library:
 
             for key, value in moduleObj.handlers['private']['events'].items():
                 if key in handlers['private']['events']['all']:
-                    return self.tools.system_message(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = str(key)))
+                    return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = str(key)))
                     
                 else:
                     handlers['private']['events']['all'].append(key)
@@ -184,7 +183,7 @@ class library:
         if action_count > 0:
             for key, value in moduleObj.handlers['public']['action'].items():
                 if key in handlers['public']['action']['all']:
-                    return self.tools.system_message(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = str(key)))
+                    return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = str(key)))
                 
                 else:
                     handlers['public']['action']['all'].append(key)
@@ -192,7 +191,7 @@ class library:
 
             for key, value in moduleObj.handlers['private']['action'].items():
                 if key in handlers['private']['action']['all']:
-                    return self.tools.system_message(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = str(key)))
+                    return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = str(key)))
                 
                 else:
                     handlers['private']['action']['all'].append(key)
@@ -200,7 +199,7 @@ class library:
                     
         if 'void' in moduleObj.handlers['public']:
             if 'void' in handlers['public']:           
-                return self.tools.system_message(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = 'void'))
+                return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = 'void'))
                 
             else: 
                 handlers['public']['void'] = moduleObj.void_react
@@ -208,7 +207,7 @@ class library:
 
         if 'void' in moduleObj.handlers['private']:
             if 'void' in handlers['private']:           
-                return self.tools.system_message(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = 'void'))
+                return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = 'void'))
                 
             else: 
                 handlers['public']['void'] = moduleObj.void_react
@@ -219,31 +218,31 @@ class library:
         check_actions = set(self.handlers['private']['action']['all']) & set(handlers['private']['action']['all'])
 
         if check_commands != set():
-            return self.tools.system_message(
+            return self.tools.log(
                 module = "library", 
                 level = "warning", 
                 write =  self.tools.values.MODULE_ALREADY.format(module = module_name, handler_type = "commands", type_list = "\n\t{listitem}".format(self.tools.values.LISTITEM).join(list(check_commands)))
             )
         elif check_events != set():
-            return self.tools.system_message(
+            return self.tools.log(
                 module = "library", 
                 level = "warning", 
                 write =  self.tools.values.MODULE_ALREADY.format(module = module_name, handler_type = "events", type_list = "\n\t{listitem}".format(self.tools.values.LISTITEM).join(list(check_events)))
             )   
         elif check_actions != set():
-            return self.tools.system_message(
+            return self.tools.log(
                 module = "library", 
                 level = "warning", 
                 write = self.tools.values.MODULE_ALREADY.format(module = module_name, handler_type = "actions", type_list = "\n\t{listitem}".format(self.tools.values.LISTITEM).join(list(check_actions)))
             )    
         elif 'void' in self.handlers['private'] and 'void' in handlers['private']:
-            return self.tools.system_message(
+            return self.tools.log(
                 module = "library", 
                 level = "warning", 
                 write = f"[{module_name}] `void is already registered")
 
         else:
-            self.tools.system_message(module = "library", level = "info", write = self.tools.values.MODULE_VALID.format(module = module_name))
+            self.tools.log(module = "library", level = "info", write = self.tools.values.MODULE_VALID.format(module = module_name))
 
             self.handlers['public']['commands']['all'].extend(handlers['public']['commands']['all'])
             self.handlers['private']['commands']['all'].extend(handlers['private']['commands']['all'])
@@ -265,4 +264,4 @@ class library:
                 
             self.modules[module_name] = moduleObj
             self.list.append(module_name)
-            return self.tools.system_message(module = "library", level = "info", write = message)
+            return self.tools.log(module = "library", level = "info", write = message)

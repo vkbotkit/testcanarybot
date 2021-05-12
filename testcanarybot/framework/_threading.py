@@ -33,7 +33,7 @@ class thread(threading.Thread):
         self.test_handler = packageHandler(self.library)
         self.test_handler.library.tools.http.create_session(self)
 
-        self.test_handler.library.tools.system_message(module = "framework", level = "debug", write = f"{self.getName()} is started")
+        self.test_handler.library.tools.log(module = "framework", level = "debug", write = f"{self.getName()} is started")
         self.thread_loop.run_forever()
 
 
@@ -84,7 +84,7 @@ class packageHandler:
         reason = str(context['exception'])
 
         if typed == exceptions.Quit:
-            self.library.tools.system_message(module = "framework", level = "debug", write = "Quited with message: " + reason)
+            self.library.tools.log(module = "framework", level = "debug", write = "Quited with message: " + reason)
             
             os._exit(1)
 
@@ -95,7 +95,7 @@ class packageHandler:
                 if hasattr(i, "start"): 
                     self.thread_loop.create_task(i.start)
 
-            self.library.tools.system_message(module = "framework", level = "debug", write = "Reloaded with message: " + reason)
+            self.library.tools.log(module = "framework", level = "debug", write = "Reloaded with message: " + reason)
 
         elif typed == exceptions.CallVoid:
             if 'void' not in self.library['private']:
@@ -111,7 +111,7 @@ class packageHandler:
                         module = self.library.handlers['public']['void']['libraryModule']
                     
                     else:
-                        self.library.tools.system_message(
+                        self.library.tools.log(
                             module = "framework",
                             level = "debug",
                             write = "Attempted to call void with incorrect task: " + reason
@@ -127,22 +127,22 @@ class packageHandler:
                     self.thread_loop.create_task(handler(module, self.library.tools, package))
 
                 else:
-                    self.library.tools.system_message(
+                    self.library.tools.log(
                         module = "framework",
                         level = "debug",
                         write = "Attempted to call void with incorrect task: " + reason
                     )
 
             else: 
-                self.library.tools.system_message(
+                self.library.tools.log(
                         module = "framework",
                         level = "debug",
                         write = "Attempted to call void with incorrect task: " + reason
                     )
 
         else:
-            self.library.tools.system_message(module = "traceback", level = "debug", write = traceback.format_exc())
-            self.library.tools.system_message(module = "framework", level = "error", write = "Appeared exception: " + reason)
+            self.library.tools.log(module = "traceback", level = "debug", write = traceback.format_exc())
+            self.library.tools.log(module = "framework", level = "error", write = "Appeared exception: " + reason)
 
 
     async def resolver(self, package):
@@ -256,10 +256,8 @@ class packageHandler:
                 
                 if package.params.command and len(package.items) > 0:
                     for i in self.library.handlers[access_type]['commands']['all']:
-                        res = [*(i.split(":::")), '$items']
-                        print(res)
-                        if package.check(res) or package.check(i.split(":::")):
-                            print(1)
+                        res = [*(i.split("&#13;")), '$items']
+                        if package.check(res) or package.check(i.split("&#13;")):
                             module = self.library.handlers[access_type]['commands']['coros'][i]['libraryModule']
                             handler = self.library.handlers[access_type]['commands']['coros'][i]['handler']
                             task = self.thread_loop.create_task(handler(module, self.library.tools, package))
@@ -278,8 +276,8 @@ class packageHandler:
                 return
 
         except Exception as e:
-            self.library.tools.system_message(module = "traceback", level = "debug", write = traceback.format_exc())
-            self.library.tools.system_message(module = "framework", level = "warning", write = "Appeared exception: " + str(e))
+            self.library.tools.log(module = "traceback", level = "debug", write = traceback.format_exc())
+            self.library.tools.log(module = "framework", level = "warning", write = "Appeared exception: " + str(e))
 
 
     def create_task(self, package):

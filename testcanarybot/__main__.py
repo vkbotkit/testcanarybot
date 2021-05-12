@@ -40,7 +40,7 @@ workingProjects = []
 projects = os.listdir(args.path + '\\')
 
 if packaet_project_directory == '' and args.run == []:
-    system_message('Try to run command \"python testcanarybot -h\"')
+    message('Try to run command \"python testcanarybot -h\"')
     quit()
 
 elif packaet_project_directory not in [args.create, args.project] and args.run == []:
@@ -51,7 +51,7 @@ if len(args.run) > 0:
 
     if args.run in [['info'], ['all']]:
         if args.run[0] == 'info':
-            system_message('Projects at this directory:\n\t- ' + '\n\t- '.join(getProjects(args.path)))
+            message('Projects at this directory:\n\t- ' + '\n\t- '.join(getProjects(args.path)))
 
         elif args.run[0] == 'all':
             for i in getProjects(args.path):
@@ -81,34 +81,34 @@ if len(args.run) > 0:
 
 
 elif args.create != '':
-    system_message('Creating project <<', packaet_project_directory, '>>')
+    message('Creating project <<', packaet_project_directory, '>>')
     
     if packaet_project_directory not in projects:
-        system_message("Creating directories")
+        message("Creating directories")
 
         os.mkdir(args.path + '\\' + packaet_project_directory)
         os.mkdir(args.path + '\\' + packaet_project_directory + '\\' + packaet_project_assets)
         os.mkdir(args.path + '\\' + packaet_project_directory + '\\' + packaet_project_library)
 
-        system_message("Creating << root >>")
+        message("Creating << root >>")
 
         with open(args.path + '\\' + packaet_project_directory + '\\' + 'root.py', 'w+') as root:
             root.write(packaet_root_raw.format(token = args.token, group = args.group, service_token = args.service))
 
-        system_message("Creating << readme >>")
+        message("Creating << readme >>")
 
         with open(args.path + '\\' + packaet_project_directory + '\\' + packaet_project_library + '\\readme.txt', 'w+') as readme:
             readme.write(packaet_readme_library.format(packaet_project_directory = packaet_project_directory))
         
         with open(args.path + '\\' + packaet_project_directory + '\\' + packaet_project_assets + '\\readme.txt', 'w+') as readme:
             readme.write(packaet_readme_assets)
-        system_message(f"Done! \n\tDirectory: ./{packaet_project_directory}/ \n\tUsage: python testcanarybot --run {packaet_project_directory}")
+        message(f"Done! \n\tDirectory: ./{packaet_project_directory}/ \n\tUsage: python testcanarybot --run {packaet_project_directory}")
     
     else:
         raise RuntimeError("Folder exists! Try another name")
 
 elif args.project != '':
-    system_message("manager for <<", packaet_project_directory, ">>")
+    message("manager for <<", packaet_project_directory, ">>")
 
     if args.cm != '':
         packaet_module_name = parsename(args.cm) # if args.cm != '' else 'handler_' + gen_str(15)
@@ -118,17 +118,17 @@ elif args.project != '':
             if packaet_module_name not in os.listdir(args.path + '\\' + packaet_project_directory + '\\library\\'):
                 os.mkdir(args.path + '\\' + packaet_project_directory + '\\library\\' + packaet_module_name)
             
-            system_message("created folder <<", packaet_module_name, ">>")
+            message("created folder <<", packaet_module_name, ">>")
             
             with open(args.path + '\\' + packaet_project_directory + '\\library\\' + packaet_module_name + "\\main.py", 'w+') as module:
                 module.write(libraryModuleRaw)
             
-            system_message("Done! Results at ./" + packaet_project_directory + "/library/")
+            message("Done! Results at ./" + packaet_project_directory + "/library/")
 
         else:
-            system_message("created file <<", packaet_module_name, ">>")
+            message("created file <<", packaet_module_name, ">>")
             
             with open(args.path + '\\' + packaet_project_directory + '\\library\\' + packaet_module_name + ".py", 'w+') as module:
                 module.write(libraryModuleRaw)
             
-            system_message("Done! Results at ./" + packaet_project_directory + "/library/")
+            message("Done! Results at ./" + packaet_project_directory + "/library/")

@@ -1,7 +1,11 @@
+from types import resolve_bases
+from testcanarybot.objects.data import response
 from .. import exceptions
 from .. import objects
 from ..enums import values
 from ..enums import events
+from ..uploader import Uploader
+
 
 from ._api import api
 from ._threading import (thread as handlering_thread, packageHandler as handler)
@@ -22,6 +26,8 @@ import threading
 import time
 import typing
 import random
+
+from testcanarybot import uploader
 
 logger_levels = {
     'CRITICAL': 50,
@@ -123,7 +129,7 @@ class _app:
         # Core settings
         print_log       [bool: False]               print log to console
         path            [str: os.getcwd()]          project path
-        countThread     [int: 1]                    set threads count for handlers.
+        countThread     [int: 0]                    set threads count for handlers.
         assets          [str: "assets"]             current assets directory name (only name without path)
         library         [str: "library"]            current library directory name (only name without path)
         """
@@ -158,8 +164,8 @@ class _app:
             asyncio.set_event_loop(self.__loop)
 
 
-        self.__tools = tools(self.__group_id, self.__api, self.__http, os.getcwd() + '\\' + assets, self.logger, level, print_log)
-        self.__tools.system_message(module = "session", level = "info", write = self.__tools.values.SESSION_START)
+        self.__tools = tools(self.__group_id, self.__api, self.__http, path + '\\' + assets, self.logger, level, print_log)
+        self.__tools.log(module = "session", level = "info", write = self.__tools.values.SESSION_START)
             
         self.__library = _library(self.__tools, library)
         atexit.register(self.__close)
@@ -196,7 +202,7 @@ class _app:
 
 
     def __close(self):
-        self.__tools.system_message(module = "session", level = "info", write = self.__tools.values.SESSION_CLOSE)
+        self.__tools.log(module = "session", level = "info", write = self.__tools.values.SESSION_CLOSE)
         
 
     async def method(self, method: str, data: dict = {}):
@@ -235,7 +241,7 @@ class _app:
             raise exceptions.MethodError(f"[{response['error']['error_code']}] {response['error']['error_msg']}")
 
         # if hasattr(self, "_app__tools"):
-        #     self.__tools.system_message(module = "vk-api", level = "DEBUG", write = self.__tools.values.API_DEBUG.format(method = method, values = values))
+        #     self.__tools.log(module = "vk-api", level = "DEBUG", write = self.__tools.values.API_DEBUG.format(method = method, values = values))
         return response['response']     
 
 
@@ -307,7 +313,7 @@ class _app:
                     
                     self.__thread.append(thread_started)
         else:
-            self.__tools.system_message(module = "framework", level = "debug", write = self.__tools.values.NO_THREAD)
+            self.__tools.log(module = "framework", level = "debug", write = self.__tools.values.NO_THREAD)
             self.handler = handler(self.__library)
 
         if not self.__booted_once:
@@ -327,7 +333,7 @@ class _app:
         """
 
         self.setup()
-        self.__library.tools.system_message(module = "longpoll", level = "debug", write = self.__tools.values.LONGPOLL_START)
+        self.__library.tools.log(module = "longpoll", level = "debug", write = self.__tools.values.LONGPOLL_START)
         self.__loop.run_until_complete(self.__pollingCycle())
 
 
@@ -340,14 +346,14 @@ class _app:
 
         self.setup()
 
-        self.__tools.system_message(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_START)
+        self.__tools.log(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_START)
         
         while times != 0:
             self.__loop.run_until_complete(self.__polling())
 
             times -= 1
         
-        self.__tools.system_message(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_CLOSE)
+        self.__tools.log(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_CLOSE)
 
 
     async def __update_longpoll_server(self, update_ts: bool = True) -> None:
@@ -359,7 +365,7 @@ class _app:
         self.__longpoll_url = response['server']
 
         if self.__tools.values.DEBUG_MESSAGES:
-            self.__tools.system_message( 
+            self.__tools.log( 
                 module = "longpoll",
                 level = "debug",
                 write = self.__tools.values.LONGPOLL_UPDATE)
@@ -454,6 +460,7 @@ class tools:
         self.__mentions = [self.__group_mention]
         
         self.__values = global_expressions()
+        self.__upl = Uploader(self)
 
 
     class name_cases:
@@ -489,7 +496,7 @@ class tools:
         return int(random.random() * 999999)
 
 
-    def system_message(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = 'info', sep = " "):
+    def log(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = 'info', sep = " "):
         if not write:
             write = list(map(str, args))
             write = sep.join()
@@ -500,6 +507,49 @@ class tools:
 
         self.__logger.log(logger_levels[level.upper()], write)
 
+    async def send_reply(self, package: objects.package, message:typing.Optional[str]=None, **kwargs):
+        if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
+        kwargs['random_id'] = self.gen_random()
+        if message: kwargs['message'] = message
+
+        return await self.api.messages.send(**kwargs)
+
+    async def send_attachment(self, package: objects.package, attachment:list, **kwargs):
+        if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
+        kwargs['random_id'] = self.gen_random()
+        kwargs['attachment'] = ",".join(attachment)
+
+        return await self.api.messages.send(**kwargs)
+
+    async def send_photo(self, package: objects.package, assets:list, **kwargs):
+        if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
+        kwargs['random_id'] = self.gen_random()
+
+        response = await self.__upl.photo_messages(assets)
+
+        if isinstance(response, list):
+            kwargs['attachment'] = ",".join([
+                "{}{}_{}".format("photo", i.owner_id, i.id) for i in response
+                ])
+        else:
+            kwargs['attachment'] = "{}{}_{}".format("phpto", response.owner_id, response.id)
+
+        return await self.api.messages.send(**kwargs)
+
+    async def send_document(self, package: objects.package, assets:list, **kwargs):
+        if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
+        kwargs['random_id'] = self.gen_random()
+
+        response = await self.__upl.document(assets, peer_id=package.peer_id)
+
+        if isinstance(response, list):
+            kwargs['attachment'] = ",".join([
+                "{}{}_{}".format(i.type, getattr(i, i.type).owner_id, getattr(i, i.type).id) for i in response
+                ])
+        else:
+            kwargs['attachment'] = "{}{}_{}".format(response.type, getattr(response, response.type).owner_id, getattr(response, response.type).id)
+
+        return await self.api.messages.send(**kwargs)
             
     def getBotId(self):
         return -self.__group_id
