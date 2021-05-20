@@ -107,13 +107,13 @@ class library:
             'public': {
                 'commands': {'all': [], 'coros': {}},
                 'events': {'all': [], 'coros': {}},
-                'action': {'all': [], 'coros': {}}
+                'action': {'all': [], 'coros': {}},
                 # 'void': handler,
             },
             'private': {
                 'commands': {'all': [], 'coros': {}},
                 'events': {'all': [], 'coros': {}},
-                'action': {'all': [], 'coros': {}}
+                'action': {'all': [], 'coros': {}},
                 # 'void': handler,
             }
         }
@@ -196,21 +196,19 @@ class library:
                 else:
                     handlers['private']['action']['all'].append(key)
                     handlers['private']['action']['coros'][key] = value
-                    
         if 'void' in moduleObj.handlers['public']:
             if 'void' in handlers['public']:           
                 return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = 'void'))
                 
             else: 
-                handlers['public']['void'] = moduleObj.void_react
-                message += self.tools.values.MODULE_INIT_VOID
+                handlers['public']['void'] = moduleObj.handlers['public']['void']
 
         if 'void' in moduleObj.handlers['private']:
             if 'void' in handlers['private']:           
                 return self.tools.log(module = "library", level = "warning", write = self.tools.values.MODULE_ISALREADY.format(module = module_name, handler = 'void'))
                 
             else: 
-                handlers['public']['void'] = moduleObj.void_react
+                handlers['private']['void'] = moduleObj.handlers['private']['void']
                 message += self.tools.values.MODULE_INIT_VOID
 
         check_commands = set(self.handlers['private']['commands']['all']) & set(handlers['private']['commands']['all'])
@@ -242,7 +240,7 @@ class library:
                 write = f"[{module_name}] `void is already registered")
 
         else:
-            self.tools.log(module = "library", level = "info", write = self.tools.values.MODULE_VALID.format(module = module_name))
+            self.tools.log(module = "library", level = "debug", write = self.tools.values.MODULE_VALID.format(module = module_name))
 
             self.handlers['public']['commands']['all'].extend(handlers['public']['commands']['all'])
             self.handlers['private']['commands']['all'].extend(handlers['private']['commands']['all'])

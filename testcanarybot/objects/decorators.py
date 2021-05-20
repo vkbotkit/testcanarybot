@@ -64,7 +64,7 @@ def ContextManager(events:typing.Optional[list]=None, commands:typing.Optional[l
 
                 response = {
                     'libraryModule': self,
-                    'coro': coro
+                    'handler': coro
                 }
 
                 self.handlers['private']['void'] = response

@@ -1,13 +1,10 @@
-from .framework._application import (
-    _app as app,
-    )
+from . import packaet
+from .packaet import app, message
+import os
 
-version = '1.1.8'
+version = '1.1.9'
 
 def root_init(name: str, file) -> bool:
-    import os
-    from .packaet import system_message
-
     if name != "__main__":
         return False
 
@@ -18,7 +15,7 @@ def root_init(name: str, file) -> bool:
         test = file[:file.rfind("\\") + 1]
         os.chdir(test)
 
-    system_message("launching the project directly...")
+    message("launching the project directly...")
 
     return True
 

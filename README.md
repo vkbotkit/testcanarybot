@@ -9,19 +9,12 @@ bot = testcanarybot.app("token", 123456)
 bot.start_polling()
 ```
 
-* [Examples](https://github.com/kensoi/testcanarybot/tree/stable/library)
+* [Examples](https://github.com/kensoi/testcanarybot/tree/dev/library)
 * [Documentation](https://kensoi.github.io/testcanarybot)
 * [VK Community](https://vk.com/testcanarybot)
-* [VK Author blog](https://vk.com/crubbukket)
 
 ## Install
 
 ```bash
 $ pip3 install testcanarybot 
 ```
-
-|               | TESTCANARYBOT DEV                      |
-| :------------ | :------------------------------------- |
-| Version       | 1.1.8                                  |
-| Channel       | DEV                                    |
-| Documentation | https://kensoi.github.io/testcanarybot |

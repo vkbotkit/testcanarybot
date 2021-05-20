@@ -22,12 +22,13 @@ import asyncio
 import aiohttp
 import atexit
 import os
+import sys
 import threading
 import time
 import typing
 import random
 
-from testcanarybot import uploader
+from testcanarybot import packaet, uploader
 
 logger_levels = {
     'CRITICAL': 50,
@@ -253,23 +254,7 @@ class _app:
         resource.append(self.__tools._tools__group_mention)
         mentions = map(str, mentions)
         mentions = map(lambda value: value.lower(), mentions)
-        self.__tools._tools__mentions = list(mentions)  
-
-
-    def appendMentions(self, mentions: list): # test
-        response = [*self.self.__tools._tools__mentions, *mentions]
-        self.setMentions(response)
-
-
-    def substractMentions(self, mentions: list): # test
-        a = set(self.self.__tools._tools__mentions)
-        
-        resource = []
-        resource.append(self.__tools._tools__group_mention)
-        mentions = map(str, mentions)
-        mentions = map(lambda value: value.lower(), mentions)
-
-        self.setMentions(list(a - set(mentions)))
+        self.__tools._tools__mentions = list(mentions)
 
 
     def setPrivateList(self, mentions: list):
@@ -278,17 +263,6 @@ class _app:
         
         else:
             self.__library.private_list = list(set(mentions))
-
-
-    def appendPrivateList(self, mentions: list): # test
-        response = [*self.private_list, *set(mentions)]
-        self.setPrivateList(response)
-
-
-    def removeFromPrivateList(self, mentions: list): # test
-        a = set(self.private_list)
-        b = set(mentions)
-        self.setPrivateList(list(a-b))
 
 
     def run(self, task):
@@ -496,32 +470,41 @@ class tools:
         return int(random.random() * 999999)
 
 
-    def log(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = 'info', sep = " "):
+    def log(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = 'info', sep = " ", end = "\n"):
         if not write:
             write = list(map(str, args))
             write = sep.join()
 
         write = "[" + level.upper() + "]\t" + "@" + self.__group_address + "." + module + ': ' + write
         if self.__print_log and logger_levels[level.upper()] >= self.__log_level:
-            print(write)
+            sys.stdout.write(write + end)
 
         self.__logger.log(logger_levels[level.upper()], write)
 
-    async def send_reply(self, package: objects.package, message:typing.Optional[str]=None, **kwargs):
+    async def send_reply(self, package: objects.package, message:typing.Optional[str]=None, delete_last:bool = False, **kwargs):
         if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
         kwargs['random_id'] = self.gen_random()
         if message: kwargs['message'] = message
 
+        if delete_last:
+            await self.delete_message(package)
+            
         return await self.api.messages.send(**kwargs)
+    
+    async def delete_message(self, package):
+        return await self.api.messages.delete(conversation_message_ids = package.conversation_message_id, peer_id = package.peer_id, delete_for_all = 1)
 
-    async def send_attachment(self, package: objects.package, attachment:list, **kwargs):
+    async def send_attachment(self, package: objects.package, attachment:list, delete_last:bool = False, **kwargs):
         if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
         kwargs['random_id'] = self.gen_random()
         kwargs['attachment'] = ",".join(attachment)
+        
+        if delete_last:
+            await self.delete_message(package)
 
         return await self.api.messages.send(**kwargs)
 
-    async def send_photo(self, package: objects.package, assets:list, **kwargs):
+    async def send_photo(self, package: objects.package, assets:list, delete_last:bool = False, **kwargs):
         if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
         kwargs['random_id'] = self.gen_random()
 
@@ -534,9 +517,12 @@ class tools:
         else:
             kwargs['attachment'] = "{}{}_{}".format("phpto", response.owner_id, response.id)
 
+        if delete_last:
+            await self.delete_message(package)
+
         return await self.api.messages.send(**kwargs)
 
-    async def send_document(self, package: objects.package, assets:list, **kwargs):
+    async def send_document(self, package: objects.package, assets:list, delete_last:bool = False, **kwargs):
         if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
         kwargs['random_id'] = self.gen_random()
 
@@ -546,8 +532,13 @@ class tools:
             kwargs['attachment'] = ",".join([
                 "{}{}_{}".format(i.type, getattr(i, i.type).owner_id, getattr(i, i.type).id) for i in response
                 ])
+
         else:
             kwargs['attachment'] = "{}{}_{}".format(response.type, getattr(response, response.type).owner_id, getattr(response, response.type).id)
+
+
+        if delete_last:
+            await self.delete_message(package)
 
         return await self.api.messages.send(**kwargs)
             
@@ -572,7 +563,6 @@ class tools:
         """
         get all mentions that you set as bot mentions at commands
         """
-
         return self.__mentions[:]
     
 
@@ -584,13 +574,16 @@ class tools:
             raise TypeError("Only message_new")
 
 
-    async def wait_reply(self, package):
+    async def wait_reply(self, package, delete_last:bool = False):
         if package.type == events.message_new:
             wait = objects.task(package)
             self.__waiting_replies[wait] = False
 
             while not self.__waiting_replies[wait]:
                 await asyncio.sleep(0)
+                
+            if delete_last:
+                await self.delete_message(package)
                 
             return self.__waiting_replies.pop(wait)
 

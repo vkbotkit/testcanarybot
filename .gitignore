@@ -28,10 +28,7 @@ share/python-wheels/
 MANIFEST
 
 #testing stuff
-kyokou/
-canarybot/
-testcanarybot-example/
-betabot/
+tildabot/
 log.txt
 
 # PyInstaller

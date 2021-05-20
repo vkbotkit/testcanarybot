@@ -63,6 +63,9 @@ class packageHandler:
         self.thread_loop = asyncio.get_event_loop()
         self.thread_loop.set_exception_handler(self.exception_handler)
         self.all_messages = self.library.tools.values.ALL_MESSAGES
+
+        if self.all_messages:
+            self.am = set([*self.mentions, *self.library.tools.values.ADDITIONAL_MENTIONS])
         self.add_mentions = self.library.tools.values.ADD_MENTIONS
         self.mentions = self.library.tools.getBotMentions()
         self.packages = []
@@ -198,10 +201,9 @@ class packageHandler:
                         check = type(message[0])
                         if check == str:
                             check_command = message[0].lower()
-                            for i in self.mentions:
-                                if check_command[:len(i)] == i:
-                                    package.params.gment = message.pop(0)
-                                    package.params.command = True
+                            if re.search("|".join(self.mentions), check_command):
+                                package.params.gment = message.pop(0)
+                                package.params.command = True
 
                         elif check == objects.mention:
                             if message[0].id == self.define_botment.id:
@@ -215,12 +217,11 @@ class packageHandler:
                     if self.add_mentions:
                         mentionslisted = list(map(int, package.params.mentions))
                         k = set(map(lambda x: str(x).lower(), package.items))
-                        n = set([*self.mentions, *self.library.tools.values.ADDITIONAL_MENTIONS])
                         
                         if self.define_botment.id in mentionslisted:
                             package.params.bot_mentioned = True
 
-                        elif k & n != set():
+                        elif k & self.am != set():
                             package.params.bot_mentioned = True
 
 
@@ -248,7 +249,7 @@ class packageHandler:
 
             if package.type == events.message_new:
                 if package.params.action:
-                    if package.action.type in self.library.handlers[access_type]['actions']['all']:
+                    if package.action.type in self.library.handlers[access_type]['action']['all']:
                         module = self.library.handlers[access_type]['actions']['coros'][package.action.type]['libraryModule']
                         handler = self.library.handlers[access_type]['actions']['coros'][package.action.type]['handler']
                         task = self.thread_loop.create_task(handler(module, self.library.tools, package))
@@ -263,7 +264,7 @@ class packageHandler:
                             task = self.thread_loop.create_task(handler(module, self.library.tools, package))
                             return
                 
-                elif 'void' in self.library.handlers[access_type]:
+                if 'void' in self.library.handlers[access_type]:
                     if self.all_messages or package.params.command or package.params.bot_mentioned:
                         module = self.library.handlers[access_type]['void']['libraryModule']
                         handler = self.library.handlers[access_type]['void']['handler']

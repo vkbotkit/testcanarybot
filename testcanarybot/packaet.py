@@ -2,6 +2,7 @@ from .framework._application import _app as app
 import threading
 import string
 import os
+import sys
 import random
 import traceback
 
@@ -29,7 +30,6 @@ fill all important info and try to run with "$ python testcanarybot --run [LIST 
 
 import testcanarybot
 
-community_name = 'betabot'
 access_token = '{token}'
 group_id = {group}
 
@@ -81,14 +81,15 @@ class Main(objects.libraryModule):
         pass # create task at start
     
     
-    @objects.ContextManager(commands = [\"send_message\"])
+    @objects.ContextManager(commands = [\"test\"])
     async def ContextManagerHandler(self, tools: objects.tools, package: objects.package):
-        await tools.send_message(package, "Hello world!")
+        await tools.send_reply(package, "Hello world!")
 """
 
 
 def message(*args):
-    print(packaet_manager_name, packaet_manager_separator, *args)
+    write = " ".join([packaet_manager_name, packaet_manager_separator, *args])
+    sys.stdout.write(write + "\n")
 
 def gen_str(test = None):
     result, num = "", random.randint(5, 25)
