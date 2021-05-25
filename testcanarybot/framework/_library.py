@@ -7,6 +7,8 @@ import importlib
 import os
 import sys
 
+join = '//' if os.name == 'nt' else '/'
+
 class library:
     def __init__(self, tools, library):
         self.libdir = library
@@ -46,8 +48,8 @@ class library:
     def upload(self):
         self.clear()
 
-        if os.path.isdir(os.getcwd() + '\\' + self.libdir):
-            listdir = os.listdir(os.getcwd() + '\\' + self.libdir)
+        if os.path.isdir(os.getcwd() + join + self.libdir):
+            listdir = os.listdir(os.getcwd() + join + self.libdir)
             listdir = [i for i in listdir if i != "__pycache__" and (i.endswith('.py') or i.count(".") == 0)]
             self.tools.log(module = "library", level = "debug", write = str(self.tools.values.LIBRARY_GET))
 
@@ -65,16 +67,16 @@ class library:
             self.tools.log(module = "library", level = "debug", write = "Supporting event types: {event_types}".format(event_types = "\n".join(["", "\t\tevents.message_new", *["\t\t" + str(i) for i in self.handlers['private']['events']['all']], ""])))
 
         else:
-            self.tools.log(module = "library", level = "error", write = "Module Library is not exists. Their directory should be here: " + os.getcwd() + '\\' + self.libdir)
-            raise ImportError("Module Library is not exists. Their directory should be here: " + os.getcwd() + '\\' + self.libdir)
+            self.tools.log(module = "library", level = "error", write = "Module Library is not exists. Their directory should be here: " + os.getcwd() + join + self.libdir)
+            raise ImportError("Module Library is not exists. Their directory should be here: " + os.getcwd() + join + self.libdir)
 
 
     async def upload_handler(self, module_name):
-        module_direct = self.libdir + '\\' + module_name
+        module_direct = self.libdir + join + module_name
         
         if os.path.isdir(module_direct): 
             module_direct += '\\main.py'
-        module_name = module_direct[:-3].replace('\\', '.')
+        module_name = module_direct[:-3].replace(join, '.')
         module = importlib.import_module(module_name)
         self.raw_modules.append(module)
 
