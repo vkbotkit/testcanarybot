@@ -144,7 +144,7 @@ class _app:
         self.__longpoll_delay = 1 / 20
         self.__longpoll_last = 0.0  
 
-        self.__http = async_sessions(headers = self._headers)
+        self.__http = async_sessions(headers = self._headers, trust_env = True)
         self.__api = api(self.__http, self.method)
         self.logger = logg
 
