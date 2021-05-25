@@ -7,7 +7,7 @@ import importlib
 import os
 import sys
 
-join = '//' if os.name == 'nt' else '/'
+join = '\\' if os.name == 'nt' else '/'
 
 class library:
     def __init__(self, tools, library):
