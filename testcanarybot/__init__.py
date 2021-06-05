@@ -1,8 +1,9 @@
 from . import packaet
 from .packaet import app, message
+from .framework._library import join
 import os
 
-version = '1.1.9'
+version = '1.2.0'
 
 def root_init(name: str, file) -> bool:
     if name != "__main__":
@@ -12,7 +13,7 @@ def root_init(name: str, file) -> bool:
         pass
 
     else:
-        test = file[:file.rfind("\\") + 1]
+        test = file[:file.rfind(join) + 1]
         os.chdir(test)
 
     message("launching the project directly...")

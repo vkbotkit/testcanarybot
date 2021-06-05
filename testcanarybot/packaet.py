@@ -1,4 +1,5 @@
 from .framework._application import _app as app
+from .framework._library import join
 import threading
 import string
 import os
@@ -126,9 +127,9 @@ def getProjects(path: str):
     projects = []
 
     for directory in os.listdir(path):
-        if os.path.isdir('\\'.join([path,directory])) and directory not in ['testcanarybot', 'docs', 'tools', 'all', 'info', 'assets', 'library']:
-            if 'root.py' in os.listdir('\\'.join([path, directory])) and 'assets' in os.listdir('\\'.join([path, directory])) and 'library' in os.listdir('\\'.join([path, directory])):
-                if not os.path.isdir('\\'.join([path, directory, 'root.py'])) and os.path.isdir('\\'.join([path, directory, 'assets'])) and os.path.isdir('\\'.join([path, directory, 'library'])):
+        if os.path.isdir(join.join([path,directory])) and directory not in ['testcanarybot', 'docs', 'tools', 'all', 'info', 'assets', 'library']:
+            if 'root.py' in os.listdir(join.join([path, directory])) and 'assets' in os.listdir(join.join([path, directory])) and 'library' in os.listdir(join.join([path, directory])):
+                if not os.path.isdir(join.join([path, directory, 'root.py'])) and os.path.isdir(join.join([path, directory, 'assets'])) and os.path.isdir(join.join([path, directory, 'library'])):
                     projects.append(directory)
 
     return projects
@@ -209,7 +210,7 @@ class threadBot(threading.Thread):
 
 
     def run(self):
-        self.bot = app(accessToken = self.accessToken, groupId = self.groupId, apiVersion = self.apiVersion, serviceToken = self.serviceToken, level = self.level, print_log = self.print_log, path = self.path, countThread = self.countThread, assets = self.botname + '\\' + self.assets, library = self.botname + '\\' + self.library)
+        self.bot = app(accessToken = self.accessToken, groupId = self.groupId, apiVersion = self.apiVersion, serviceToken = self.serviceToken, level = self.level, print_log = self.print_log, path = self.path, countThread = self.countThread, assets = self.botname + join + self.assets, library = self.botname + join + self.library)
         
         if len(self.mentions) != 0: self.bot.setMentions(self.mentions)
         if len(self.pl) != 0: self.bot.setPrivateList(self.pl)
