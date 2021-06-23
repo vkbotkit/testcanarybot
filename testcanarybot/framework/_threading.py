@@ -101,47 +101,46 @@ class packageHandler:
             self.library.tools.log(module = "framework", level = "debug", write = "Reloaded with message: " + reason)
 
         elif typed == exceptions.CallVoid:
-            if 'void' not in self.library['private']:
-                if reason[0] == "$" and reason.count("_") == 1:
-                    peer_id, from_id = reason[1:].split("_")
-                    
-                    if from_id in self.library.private_list:
-                        handler = self.library.handlers['private']['void']['coro']
-                        module = self.library.handlers['private']['void']['libraryModule']
+            if reason[0] == "$" and reason.count("_") == 1:
+                peer_id, from_id = reason[1:].split("_")
+                
+                if from_id in self.library.private_list:
+                    handler = self.library.handlers['private']['void']['handler']
+                    module = self.library.handlers['private']['void']['libraryModule']
 
-                    elif 'void' in self.library.handler['public']:
-                        handler = self.library.handlers['public']['void']['coro']
-                        module = self.library.handlers['public']['void']['libraryModule']
-                    
-                    else:
-                        self.library.tools.log(
-                            module = "framework",
-                            level = "debug",
-                            write = "Attempted to call void with incorrect task: " + reason
-                        )
-
-                    package = objects.package({
-                        'peer_id': int(peer_id), 
-                        'from_id': int(from_id), 
-                        'items': [self.library.tools.values.NOREPLY]
-                        })
-                    package.params.command = True
-
-                    self.thread_loop.create_task(handler(module, self.library.tools, package))
-
+                elif 'void' in self.library.handlers['public']:
+                    handler = self.library.handlers['public']['void']['handler']
+                    module = self.library.handlers['public']['void']['libraryModule']
+                
                 else:
                     self.library.tools.log(
                         module = "framework",
                         level = "debug",
-                        write = "Attempted to call void with incorrect task: " + reason
+                        write = "Void is not registered. Attempt to call with task: " + reason
                     )
 
-            else: 
+                package = objects.package({
+                    'peer_id': int(peer_id), 
+                    'from_id': int(from_id), 
+                    'items': [self.library.tools.values.NOREPLY]
+                    })
+                package.params.command = True
+
+                self.thread_loop.create_task(handler(module, self.library.tools, package))
+
+            else:
                 self.library.tools.log(
-                        module = "framework",
-                        level = "debug",
-                        write = "Attempted to call void with incorrect task: " + reason
-                    )
+                    module = "framework",
+                    level = "debug",
+                    write = "Attempted to call void with incorrect task: " + reason
+                )
+
+            # else: 
+            #     self.library.tools.log(
+            #             module = "framework",
+            #             level = "debug",
+            #             write = "Attempted to call void with incorrect task: " + reason
+            #         )
 
         else:
             self.library.tools.log(module = "traceback", level = "debug", write = traceback.format_exc())

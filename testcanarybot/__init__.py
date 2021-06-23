@@ -22,7 +22,7 @@ def root_init(name: str, file) -> bool:
 
 __version__ = version
 
-__title__ = 'TestCanaryBot ' + version
+__title__ = " ".join(['TestCanaryBot', version, 'Dev'])
 __author__ = 'Kensoi'
 __license__ = 'Apache v2'
 __copyright__ = 'Copyright 2021 kensoi'

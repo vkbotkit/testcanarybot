@@ -261,6 +261,12 @@ class library:
                 self.handlers['private']['void'] = handlers['private']['void']
             
             del moduleObj.handlers
+            self.handlers['public']['commands']['all'].sort(key = lambda x: -x.count('&#13;'))
+            self.handlers['private']['commands']['all'].sort(key = lambda x: -x.count('&#13;'))
+            self.handlers['public']['commands']['coros'] = sorted(self.handlers['public']['commands']['coros'].items(), key = lambda x: -x.count('&#13;'))
+            self.handlers['public']['commands']['coros'] = dict(self.handlers['public']['commands']['coros'])
+            self.handlers['private']['commands']['coros'] = sorted(self.handlers['private']['commands']['coros'].items(), key = lambda x: -x.count('&#13;'))
+            self.handlers['private']['commands']['coros'] = dict(self.handlers['private']['commands']['coros'])
                 
             self.modules[module_name] = moduleObj
             self.list.append(module_name)
