@@ -1,0 +1,1 @@
+from testcanarybot import __main__

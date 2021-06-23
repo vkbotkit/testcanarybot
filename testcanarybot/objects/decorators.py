@@ -5,12 +5,8 @@ from ..enums import events as enums_events
 from ..enums import action as enums_action
 
 
-def ContextManager(
-        events: typing.Optional[list] = None, 
-        commands: typing.Optional[list] = None, 
-        action: typing.Optional[list] = None, 
-        # payload: typing.Optional[list] = None
-        ):
+def ContextManager(events:typing.Optional[list]=None, commands:typing.Optional[list]=None, action:typing.Optional[list]=None,
+        private:bool=False) -> None:
 
     def decorator(coro: typing.Callable):
         def registerCommand(self):
@@ -19,58 +15,78 @@ def ContextManager(
                     if not isinstance(i, enums_events):
                         raise TypeError("Incorrect type!")
 
-                    elif i not in self.event_handlers and i != enums_events.message_new:
-                        self.event_handlers[i] = coro
+                    elif i not in self.handlers['private']['events']['all'] and i != enums_events.message_new:
+                        response = {'libraryModule': self, 'handler': coro}
+
+                        self.handlers['private']['events']['all'].append(i)
+                        self.handlers['private']['events']['coros'][i] = response
+
+                        if not private: 
+                            self.handlers['public']['events']['all'].append(i)
+                            self.handlers['public']['events']['coros'][i] = response
 
                     else:
                         raise exceptions.LibraryRewriteError(f"\"{str(i)}\" is already registered event")
                 
-                return # coro(self, *args, **kwargs) 
+                return 
 
             if commands:
-                response = {'handler': coro, 'commands': commands}
+                for i in range(len(commands)):
+                    if isinstance(commands[i], str):
+                        commands[i] = [commands[i]] 
 
-                self.commands.extend(commands)
-                self.handler_dict[coro.__name__] = response
+                response = {'libraryModule': self, 'handler': coro, 'commands': commands}
+                self.handlers['private']['commands'][coro.__name__] = response
+                if not private:
+                    self.handlers['public']['commands'][coro.__name__] = response
 
-                return # coro(self, *args, **kwargs)
+                return
 
             if action:
                 for i in action:
                     if not isinstance(i, enums_action):
                         raise TypeError("use testcanarybot.enums.action for this context!")
                     
-                    if i not in self.action_handlers:
-                        self.action_handlers[i] = coro
-                    
+                    if i not in self.handlers['private']['action']:
+                        response = {'libraryModule': self, 'handler': coro}
+
+                        self.handlers['private']['action'][i] = coro
+                        if not private: self.handlers['public']['action'][i] = coro
+
                     else:
                         raise exceptions.LibraryRewriteError(f"{str(i)} is already registered action")
 
-                return # coro(self, *args, **kwargs)
+                return
 
             if not (events or commands or action):
-                if self.void_react:
+                if 'void' in self.handlers:
                     raise NameError("Void handler is already created")
 
-                self.void_react = coro
+                response = {
+                    'libraryModule': self,
+                    'handler': coro
+                }
 
-                return # coro(self, *args, **kwargs)
+                self.handlers['private']['void'] = response
+                if not private: self.handlers['public']['void'] = response
+
+                return
         
         return registerCommand
         
     return decorator
     
-def event(events: list):
-    return ContextManager(events = events)
+def event(events:list, private:bool=False):
+    return ContextManager(events=events, private=private)
 
 
-def priority(commands: list):
-    return ContextManager(commands = commands)
+def priority(commands:list, private:bool=False):
+    return ContextManager(commands=commands, private=private)
 
 
-def void(coro: typing.Callable):
-    return ContextManager()(coro)
+def void(coro:typing.Callable):
+    return ContextManager(private=False)(coro)
     
 
-def action(action: list()):
-    return ContextManager(action = action)
+def action(action:list, private:bool=False):
+    return ContextManager(action=action, private=private)

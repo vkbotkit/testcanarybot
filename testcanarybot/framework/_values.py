@@ -88,13 +88,21 @@ class global_expressions:
         self.set(name = "MODULE_INIT_EVENTS", value = "\n\t\t with {event}", type = values.log)
         self.set(name = "MODULE_INIT_ACTION", value = "\n\t\t with {action}", type = values.log)
 
-        self.set(name = "MODULE_FAILED_BROKEN", value = "{module} is broken: no 'Main' class", type = values.log)
-        self.set(name = "MODULE_FAILED_VERSION", value = "{module} is broken: unsupported version of that", type = values.log)
-        self.set(name = "MODULE_FAILED_SUBCLASS", value = "{module} is broken: is not inherited from testcanarybot.objects.libraryModule", type = values.log)
-        self.set(name = "MODULE_FAILED_HANDLERS", value = """{module} is broken: no any handlers at module, write coroutine with these decorators:
-            @objects.priority(commands = [])
-            @objects.event(events = [])
-            @objects.void""", type = values.log)
+        self.set(name = "UPLOADER_DEBUG", value = "appeared exception at {module}: {exception}", type = values.log)
+        self.set(name = "API_DEBUG", value = "used method `{method}` with values {values}", type = values.log)
+
+        self.set(name = "MODULE_FAILED_NOMAIN", value = "{module} loading failed: no 'Main' class", type = values.log)
+        self.set(name = "MODULE_FAILED_HANDLERS", value = """{module} loading failed: no any handlers at module, write coroutine with these decorators:
+            @objects.priority(commands = [], private = False)
+            @objects.event(events = [], private = False)
+            @objects.action(events = [], private = False)
+            @objects.void
+            
+or create coroutine start(self, tools)""", type = values.log)
+    
+        self.set(name = "MODULE_ALREADY", value = "{module} loading failed: these {handler_type} already registered:\n{type_list}", type = values.log)
+        self.set(name = "MODULE_ISALREADY", value = "{module} loading failed: {handler} is already registered", type = values.log)
+        self.set(name = "MODULE_VALID", value = "{module} is valid, moving handlers into the main dictionary.", type = values.log)
 
         self.set(name = "MESSAGE_HANDLER_ITEMS", value = "\t\titems: {items}", type = values.log)
         self.set(name = "MESSAGE_HANDLER_TYPE", value = "{event_type}", type = values.log)

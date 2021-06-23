@@ -1,7 +1,11 @@
+from types import resolve_bases
+from testcanarybot.objects.data import response
 from .. import exceptions
 from .. import objects
 from ..enums import values
 from ..enums import events
+from ..uploader import Uploader
+
 
 from ._api import api
 from ._threading import (thread as handlering_thread, packageHandler as handler)
@@ -18,10 +22,13 @@ import asyncio
 import aiohttp
 import atexit
 import os
+import sys
 import threading
 import time
 import typing
 import random
+
+from testcanarybot import packaet, uploader
 
 logger_levels = {
     'CRITICAL': 50,
@@ -123,7 +130,7 @@ class _app:
         # Core settings
         print_log       [bool: False]               print log to console
         path            [str: os.getcwd()]          project path
-        countThread     [int: 1]                    set threads count for handlers.
+        countThread     [int: 0]                    set threads count for handlers.
         assets          [str: "assets"]             current assets directory name (only name without path)
         library         [str: "library"]            current library directory name (only name without path)
         """
@@ -137,7 +144,7 @@ class _app:
         self.__longpoll_delay = 1 / 20
         self.__longpoll_last = 0.0  
 
-        self.__http = async_sessions(headers = self._headers)
+        self.__http = async_sessions(headers = self._headers, trust_env = True)
         self.__api = api(self.__http, self.method)
         self.logger = logg
 
@@ -158,16 +165,16 @@ class _app:
             asyncio.set_event_loop(self.__loop)
 
 
-        self.__tools = tools(self.__group_id, self.__api, self.__http, os.getcwd() + '\\' + assets, self.logger, level, print_log)
-        self.__tools.system_message(module = "session", level = "info", write = self.tools.values.SESSION_START)
+        self.__tools = tools(self.__group_id, self.__api, self.__http, path + '\\' + assets, self.logger, level, print_log)
+        self.__tools.log(module = "session", level = "info", write = self.__tools.values.SESSION_START)
             
-        self.__library = _library(self.tools, library)
+        self.__library = _library(self.__tools, library)
         atexit.register(self.__close)
 
 
     @property
     def countThread(self):
-        return self.__countThread
+        return self.__countThread + 0
 
 
     @property
@@ -196,7 +203,7 @@ class _app:
 
 
     def __close(self):
-        self.__tools.system_message(module = "session", level = "info", write = self.__tools.values.SESSION_CLOSE)
+        self.__tools.log(module = "session", level = "info", write = self.__tools.values.SESSION_CLOSE)
         
 
     async def method(self, method: str, data: dict = {}):
@@ -234,6 +241,8 @@ class _app:
         if 'error' in response: 
             raise exceptions.MethodError(f"[{response['error']['error_code']}] {response['error']['error_msg']}")
 
+        # if hasattr(self, "_app__tools"):
+        #     self.__tools.log(module = "vk-api", level = "DEBUG", write = self.__tools.values.API_DEBUG.format(method = method, values = values))
         return response['response']     
 
 
@@ -242,12 +251,22 @@ class _app:
         Setup custom mentions instead "@{group_address}"
         """
         resource = []
-        resource.append(self.tools._tools__group_mention)
+        resource.append(self.__tools._tools__group_mention)
         mentions = map(str, mentions)
         mentions = map(lambda value: value.lower(), mentions)
-        mentions = list(mentions)
+        self.__tools._tools__mentions = list(mentions)
 
-        self.tools._tools__mentions = mentions  
+
+    def setPrivateList(self, mentions: list):
+        if len(mentions) > 10:
+            raise ValueError("Too much users")
+        
+        else:
+            self.__library.private_list = list(set(mentions))
+
+
+    def run(self, task):
+        self.__loop.run_until_complete(task)
 
 
     def setup(self):  
@@ -256,8 +275,9 @@ class _app:
         """  
           
         self.__library.upload()
+        # self.__library.private_list = self.private_list
 
-        self.logger.info(self.tools.values.LOGGER_START)
+        self.logger.info(self.__tools.values.LOGGER_START)
         if self.__countThread > 0:
             if len(self.__thread) <= self.__countThread:
                 current_thread = threading.currentThread()
@@ -267,7 +287,7 @@ class _app:
                     
                     self.__thread.append(thread_started)
         else:
-            self.tools.system_message(module = "framework", level = "debug", write = self.tools.values.NO_THREAD)
+            self.__tools.log(module = "framework", level = "debug", write = self.__tools.values.NO_THREAD)
             self.handler = handler(self.__library)
 
         if not self.__booted_once:
@@ -287,7 +307,7 @@ class _app:
         """
 
         self.setup()
-        self.__library.tools.system_message(module = "longpoll", level = "debug", write = self.tools.values.LONGPOLL_START)
+        self.__library.tools.log(module = "longpoll", level = "debug", write = self.__tools.values.LONGPOLL_START)
         self.__loop.run_until_complete(self.__pollingCycle())
 
 
@@ -300,14 +320,14 @@ class _app:
 
         self.setup()
 
-        self.tools.system_message(module = 'longpoll', level = "debug", write = self.tools.values.LONGPOLL_START)
+        self.__tools.log(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_START)
         
         while times != 0:
             self.__loop.run_until_complete(self.__polling())
 
             times -= 1
         
-        self.tools.system_message(module = 'longpoll', level = "debug", write = self.tools.values.LONGPOLL_CLOSE)
+        self.__tools.log(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_CLOSE)
 
 
     async def __update_longpoll_server(self, update_ts: bool = True) -> None:
@@ -318,11 +338,11 @@ class _app:
         self.__longpoll_key = response['key']
         self.__longpoll_url = response['server']
 
-        if self.tools.values.DEBUG_MESSAGES:
-            self.tools.system_message( 
+        if self.__tools.values.DEBUG_MESSAGES:
+            self.__tools.log( 
                 module = "longpoll",
                 level = "debug",
-                write = self.tools.values.LONGPOLL_UPDATE)
+                write = self.__tools.values.LONGPOLL_UPDATE)
 
 
     async def __check(self):
@@ -414,6 +434,7 @@ class tools:
         self.__mentions = [self.__group_mention]
         
         self.__values = global_expressions()
+        self.__upl = Uploader(self)
 
 
     class name_cases:
@@ -449,17 +470,77 @@ class tools:
         return int(random.random() * 999999)
 
 
-    def system_message(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = 'info', sep = " "):
+    def log(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = 'info', sep = " ", end = "\n"):
         if not write:
             write = list(map(str, args))
             write = sep.join()
 
         write = "[" + level.upper() + "]\t" + "@" + self.__group_address + "." + module + ': ' + write
         if self.__print_log and logger_levels[level.upper()] >= self.__log_level:
-            print(write)
+            sys.stdout.write(write + end)
 
         self.__logger.log(logger_levels[level.upper()], write)
 
+    async def send_reply(self, package: objects.package, message:typing.Optional[str]=None, delete_last:bool = False, **kwargs):
+        if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
+        kwargs['random_id'] = self.gen_random()
+        if message: kwargs['message'] = message
+
+        if delete_last:
+            await self.delete_message(package)
+            
+        return await self.api.messages.send(**kwargs)
+    
+    async def delete_message(self, package):
+        return await self.api.messages.delete(conversation_message_ids = package.conversation_message_id, peer_id = package.peer_id, delete_for_all = 1)
+
+    async def send_attachment(self, package: objects.package, attachment:list, delete_last:bool = False, **kwargs):
+        if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
+        kwargs['random_id'] = self.gen_random()
+        kwargs['attachment'] = ",".join(attachment)
+        
+        if delete_last:
+            await self.delete_message(package)
+
+        return await self.api.messages.send(**kwargs)
+
+    async def send_photo(self, package: objects.package, assets:list, delete_last:bool = False, **kwargs):
+        if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
+        kwargs['random_id'] = self.gen_random()
+
+        response = await self.__upl.photo_messages(assets)
+
+        if isinstance(response, list):
+            kwargs['attachment'] = ",".join([
+                "{}{}_{}".format("photo", i.owner_id, i.id) for i in response
+                ])
+        else:
+            kwargs['attachment'] = "{}{}_{}".format("phpto", response.owner_id, response.id)
+
+        if delete_last:
+            await self.delete_message(package)
+
+        return await self.api.messages.send(**kwargs)
+
+    async def send_document(self, package: objects.package, assets:list, delete_last:bool = False, **kwargs):
+        if not 'peer_id' in kwargs: kwargs['peer_id'] = package.peer_id
+        kwargs['random_id'] = self.gen_random()
+
+        response = await self.__upl.document(assets, peer_id=package.peer_id)
+
+        if isinstance(response, list):
+            kwargs['attachment'] = ",".join([
+                "{}{}_{}".format(i.type, getattr(i, i.type).owner_id, getattr(i, i.type).id) for i in response
+                ])
+
+        else:
+            kwargs['attachment'] = "{}{}_{}".format(response.type, getattr(response, response.type).owner_id, getattr(response, response.type).id)
+
+
+        if delete_last:
+            await self.delete_message(package)
+
+        return await self.api.messages.send(**kwargs)
             
     def getBotId(self):
         return -self.__group_id
@@ -482,7 +563,6 @@ class tools:
         """
         get all mentions that you set as bot mentions at commands
         """
-
         return self.__mentions[:]
     
 
@@ -494,13 +574,16 @@ class tools:
             raise TypeError("Only message_new")
 
 
-    async def wait_reply(self, package):
+    async def wait_reply(self, package, delete_last:bool = False):
         if package.type == events.message_new:
             wait = objects.task(package)
             self.__waiting_replies[wait] = False
 
             while not self.__waiting_replies[wait]:
                 await asyncio.sleep(0)
+                
+            if delete_last:
+                await self.delete_message(package)
                 
             return self.__waiting_replies.pop(wait)
 

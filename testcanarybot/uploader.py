@@ -1,6 +1,3 @@
-from .assets import assets
-
-
 from io import IOBase as FileType
 from io import BytesIO
 

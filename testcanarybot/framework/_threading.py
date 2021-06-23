@@ -33,7 +33,7 @@ class thread(threading.Thread):
         self.test_handler = packageHandler(self.library)
         self.test_handler.library.tools.http.create_session(self)
 
-        self.test_handler.library.tools.system_message(module = "framework", level = "debug", write = f"{self.getName()} is started")
+        self.test_handler.library.tools.log(module = "framework", level = "debug", write = f"{self.getName()} is started")
         self.thread_loop.run_forever()
 
 
@@ -63,6 +63,9 @@ class packageHandler:
         self.thread_loop = asyncio.get_event_loop()
         self.thread_loop.set_exception_handler(self.exception_handler)
         self.all_messages = self.library.tools.values.ALL_MESSAGES
+
+        if self.all_messages:
+            self.am = set([*self.mentions, *self.library.tools.values.ADDITIONAL_MENTIONS])
         self.add_mentions = self.library.tools.values.ADD_MENTIONS
         self.mentions = self.library.tools.getBotMentions()
         self.packages = []
@@ -74,7 +77,7 @@ class packageHandler:
     def supportingEvents(self):
         response = []
         response.append(events.message_new)
-        response.extend(self.library.handlers['events'])
+        response.extend(self.library.handlers['private']['events']['all'])
 
         return response
 
@@ -84,7 +87,7 @@ class packageHandler:
         reason = str(context['exception'])
 
         if typed == exceptions.Quit:
-            self.library.tools.system_message(module = "framework", level = "debug", write = "Quited with message: " + reason)
+            self.library.tools.log(module = "framework", level = "debug", write = "Quited with message: " + reason)
             
             os._exit(1)
 
@@ -95,34 +98,53 @@ class packageHandler:
                 if hasattr(i, "start"): 
                     self.thread_loop.create_task(i.start)
 
-            self.library.tools.system_message(module = "framework", level = "debug", write = "Reloaded with message: " + reason)
+            self.library.tools.log(module = "framework", level = "debug", write = "Reloaded with message: " + reason)
 
         elif typed == exceptions.CallVoid:
             if reason[0] == "$" and reason.count("_") == 1:
                 peer_id, from_id = reason[1:].split("_")
-                handler = self.library.handlers['void']
-                module = self.library.modules[handler.__module__]
+                
+                if from_id in self.library.private_list:
+                    handler = self.library.handlers['private']['void']['handler']
+                    module = self.library.handlers['private']['void']['libraryModule']
+
+                elif 'void' in self.library.handlers['public']:
+                    handler = self.library.handlers['public']['void']['handler']
+                    module = self.library.handlers['public']['void']['libraryModule']
+                
+                else:
+                    self.library.tools.log(
+                        module = "framework",
+                        level = "debug",
+                        write = "Void is not registered. Attempt to call with task: " + reason
+                    )
 
                 package = objects.package({
                     'peer_id': int(peer_id), 
                     'from_id': int(from_id), 
                     'items': [self.library.tools.values.NOREPLY]
                     })
-                
                 package.params.command = True
 
                 self.thread_loop.create_task(handler(module, self.library.tools, package))
 
             else:
-                self.library.tools.system_message(
+                self.library.tools.log(
                     module = "framework",
                     level = "debug",
                     write = "Attempted to call void with incorrect task: " + reason
                 )
 
+            # else: 
+            #     self.library.tools.log(
+            #             module = "framework",
+            #             level = "debug",
+            #             write = "Attempted to call void with incorrect task: " + reason
+            #         )
+
         else:
-            self.library.tools.system_message(module = "traceback", level = "debug", write = traceback.format_exc())
-            self.library.tools.system_message(module = "framework", level = "error", write = "Appeared exception: " + reason)
+            self.library.tools.log(module = "traceback", level = "debug", write = traceback.format_exc())
+            self.library.tools.log(module = "framework", level = "error", write = "Appeared exception: " + reason)
 
 
     async def resolver(self, package):
@@ -178,10 +200,9 @@ class packageHandler:
                         check = type(message[0])
                         if check == str:
                             check_command = message[0].lower()
-                            for i in self.mentions:
-                                if check_command[:len(i)] == i:
-                                    package.params.gment = message.pop(0)
-                                    package.params.command = True
+                            if re.search("|".join(self.mentions), check_command):
+                                package.params.gment = message.pop(0)
+                                package.params.command = True
 
                         elif check == objects.mention:
                             if message[0].id == self.define_botment.id:
@@ -195,12 +216,11 @@ class packageHandler:
                     if self.add_mentions:
                         mentionslisted = list(map(int, package.params.mentions))
                         k = set(map(lambda x: str(x).lower(), package.items))
-                        n = set([*self.mentions, *self.library.tools.values.ADDITIONAL_MENTIONS])
                         
                         if self.define_botment.id in mentionslisted:
                             package.params.bot_mentioned = True
 
-                        elif k & n != set():
+                        elif k & self.am != set():
                             package.params.bot_mentioned = True
 
 
@@ -216,9 +236,6 @@ class packageHandler:
 
 
     async def handler(self, package: objects.package):
-        self.library.handlers['void']
-        handler = None
-
         try:
             package.items.append(self.library.tools.values.ENDLINE)
 
@@ -227,36 +244,40 @@ class packageHandler:
                 self.library.tools._tools__waiting_replies[task] = package
                 return
 
-            elif package.type == events.message_new:
+            access_type='private' if package.from_id in self.library.private_list else 'public'
+
+            if package.type == events.message_new:
                 if package.params.action:
-                    handler = self.library.handlers['action'][package.action.type]
-                    module = self.library.modules[handler.__module__]
-
-                elif package.params.command and len(package.items) > 0 and package.items[0] in self.library.handlers['priority'].keys():
-                    handler = self.library.handlers['priority'][package.items[0]]
-                    module = self.library.modules[handler.__module__]
-
-                elif self.library.void_react:
+                    if package.action.type in self.library.handlers[access_type]['action']['all']:
+                        module = self.library.handlers[access_type]['actions']['coros'][package.action.type]['libraryModule']
+                        handler = self.library.handlers[access_type]['actions']['coros'][package.action.type]['handler']
+                        task = self.thread_loop.create_task(handler(module, self.library.tools, package))
+                        return
+                
+                if package.params.command and len(package.items) > 0:
+                    for i in self.library.handlers[access_type]['commands']['all']:
+                        res = [*(i.split("&#13;")), '$items']
+                        if package.check(res) or package.check(i.split("&#13;")):
+                            module = self.library.handlers[access_type]['commands']['coros'][i]['libraryModule']
+                            handler = self.library.handlers[access_type]['commands']['coros'][i]['handler']
+                            task = self.thread_loop.create_task(handler(module, self.library.tools, package))
+                            return
+                
+                if 'void' in self.library.handlers[access_type]:
                     if self.all_messages or package.params.command or package.params.bot_mentioned:
-                        handler = self.library.handlers['void']
-                        module = self.library.modules[handler.__module__]
-
-                else:
-                    return
-
-
-            elif package.type in self.library.handlers['events'].keys():
-                handler = self.library.handlers['events'][package.type]
-                module = self.library.modules[handler.__module__]
-
-            else:
-                return
-            if handler:
+                        module = self.library.handlers[access_type]['void']['libraryModule']
+                        handler = self.library.handlers[access_type]['void']['handler']
+                        task = self.thread_loop.create_task(handler(module, self.library.tools, package))
+                        return
+            elif package.type in self.library.handlers[access_type]['events']['all']:
+                module = self.library.handlers[access_type]['events']['coros'][package.type]['libraryModule']
+                handler = self.library.handlers[access_type]['events']['coros'][package.type]['handler']
                 task = self.thread_loop.create_task(handler(module, self.library.tools, package))
+                return
 
         except Exception as e:
-            self.library.tools.system_message(module = "traceback", level = "debug", write = traceback.format_exc())
-            self.library.tools.system_message(module = "framework", level = "error", write = "Appeared exception: " + str(e))
+            self.library.tools.log(module = "traceback", level = "debug", write = traceback.format_exc())
+            self.library.tools.log(module = "framework", level = "warning", write = "Appeared exception: " + str(e))
 
 
     def create_task(self, package):

@@ -1,13 +1,10 @@
-from .framework._application import (
-    _app as app,
-    )
+from . import packaet
+from .packaet import app, message, testcanarybot_name_data
+from .framework._library import join
+import os
 
-version = '01.01.003'
 
 def root_init(name: str, file) -> bool:
-    import os
-    from .packaet import system_message
-
     if name != "__main__":
         return False
 
@@ -15,21 +12,21 @@ def root_init(name: str, file) -> bool:
         pass
 
     else:
-        test = file[:file.rfind("\\") + 1]
+        test = file[:file.rfind(join) + 1]
         os.chdir(test)
 
-    system_message("launching the project directly...")
+    message("launching the project directly...")
 
     return True
 
-__version__ = version
+__version__ = testcanarybot_name_data['keywords']['version']
 
-__title__ = 'TestCanaryBot ' + version
+__title__ = testcanarybot_name_data['sep'].join([i for i in testcanarybot_name_data['keywords'].values() if i.lower() != 'stable'])
 __author__ = 'Kensoi'
 __license__ = 'Apache v2'
 __copyright__ = 'Copyright 2021 kensoi'
 
-__doc__ = "kensoi/testcanarybot, " + version + """
+__doc__ = "kensoi/testcanarybot, " + __version__ + """
 Documentation is available at kensoi.github.io/testcanarybot
 """
 
