@@ -1,9 +1,8 @@
 from . import packaet
-from .packaet import app, message
+from .packaet import app, message, testcanarybot_name_data
 from .framework._library import join
 import os
 
-version = '1.2.0'
 
 def root_init(name: str, file) -> bool:
     if name != "__main__":
@@ -20,14 +19,14 @@ def root_init(name: str, file) -> bool:
 
     return True
 
-__version__ = version
+__version__ = testcanarybot_name_data['keywords']['version']
 
-__title__ = " ".join(['TestCanaryBot', version, 'Dev'])
+__title__ = testcanarybot_name_data['sep'].join([i for i in testcanarybot_name_data['keywords'].values() if i.lower() != 'stable'])
 __author__ = 'Kensoi'
 __license__ = 'Apache v2'
 __copyright__ = 'Copyright 2021 kensoi'
 
-__doc__ = "kensoi/testcanarybot, " + version + """
+__doc__ = "kensoi/testcanarybot, " + __version__ + """
 Documentation is available at kensoi.github.io/testcanarybot
 """
 

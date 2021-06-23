@@ -7,6 +7,14 @@ import sys
 import random
 import traceback
 
+testcanarybot_name_data = {
+    'keywords': {
+    'name': 'TestCanarybot',
+    'version': '1.2.0',
+    'branch': 'Dev'},
+    'sep': ' '
+}
+
 packaet_manager_name = '[tppm]'
 packaet_manager_separator = '\t'
 
