@@ -9,9 +9,9 @@ import traceback
 
 testcanarybot_name_data = {
     'keywords': {
-    'name': 'TestCanarybot',
-    'version': '1.2.0',
-    'branch': 'Dev'},
+    'name': 'TestCanaryBot',
+    'version': '1.2.0.2',
+    'branch': 'Unstable'},
     'sep': ' '
 }
 
