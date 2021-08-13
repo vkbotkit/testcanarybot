@@ -26,15 +26,4 @@ class api:
             if isinstance(v, (list, tuple)):
                 kwargs[k] = ','.join(str(x) for x in v)
 
-        result = await self._method(self._string, kwargs)
-        
-        instance = type(result)
-
-        if instance == list:
-            return [objects.response(i) for i in result]
-        
-        elif instance == dict:
-            return objects.response(result)
-
-        else:
-            return result
+        return await self._method(self._string, kwargs)

@@ -58,6 +58,10 @@ class _assets:
     def __exit__(self, exc_type, exc_value, traceback):
         pass
 
+async def make_query(http, *args, **kwargs):
+    response = await http.post(*args, **kwargs)
+    return await response.json()
+
 
 class async_sessions():
     """
@@ -111,7 +115,7 @@ class _app:
     __booted_once = False
 
 
-    def __init__(self, accessToken: str, groupId: typing.Union[str, int], apiVersion: str = "5.126", serviceToken: str = "", 
+    def __init__(self, accessToken: str, groupId: typing.Union[str, int], apiVersion: str = "5.131", serviceToken: str = "", 
                     logg = logging.Logger(name = "testcanarybot"), level: str = 'info', 
                     print_log: bool = False, path = os.getcwd(), countThread: int = 0, assets = 'assets', library = 'library'):
         """
@@ -233,17 +237,25 @@ class _app:
 
         if delay > 0: await asyncio.sleep(delay)
 
-        response = await self.http.post(self.api_url + method, data = data)
-        response = await response.json()
+        response = await self.__loop.create_task(make_query(self.http, self.api_url + method, data = data))
 
         self.last_request = time.time()
 
         if 'error' in response: 
             raise exceptions.MethodError(f"[{response['error']['error_code']}] {response['error']['error_msg']}")
 
-        # if hasattr(self, "_app__tools"):
-        #     self.__tools.log(module = "vk-api", level = "DEBUG", write = self.__tools.values.API_DEBUG.format(method = method, values = values))
-        return response['response']     
+        if hasattr(self, "_app__tools"):
+            self.tools.log(module = "api", level = "DEBUG", write = self.tools.values.API_DEBUG.format(method = method, values = "{...}"))
+        instance = type(response['response'])
+
+        if instance == list:
+            return [objects.response(i) for i in response['response']]
+        
+        elif instance == dict:
+            return objects.response(response['response'])
+
+        else:
+            return response['response']    
 
 
     def setMentions(self, mentions: list):
@@ -332,7 +344,7 @@ class _app:
 
     async def __update_longpoll_server(self, update_ts: bool = True) -> None:
         response = await self.method('groups.getLongPollServer', {'group_id': self.__group_id})
-
+        response = response.raw
         if update_ts: 
             self.__ts = response['ts']
         self.__longpoll_key = response['key']

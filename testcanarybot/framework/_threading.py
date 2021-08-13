@@ -249,8 +249,8 @@ class packageHandler:
             if package.type == events.message_new:
                 if package.params.action:
                     if package.action.type in self.library.handlers[access_type]['action']['all']:
-                        module = self.library.handlers[access_type]['actions']['coros'][package.action.type]['libraryModule']
-                        handler = self.library.handlers[access_type]['actions']['coros'][package.action.type]['handler']
+                        module = self.library.handlers[access_type]['action']['coros'][package.action.type]['libraryModule']
+                        handler = self.library.handlers[access_type]['action']['coros'][package.action.type]['handler']
                         task = self.thread_loop.create_task(handler(module, self.library.tools, package))
                         return
                 

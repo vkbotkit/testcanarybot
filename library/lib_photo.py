@@ -3,6 +3,8 @@ from testcanarybot import objects
 
 # Copyright 2021 kensoi
 
+# Searching photos via query at VK
+
 class Main(objects.libraryModule):
     @objects.priority(commands = ["картинка"])
     async def photo_search(self, tools, package):

@@ -10,7 +10,7 @@ import traceback
 testcanarybot_name_data = {
     'keywords': {
     'name': 'TestCanarybot',
-    'version': '1.2.0',
+    'version': '1.3.0',
     'branch': 'Dev'},
     'sep': ' '
 }
@@ -97,7 +97,7 @@ class Main(objects.libraryModule):
 
 
 def message(*args):
-    write = " ".join([packaet_manager_name, packaet_manager_separator, *args])
+    write = " ".join([packaet_manager_name, *args])
     sys.stdout.write(write + "\n")
 
 def gen_str(test = None):
@@ -225,6 +225,5 @@ class threadBot(threading.Thread):
         if len(self.addt) != 0: self.bot.tools.values.set('ADDITIONAL_MENTIONS', self.addt)
         if self.all_messages: self.bot.tools.values.set("ALL_MESSAGES", self.all_messages)
         if self.listitem: self.bot.tools.values.set("LISTITEM", self.listitem)
-        
         message("@" + self.bot.tools.getBotLink(), "initialised, started")
         self.bot.start_polling()

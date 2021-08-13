@@ -49,6 +49,8 @@ $ python -m testcanarybot --run BotName1 BotName2 [--library library] [--assets 
 tppm >> @bot1 initialised, started #BotName1 folder
 tppm >> @bot2 initialised, started #BotName2 folder
 ```
+P.S. можно использовать TPPM Wrapper.
+
 
 #### Для запуска всех проектов в директории
 
