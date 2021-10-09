@@ -60,7 +60,7 @@ class _assets:
 
 async def make_query(http, *args, **kwargs):
     response = await http.post(*args, **kwargs)
-    return await response.json(content_type=None)
+    return await response.json()
 
 class async_sessions():
     """
