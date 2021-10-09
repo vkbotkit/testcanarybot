@@ -63,6 +63,7 @@ async def make_query(http, *args, **kwargs):
     try:
         return await response.json(content_type='text/html')
     except:
+        print(response.text())
         print(args, kwargs)
         quit()
 
