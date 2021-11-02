@@ -2,7 +2,8 @@
     <a href = "http://kensoi.github.io/testcanarybot/">
         <img src="/docs/pc-cover.png" alt="kensoi/testcanarybot" />
     </a>
-</p>
+</p>  
+
 # testcanarybot
 async framework for vk chatbots
 
