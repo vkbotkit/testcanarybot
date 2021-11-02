@@ -1,6 +1,6 @@
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = 0.4
+        self.v = "0.4.0"
         self.descr = 'test plugin'
 
         self.response_success_add = "Люди успешно внесены в список. Чтобы подписка отправляла сообщения, разрешите боту "

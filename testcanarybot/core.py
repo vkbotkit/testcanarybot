@@ -3,7 +3,7 @@ import random
 
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = 0.5
+        self.v = "0.5.0"
         self.descr = 'test plugin'
         self.plugintype = [
             tools.objects.MESSAGE_NEW,

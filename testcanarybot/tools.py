@@ -16,7 +16,7 @@ class tools:
         self.objects.log = self.assets("log.txt", "a+")
 
         print("CANARYBOT_LOG_FILE", file = self.objects.log)
-        print("TESTCANARYBOT 0.5", file = self.objects.log)
+        print("TESTCANARYBOT "0.5.0"", file = self.objects.log)
         print("BY ANDREW PROKOFIEFF 2020", file = self.objects.log)
         print("", file = self.objects.log)
         

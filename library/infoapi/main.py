@@ -1,6 +1,6 @@
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = 0.4
+        self.v = "0.4.0"
         self.descr = 'Плагин для работы с VK API и информацией о боте. \n\nКоманды для бота: \n\u2022 @canarybot помощь = Отослать полезные ссылки. \n\u2022 @canarybot ссылка *ссылка* = Сократить ссылку с помощью VK CC\n\u2022 @canarybot тип *упоминание страницы, например @durov* = узнать тип страницы, её ID, краткий адрес'
 
         self.answers = {
