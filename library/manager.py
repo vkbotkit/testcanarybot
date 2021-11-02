@@ -1,4 +1,4 @@
-v = 0.6
+v = "0.6.0"
 name = """Управление подписками"""
 descr = """{group_mention} subman mngrs [admins/none/список упоминаний] - установить список
 {group_mention} subman mngrs_add [список упоминаний] - добавить людей в список

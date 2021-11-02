@@ -1,4 +1,4 @@
-v = 0.6
+v = "0.6.0"
 name = """Запросы SQLITE"""
 descr = """{listitem} {group_mention} sql [запрос] - выполнить запрос в базу данных canarycore"""
 

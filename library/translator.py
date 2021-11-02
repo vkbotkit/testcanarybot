@@ -1,7 +1,7 @@
 import googletrans
 
 
-v = 0.6
+v = "0.6.0"
 name = """Google Переводчик"""
 descr = """Плагин-обёртка для Google Translate. 
     Доступные языки: "{group_mention} доступные языки" 

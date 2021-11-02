@@ -19,7 +19,7 @@ class tools:
         self.upload = VkUpload(self.api)
 
         print("CANARYBOT_LOG_FILE", file = self.log)
-        print("TESTCANARYBOT 0.6", file = self.log)
+        print("TESTCANARYBOT "0.6.0"", file = self.log)
         print("BY KENSOI.GITHUB.IO 2020", file = self.log)
         print("", file = self.objects.log)
         

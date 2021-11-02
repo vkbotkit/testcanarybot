@@ -1,7 +1,7 @@
 import random
 
 
-v = 0.6
+v = "0.6.0"
 name = """Roleplay"""
 descrcover = """Плагин для проведения ролевых игр."""
 cmdcover = """\n{listitem} {group_mention} {cmd_type} {mention_type}"""

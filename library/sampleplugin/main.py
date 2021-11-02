@@ -1,4 +1,4 @@
-v = 0.6
+v = "0.6.0"
 name = """testcanarybot plugin"""
 descr = """plugin descr"""
 
