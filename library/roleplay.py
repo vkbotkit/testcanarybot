@@ -1,7 +1,7 @@
 import random
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = 0.4
+        self.v = "0.4.0"
         self.descr = 'Плагин для проведения ролевых игр.'
         
         self.reactions = {

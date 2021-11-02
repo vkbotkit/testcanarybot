@@ -2,7 +2,7 @@ import random
 import vk_api.exceptions
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = 0.4
+        self.v = "0.4.0"
         self.descr = 'Модуль для работы с message.action и упоминаниями бота'
         self.mentions = ['video-195675828_456239017', 'video-195675828_456239018']
 

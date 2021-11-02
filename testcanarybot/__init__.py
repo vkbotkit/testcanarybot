@@ -19,7 +19,7 @@ class Longpoll():
         """
         self.bot = vk_api.VkApi(token = token)
         self.api = self.bot.get_api()
-        self.supp_v = [0.4]
+        self.supp_v = ["0.4.0"]
         
         self.longpoll = None
         self.library = plugins(self.supp_v, group_id, self.api, library)

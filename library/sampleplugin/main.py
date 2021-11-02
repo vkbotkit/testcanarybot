@@ -1,6 +1,6 @@
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = 0.4
+        self.v = "0.4.0"
         self.descr = 'test plugin'
         # для начала назовите папку любым другим именем кроме "sampleplugin"
 
