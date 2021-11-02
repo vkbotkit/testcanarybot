@@ -1,4 +1,4 @@
-# Install and try testcanarybot 0.09.110
+# Install and try testcanarybot 0.9.1-dev10
 ## Requirements
 
 - Python 3.7
