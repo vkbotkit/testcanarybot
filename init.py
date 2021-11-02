@@ -4,7 +4,7 @@ import engine
 import random
 
 
-v = '002'
+v = '0.2.1'
 token = "816be56e3b314cd7af06e361b948b0f6958e87c348e1c906726c15046214f36e91bf3aad22547635c10da"
 
 

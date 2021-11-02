@@ -170,30 +170,3 @@ class assets():
 
     def __call__(self, filename, mode):
         return open(os.path.abspath(os.path.dirname(__file__)) + '\\assets\\' + filename, mode)
-
-
-if __name__ == "__main__":
-    # Подключение файла из папки library 
-    # testlib = plugins_autoimport()
-    # testlib.package.update() #library/package/main.py update()
-
-    # Подключение медиафайла из папки assets
-    # testassets = assets()
-
-    # test2 = open('test.jpg', "wb")
-    # with testassets('test.jpg', "rb") as origin:
-    #     test2.write(origin.read())
-
-    # v = '002'
-    # token = ""
-
-
-    # Список плагинов
-    # testplugins = plugins(v, testassets, api)
-    
-    # print(testplugins.plugins)
-    # print(testplugins.all)
-    # print(testplugins.getPlugins())
-
-    # print(testplugins.getMention(517114114, 'nom'))
-    pass

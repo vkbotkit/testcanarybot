@@ -2,7 +2,7 @@ import random
 
 class lib_plugin():
     def __init__(self):
-        self.v = '002'
+        self.v = '0.2.1'
         self.answers = {
             'help': {
                 1: 'Ой, привет, {user}, почему ты пишешь мне?',

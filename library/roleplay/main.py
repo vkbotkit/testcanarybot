@@ -1,7 +1,7 @@
 import random
 class lib_plugin():
     def __init__(self):
-        self.v = '002'
+        self.v = '0.2.1'
 
 
     def check(args):
