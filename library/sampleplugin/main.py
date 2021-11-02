@@ -1,6 +1,6 @@
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = '0.0032'
+        self.v = '0.3.2'
         self.descr = 'Шаблонный плагин для версии ' + self.v
         # для начала назовите папку любым другим именем кроме "sampleplugin"
 

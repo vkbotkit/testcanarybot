@@ -2,7 +2,7 @@ import googletrans
 
 class lib_plugin():
     def __init__(self, api, tools):
-        self.v = '0.0032'
+        self.v = '0.3.2'
         self.descr = 'Переводчик'
         self.translator = googletrans.Translator()
         

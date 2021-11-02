@@ -46,5 +46,5 @@ name cases for getMention:
 предложный – abl,
 link - shortlink (to make mention like @durov)
 
-For now, your plugin can be supported for all TestCanaryBot versions, that supports 0.0032!
+For now, your plugin can be supported for all TestCanaryBot versions, that supports 0.3.2!
 @@@ andprokofieff.github.io

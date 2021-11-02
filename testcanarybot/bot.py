@@ -12,7 +12,7 @@ class TestCanaryBot():
         """
         self.bot = vk_api.VkApi(token = token)
         self.api = self.bot.get_api()
-        self.supp_v = ['0.0032']
+        self.supp_v = ['0.3.2']
         
         self.longpoll = None
         self.library = plugins(self.supp_v, group_id, self.api, library)
