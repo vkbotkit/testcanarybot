@@ -310,27 +310,27 @@ class Databases:
         if check == list:
             for name in names:
                 if self.check(name[0]):
-                    raise DBError("This DB already exists")
+                    raise exceptions.DBError("This DB already exists")
 
                 else:
                     self.__dbs[name[0]] = Database(name[1])
 
         elif check == tuple:
             if self.check(names[0]):
-                raise DBError("This DB already exists")
+                raise exceptions.DBError("This DB already exists")
 
             else:
                 self.__dbs[names[0]] = Database(names[1])
 
         elif check == str:
             if self.check(names):
-                raise DBError("This DB already exists")
+                raise exceptions.DBError("This DB already exists")
 
             else:
                 self.__dbs[names] = Database(names)
         
         else:
-            raise DBError("Incorrect type of 'names'")
+            raise exceptions.DBError("Incorrect type of 'names'")
 
 
 class library:
@@ -447,7 +447,7 @@ class library:
         package_handled = objects.package
         package_handled.peer_id = event_object['user_id']
 
-        for key, value in obj.items():
+        for key, value in event_object.items():
             if key in _ohr.peer_id: 
                 package_handled.peer_id = value
 
@@ -456,7 +456,7 @@ class library:
 
             package_handled[key] = value
         
-        package_handled.items.append(event)
+        package_handled.items.append(event_object)
         package_handled.items.append(self.tools.getObject("ENDLINE"))
         package_handled.type = event_type
         package_handled.__dict__.update(
@@ -481,7 +481,7 @@ class library:
             message.items = self.parse_command(message.text)
             
         message.items.append(self.tools.getValue("ENDLINE"))
-        if len(event_package.items) != 0 or not self.tools.getValue("ONLY_COMMANDS").value:
+        if len(message.items) != 0 or not self.tools.getValue("ONLY_COMMANDS").value:
             self.parse_package(message)
 
 
@@ -890,4 +890,4 @@ def init_async(coroutine: asyncio.coroutine):
     return loop.run_until_complete(coroutine)
 
 assets = _assets()
-supporting = [objects.static, 0.801, 0.802]
+supporting = [objects.static, "0.8.0", "0.8.1", "0.8.2"]

@@ -3,7 +3,7 @@ from testcanarybot import events
 class Main:
     async def start(self, tools):
         self.name = "package_type"
-        self.version = 0.8
+        self.version = "0.8.0"
         self.description = """
             testcanarybot objects type handler
             """

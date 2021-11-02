@@ -5,7 +5,7 @@ from . import objects
 module_cover = """{package_handler_import}class Main:
     async def start(self, tools):
         self.name = "{name}"
-        self.version = 0.802
+        self.version = "0.8.0"02
         self.description = \"\"\"
             {descr}\"\"\"{package_events}
         
@@ -42,7 +42,7 @@ def setExpression(name, value = None):
     expressions.list.append(name)
 
 
-setExpression("LOGGER_START", ['TESTCANARYBOT 0.8', 'KENSOI.GITHUB.IO 2020', ''])
+setExpression("LOGGER_START", ['TESTCANARYBOT "0.8.0"', 'KENSOI.GITHUB.IO 2020', ''])
 setExpression("SESSION_START", "started")
 setExpression("SESSION_LONGPOLL_START", "connected")
 setExpression("SESSION_LONGPOLL_ERROR", "is not connected [LongpollError Exception]")

@@ -1,7 +1,7 @@
 import random
 from testcanarybot import events
 from testcanarybot.objects import static, message, expression
-    # static for supporting testcanarybot 0.801 and newer
+    # static for supporting testcanarybot 0.8.0 and newer
     # message to convert fwd_messages or reply_message into object
 
 """

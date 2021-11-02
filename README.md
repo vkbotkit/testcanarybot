@@ -1,6 +1,6 @@
 <p align="center">
     <a href = "http://kensoi.github.io/testcanarybot/">
-        <img src="http://kensoi.github.io/testcanarybot/kcb-wide-white.jpg">
+        <img src="docs/kcb-wide-white.jpg">
     </a>
 </p>
 
