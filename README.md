@@ -1,9 +1,8 @@
 <p align="center">
     <a href = "http://kensoi.github.io/testcanarybot/">
-        <img src="docs/kcb-wide-white.jpg">
+        <img src="/docs/pc-cover.png" alt="kensoi/testcanarybot" />
     </a>
 </p>
-
 # testcanarybot
 async framework for vk chatbots
 
