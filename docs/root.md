@@ -13,12 +13,11 @@ fill all important info and try to run with "$ python testcanarybot --run [LIST 
 
 import testcanarybot
 
-community_name = 'Канарейка чан'
 community_token = 'ABCDEF' # https://vk.com/yourbot?act=tokens
 community_id = 0
 
 community_service = '4b982af44b982af44b982af4044bea70b544b984b982af4154d123d6075b06ad58a362a' # to make requests via standalone application
-apiVersion = '5.130'    # optional
+apiVersion = '5.131'    # optional
 countThread = 10        # optional
 
 MENTIONS = []

@@ -1,11 +1,11 @@
-# Packaet wrapper
-# Copyright 2021 Andrew Prokofieff
+# TPPM wrapper
+# Copyright 2021 kensoi
 
-# works with projects that's has generated root.py file via packaet
+# works with projects that's has generated root.py file via TPPM
 # put this file into folder where you located all your projects. It shall look like this:
 
 # your_dir/
-#   manage.py <-- packaet wrapper
+#   manage.py <-- TPPM wrapper
 #   botName1/
 #     assets/
 #     library/

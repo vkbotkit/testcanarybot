@@ -40,6 +40,7 @@ class thread(threading.Thread):
     def create_task(self, package):
         if hasattr(self, "thread_loop"):
             pass
+
         else:
             self.thread_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.thread_loop)
@@ -251,6 +252,7 @@ class packageHandler:
 
             else:
                 return
+                
             if handler:
                 task = self.thread_loop.create_task(handler(module, self.library.tools, package))
 
