@@ -1,4 +1,4 @@
-# Установка testcanarybot 1.1.000
+# Установка testcanarybot 1.1.4
 Вы можете установить testcanarybot двумя способами: через pypi и через github
 
 #### 1. PYPI

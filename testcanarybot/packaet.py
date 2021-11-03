@@ -1,7 +1,13 @@
 from .framework._application import _app as app
 import threading
+import traceback
 import string
+import random
 import os
+
+
+# Copyright 2021 kensoi
+
 
 packaet_manager_name = '[tppm]'
 packaet_manager_separator = '\t'
@@ -27,12 +33,11 @@ fill all important info and try to run with "$ python testcanarybot --run [LIST 
 
 import testcanarybot
 
-community_name = 'testcanary chan'
 community_token = '{token}'
 community_id = {group}
 
 community_service = '{service_token}' # optional
-apiVersion = '5.130'    # optional
+apiVersion = '5.131'    # optional
 countThread = 0         # optional
 
 
@@ -98,20 +103,16 @@ def gen_str(test = None):
         num = test
 
     while num != 0:
-        result += random.choice([
-                *string.ascii_lowercase,
-                *string.digits]
-        )
+        result += random.choice([*string.ascii_lowercase, *string.digits])
         num -= 1
+
     return result
 
 def parsename(name: str):
     name = name.lower()
     test, i = len(name), 0
     while i< test:
-        if name[i] not in [
-                *string.ascii_lowercase,
-                *string.digits]:
+        if name[i] not in [*string.ascii_lowercase, *string.digits]:
             name = name[:i] + name[i+1:]
             test -= 1
 
@@ -167,10 +168,17 @@ class threadBot(threading.Thread):
     def run(self):
         self.bot = app(accessToken = self.accessToken, groupId = self.groupId, apiVersion = self.apiVersion, serviceToken = self.serviceToken, level = self.level, print_log = self.print_log, path = self.path, countThread = self.countThread, assets = self.botname + '\\' + self.assets, library = self.botname + '\\' + self.library)
         
-        if len(self.mentions) != 0: self.bot.setMentions(self.mentions)
-        if len(self.addt) != 0: self.bot.tools.values.set('ADDITIONAL_MENTIONS', self.addt)
-        if self.all_messages: self.bot.tools.values.set("ALL_MESSAGES", self.all_messages)
-        if self.listitem: self.bot.tools.values.set("LISTITEM", self.listitem)
+        if len(self.mentions) != 0: 
+            self.bot.setMentions(self.mentions)
+
+        if len(self.addt) != 0: 
+            self.bot.tools.values.set('ADDITIONAL_MENTIONS', self.addt)
+
+        if self.all_messages: 
+            self.bot.tools.values.set("ALL_MESSAGES", self.all_messages)
+
+        if self.listitem: 
+            self.bot.tools.values.set("LISTITEM", self.listitem)
         
         system_message("@" + self.bot.tools.getBotLink(), "initialised, started")
         self.bot.start_polling()

@@ -23,6 +23,7 @@ import time
 import typing
 import random
 
+
 logger_levels = {
     'CRITICAL': 50,
     'ERROR': 40,
@@ -31,6 +32,7 @@ logger_levels = {
     'DEBUG': 10,
     'NOTSET': 0
 }
+
 
 class _assets:
     def __init__(self, assets = os.getcwd() + '\\assets'):
@@ -82,19 +84,8 @@ class async_sessions():
             return getattr(thread.session, name)
 
 
-def _codenameToINT(int1: int, int2: int, int3: int) -> int:
-    return int1 * 10000 + int2 * 1000 + int3
-
-
-def _correctCodeName(int1: int, int2: int, int3: int) -> str:
-    return f"{'%02d' % int1}.{'%02d' % int2}.{'%03d' % int3}"
-
-
 class _app:  
-    _headers = {
-        'User-agent': """Mozilla/5.0 (Windows NT 6.1; rv:52.0) 
-            Gecko/20100101 Firefox/52.0"""
-    }
+    _headers = {'User-agent': """Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"""}
 
 
     __longpoll_url = ""
@@ -266,6 +257,7 @@ class _app:
                     thread_started = handlering_thread(self.__library, i, current_thread.getName())
                     
                     self.__thread.append(thread_started)
+
         else:
             self.tools.system_message(module = "framework", level = "debug", write = self.tools.values.NO_THREAD)
             self.handler = handler(self.__library)
@@ -304,7 +296,6 @@ class _app:
         
         while times != 0:
             self.__loop.run_until_complete(self.__polling())
-
             times -= 1
         
         self.tools.system_message(module = 'longpoll', level = "debug", write = self.tools.values.LONGPOLL_CLOSE)
@@ -315,6 +306,7 @@ class _app:
 
         if update_ts: 
             self.__ts = response['ts']
+
         self.__longpoll_key = response['key']
         self.__longpoll_url = response['server']
 
@@ -353,7 +345,8 @@ class _app:
 
 
     async def __pollingCycle(self):
-        while True: await self.__polling()
+        while True: 
+            await self.__polling()
 
 
     async def __polling(self):
@@ -381,6 +374,7 @@ class _app:
                 self.__lastthread = 0
             
             return self.__thread[self.__lastthread]
+
         else:
             return self.handler
 
@@ -602,8 +596,7 @@ class tools:
 
 
     async def isChatManager(self, from_id, peer_id: int):
-        response = await self.getChatManagers(peer_id)
-        return from_id in response
+        return from_id in await self.getChatManagers(peer_id)
 
 
     async def getMembers(self, peer_id: int):
@@ -617,8 +610,6 @@ class tools:
 
 
     async def isMember(self, from_id: int, peer_id: int):
-        response = await self.getMembers(peer_id)
-
-        return from_id in response
+        return from_id in await self.getMembers(peer_id)
 
 

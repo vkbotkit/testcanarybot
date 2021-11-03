@@ -65,6 +65,7 @@ if len(args.run) > 0:
                 testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library, args.path + '\\' + i)
                 workingProjects.append(testBot)
                 time.sleep(1)
+
             else:
                 raise ValueError(f"Directory does not exist or is not a bot project. Run \"python testcanarybot --create {i}\" to create project, and try again")
 
@@ -75,6 +76,7 @@ if len(args.run) > 0:
 
         if len(workingProjects) == 0:
             quit()
+
         time.sleep(3)
 
 
@@ -101,6 +103,7 @@ elif args.create != '':
         
         with open(args.path + '\\' + packaet_project_directory + '\\' + packaet_project_assets + '\\readme.txt', 'w+') as readme:
             readme.write(packaet_readme_assets)
+            
         system_message(f"Done! \n\tDirectory: ./{packaet_project_directory}/ \n\tUsage: python testcanarybot --run {packaet_project_directory}")
     
     else:

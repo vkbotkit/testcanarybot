@@ -1,6 +1,3 @@
-from .assets import assets
-
-
 from io import IOBase as FileType
 from io import BytesIO
 
@@ -54,8 +51,12 @@ class Uploader:
         response = await self.__api.docs.getMessagesUploadServer(**values) # vk.com/dev/docs.getMessagesUploadServer
         response = await self.__http.post(response.upload_url, data = self.convertAsset(document, sign = 'file'))
         response = await response.json(content_type = None)
-        if title: response['title'] = title 
-        if tags: response['tags'] = tags
+
+        if title: 
+            response['title'] = title 
+            
+        if tags: 
+            response['tags'] = tags
 
         return await self.__api.docs.save(**response) 
 
@@ -80,14 +81,10 @@ class Uploader:
             raise ValueError('type should be either photo or video')
 
         if (not link_text) != (not link_url):
-            raise ValueError(
-                'Either both link_text and link_url or neither one are required'
-            )
+            raise ValueError('Either both link_text and link_url or neither one are required')
 
         if link_url and not link_url.startswith('__https://vk.com'):
-            raise ValueError(
-                'Only internal __https://vk.com links are allowed for link_url'
-            )
+            raise ValueError('Only internal __https://vk.com links are allowed for link_url')
 
         if link_url and len(link_url) > 2048:
             raise ValueError('link_url is too long. Max length - 2048')
@@ -95,9 +92,14 @@ class Uploader:
         values = dict()
 
         values['add_to_news'] = True
-        if reply_to_story: values['reply_to_story'] = reply_to_story
-        if link_text: values['link_text'] = link_text
-        if link_url: values['link_url'] = link_url
+        if reply_to_story: 
+            values['reply_to_story'] = reply_to_story
+
+        if link_text: 
+            values['link_text'] = link_text
+
+        if link_url: 
+            values['link_url'] = link_url
 
         response = await method(**values)
         response = await self.__http.post(response.upload_url, data = self.convertAsset(file, 'file' if file_type == "photo" else 'video_file'))
@@ -112,8 +114,10 @@ class Uploader:
 
             if isinstance(files, str): 
                 response = self.__assets(files, 'rb', buffering = 0)
+
             elif isinstance(files, bytes): 
                 response = self.__assets(files)
+
             else:
                 response = files
 
@@ -130,8 +134,10 @@ class Uploader:
 
                     if isinstance(files[i], str): 
                         response = self.__assets(files[i], 'rb', buffering = 0)
+
                     elif isinstance(files[i], bytes): 
                         response = BytesIO(files[i])
+
                     else:
                         response = files[i]
 

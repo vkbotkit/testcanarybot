@@ -7,6 +7,8 @@ MAX_BUTTONS_ON_LINE = 5
 MAX_DEFAULT_LINES = 10
 MAX_INLINE_LINES = 6
 
+# Copyright 2021 kensoi
+# Copied from vk_api
 
 def sjson_dumps(*args, **kwargs):
     kwargs['ensure_ascii'] = False

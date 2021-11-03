@@ -5,7 +5,7 @@ from .. import objects
 import asyncio
 import importlib
 import os
-import sys
+
 
 class library:
     def __init__(self, tools, library):
@@ -52,6 +52,7 @@ class library:
 
             if self.loop.is_running():
                 pass
+
             else:
                 self.loop.run_until_complete(asyncio.wait(tasklist))
                 
@@ -98,6 +99,7 @@ class library:
             if coro_name != 'start' and callable(coro):
                 try:
                     await coro()
+
                 except:
                     pass
 

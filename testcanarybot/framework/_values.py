@@ -52,6 +52,7 @@ def gen_str(test = None):
                 *string.digits]
         )
         num -= 1
+        
     return result
 
 
@@ -126,6 +127,7 @@ class global_expressions:
         for i in self.__types.keys():
             if name in self.__types[i]:
                 return i
+
         raise NameError("\"{name}\" is not exists")
         
 
@@ -148,6 +150,7 @@ class global_expressions:
             for i in self.__types:
                 if name in i and i != type:
                     pass
+
                 else:
                     raise TypeError("Incorrect type for value:", type)
         self.__values[name] = value

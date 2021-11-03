@@ -1,4 +1,10 @@
-![https://pypi.org/project/testcanarybot/1.1.3/](https://img.shields.io/badge/pypi-1.01.003-blue?style=flat-square) ![](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue?style=flat-square) ![](https://img.shields.io/badge/license-Apache%20License%202.0-green?style=flat-square)
+![https://pypi.org/project/testcanarybot/1.1.4/](https://img.shields.io/badge/pypi-1.1.4-blue?style=flat-square) ![](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue?style=flat-square) ![](https://img.shields.io/badge/license-Apache%20License%202.0-green?style=flat-square)
+
+<p align="center">
+    <a href="https://kensoi.github.io/testcanarybot/"> 
+        <img src ="/docs/pc-cover.png"/>
+    </a>
+</p>
 
 Asynchronous bot framework with perfect module library for VK API on Python 3.9 with aiohttp, asyncio and threading.
 
@@ -19,9 +25,3 @@ bot.start_polling()
 ```bash
 $ pip3 install testcanarybot 
 ```
-
-|               | TESTCANARYBOT STABLE                   |
-| :------------ | :------------------------------------- |
-| Version       | 01.01.003                              |
-| Channel       | STABLE                                 |
-| Documentation | https://kensoi.github.io/testcanarybot |
