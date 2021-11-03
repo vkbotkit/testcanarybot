@@ -1,3 +1,9 @@
+<p align="center">
+    <a href="https://kensoi.github.io/testcanarybot/"> 
+        <img src ="pc-cover.png"/>
+    </a>
+</p>
+
 Основано на python273/vk_api и aiogram
 
 [Установка](./install.md)  

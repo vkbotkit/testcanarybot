@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name = "testcanarybot",
-    version = '1.3.0',
+    version = '1.3.1',
     author = "andprokofieff",
     author_email = "prokofieff@internet.ru",
     description = "asynchronous VK Bot Framework",

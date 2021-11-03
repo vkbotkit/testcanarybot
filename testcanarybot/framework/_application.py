@@ -1,8 +1,5 @@
-from types import resolve_bases
-from testcanarybot.objects.data import response
 from .. import exceptions
 from .. import objects
-from ..enums import values
 from ..enums import events
 from ..uploader import Uploader
 
@@ -10,12 +7,7 @@ from ..uploader import Uploader
 from ._api import api
 from ._threading import (thread as handlering_thread, packageHandler as handler)
 from ._library import library as _library
-from ._values import _ohr
 from ._values import global_expressions
-
-from datetime import datetime
-from enum import Enum
-
 import logging
 
 import asyncio

@@ -29,6 +29,8 @@ MANIFEST
 
 #testing stuff
 tildabot/
+kyokou/
+canarybot/
 log.txt
 
 # PyInstaller
