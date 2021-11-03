@@ -3,14 +3,11 @@ import threading
 import traceback
 import string
 import random
+import platform
 import os
-
-
-# Copyright 2021 kensoi
-
-
-packaet_manager_name = '[tppm]'
-packaet_manager_separator = '\t'
+packaet_path_separator = "\\" if platform.system() == 'Windows' else "/"
+packaet_manager_name = 'tppm'
+packaet_manager_separator = "\t"
 
 packaet_readme_assets = """testcanarybot assets
 Copyright 2021 kensoi
@@ -127,9 +124,9 @@ def getProjects(path: str):
     projects = []
 
     for directory in os.listdir(path):
-        if os.path.isdir('\\'.join([path,directory])) and directory not in ['testcanarybot', 'docs', 'tools', 'all', 'info', 'assets', 'library']:
-            if 'root.py' in os.listdir('\\'.join([path, directory])) and 'assets' in os.listdir('\\'.join([path, directory])) and 'library' in os.listdir('\\'.join([path, directory])):
-                if not os.path.isdir('\\'.join([path, directory, 'root.py'])) and os.path.isdir('\\'.join([path, directory, 'assets'])) and os.path.isdir('\\'.join([path, directory, 'library'])):
+        if os.path.isdir(packaet_path_separator.join([path,directory])) and directory not in ['testcanarybot', 'docs', 'tools', 'all', 'info', 'assets', 'library']:
+            if 'root.py' in os.listdir(packaet_path_separator.join([path, directory])) and 'assets' in os.listdir(packaet_path_separator.join([path, directory])) and 'library' in os.listdir(packaet_path_separator.join([path, directory])):
+                if not os.path.isdir(packaet_path_separator.join([path, directory, 'root.py'])) and os.path.isdir(packaet_path_separator.join([path, directory, 'assets'])) and os.path.isdir(packaet_path_separator.join([path, directory, 'library'])):
                     projects.append(directory)
 
     return projects

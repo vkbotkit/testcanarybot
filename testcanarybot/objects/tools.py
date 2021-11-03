@@ -12,6 +12,7 @@ class tools(abc.ABCMeta):
     def assets(self):
         pass    
         
+        
     class name_cases:
         nom = 'nom'
         gen = 'gen'

@@ -32,7 +32,7 @@ class Main(objects.libraryModule):
 
     def gen(self, lenght = None, choice = None):
         if not lenght: lenght = random.randint(5,256)
-        if not choice: choice = bool(random.getrandbits(1))
+        if not choice: choice = not not random.getrandbits(1)
         
         if choice:
             return self.laugh_dict[:-1] + self.laugh_dict[-1] * lenght

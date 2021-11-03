@@ -38,10 +38,7 @@ class thread(threading.Thread):
 
 
     def create_task(self, package):
-        if hasattr(self, "thread_loop"):
-            pass
-
-        else:
+        if not hasattr(self, "thread_loop"):
             self.thread_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.thread_loop)
 
@@ -67,7 +64,6 @@ class packageHandler:
         self.add_mentions = self.library.tools.values.ADD_MENTIONS
         self.mentions = self.library.tools.getBotMentions()
         self.packages = []
-
         self.define_key = "@" + self.library.tools.getBotLink() + ":"
         self.define_botment = objects.mention(self.library.tools.getBotId(), self.library.tools.getBotLink())
 
@@ -86,7 +82,6 @@ class packageHandler:
 
         if typed == exceptions.Quit:
             self.library.tools.system_message(module = "framework", level = "debug", write = "Quited with message: " + reason)
-            
             os._exit(1)
 
         elif typed == exceptions.LibraryReload:
@@ -103,15 +98,12 @@ class packageHandler:
                 peer_id, from_id = reason[1:].split("_")
                 handler = self.library.handlers['void']
                 module = self.library.modules[handler.__module__]
-
                 package = objects.package({
                     'peer_id': int(peer_id), 
                     'from_id': int(from_id), 
                     'items': [self.library.tools.values.NOREPLY]
                     })
-                
                 package.params.command = True
-
                 self.thread_loop.create_task(handler(module, self.library.tools, package))
 
             else:
@@ -198,10 +190,7 @@ class packageHandler:
                         k = set(map(lambda x: str(x).lower(), package.items))
                         n = set([*self.mentions, *self.library.tools.values.ADDITIONAL_MENTIONS])
                         
-                        if self.define_botment.id in mentionslisted:
-                            package.params.bot_mentioned = True
-
-                        elif k & n != set():
+                        if self.define_botment.id in mentionslisted or k & n != set():
                             package.params.bot_mentioned = True
 
 

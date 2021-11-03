@@ -5,13 +5,7 @@ from ..enums import events as enums_events
 from ..enums import action as enums_action
 
 
-def ContextManager(
-        events: typing.Optional[list] = None, 
-        commands: typing.Optional[list] = None, 
-        action: typing.Optional[list] = None, 
-        # payload: typing.Optional[list] = None
-        ):
-
+def ContextManager(events: typing.Optional[list] = None, commands: typing.Optional[list] = None, action: typing.Optional[list] = None):
     def decorator(coro: typing.Callable):
         def registerCommand(self):
             if events:
