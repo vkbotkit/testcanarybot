@@ -152,6 +152,7 @@ or create coroutine start(self, tools)""", type = values.log)
                 type = values.expr
             
             self.__types[type].append(name)
+
         elif type:
             for i in self.__types:
                 if name in i and i != type:
@@ -178,12 +179,3 @@ or create coroutine start(self, tools)""", type = values.log)
     __values: dict
     __init__ = clear
     get = __getattr__
-
-
-
-class _ohr:
-    from_id = ['deleter_id', 'liker_id', 'user_id']
-    peer_id = ['market_owner_id', 'owner_id', 'object_owner_id', 
-                'post_owner_id', 'photo_owner_id', 'topic_owner_id', 
-                'video_owner_id', 'to_id'
-                ]

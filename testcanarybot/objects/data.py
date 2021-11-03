@@ -163,7 +163,7 @@ class package(response):
                 continue
 
             elif command[i] == self.__exprs:
-                if not isinstance(j, expression):
+                if not isinstance(i, expression):
                     return False
 
                 return self.items[i:-1]

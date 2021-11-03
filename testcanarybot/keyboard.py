@@ -7,6 +7,7 @@ MAX_BUTTONS_ON_LINE = 5
 MAX_DEFAULT_LINES = 10
 MAX_INLINE_LINES = 6
 
+# Copied from vk_api
 
 def sjson_dumps(*args, **kwargs):
     kwargs['ensure_ascii'] = False
@@ -45,14 +46,17 @@ class keyboard:
             'buttons': self.lines
         }
 
+
     def get_keyboard(self):
         return sjson_dumps(self.keyboard)
+
 
     @classmethod
     def get_empty_keyboard(cls):
         keyboard = cls()
         keyboard.keyboard['buttons'] = []
         return keyboard.get_keyboard()
+
 
     def add_button(self, label, color=keyboardcolor.SECONDARY, payload=None):
         current_line = self.lines[-1]
@@ -193,6 +197,7 @@ class keyboard:
         if self.inline:
             if len(self.lines) >= MAX_INLINE_LINES:
                 raise ValueError(f'Max {MAX_INLINE_LINES} lines for inline keyboard')
+                
         else:
             if len(self.lines) >= MAX_DEFAULT_LINES:
                 raise ValueError(f'Max {MAX_DEFAULT_LINES} lines for default keyboard')

@@ -18,6 +18,11 @@ bot = testcanarybot.app(config.token, config.group_id)
 bot.start_polling()
 ```
 
+* [Examples](https://github.com/kensoi/testcanarybot/tree/v1.x/library)
+* [Documentation](https://kensoi.github.io/testcanarybot)
+* [VK Community](https://vk.com/testcanarybot)
+* [VK Author blog](https://vk.com/crubbukket)
+
 ## Install
 
 ```bash

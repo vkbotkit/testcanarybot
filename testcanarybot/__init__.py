@@ -1,8 +1,8 @@
 from . import packaet
 from .packaet import app, message, testcanarybot_name_data
-from .framework._library import join
 import os
 
+from .packaet import packaet_path_separator
 
 def root_init(name: str, file) -> bool:
     if name != "__main__":
@@ -12,7 +12,7 @@ def root_init(name: str, file) -> bool:
         pass
 
     else:
-        test = file[:file.rfind(join) + 1]
+        test = file[:file.rfind(packaet_path_separator) + 1]
         os.chdir(test)
 
     message("launching the project directly...")

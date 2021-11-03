@@ -2,21 +2,22 @@ from .framework._application import _app as app
 from .framework._library import join
 import threading
 import string
+import random
+import platform
 import os
 import sys
-import random
 import traceback
+packaet_path_separator = "\\" if platform.system() == 'Windows' else "/"
+packaet_manager_name = 'tppm'
+packaet_manager_separator = "\t"
 
 testcanarybot_name_data = {
     'keywords': {
     'name': 'TestCanarybot',
     'version': '1.3.1',
-    'branch': 'Dev'},
+    'branch': 'dev'},
     'sep': ' '
 }
-
-packaet_manager_name = '[tppm]'
-packaet_manager_separator = '\t'
 
 packaet_readme_assets = """testcanarybot assets
 Copyright 2021 kensoi
@@ -135,9 +136,9 @@ def getProjects(path: str):
     projects = []
 
     for directory in os.listdir(path):
-        if os.path.isdir(join.join([path,directory])) and directory not in ['testcanarybot', 'docs', 'tools', 'all', 'info', 'assets', 'library']:
-            if 'root.py' in os.listdir(join.join([path, directory])) and 'assets' in os.listdir(join.join([path, directory])) and 'library' in os.listdir(join.join([path, directory])):
-                if not os.path.isdir(join.join([path, directory, 'root.py'])) and os.path.isdir(join.join([path, directory, 'assets'])) and os.path.isdir(join.join([path, directory, 'library'])):
+        if os.path.isdir(packaet_path_separator.join([path,directory])) and directory not in ['testcanarybot', 'docs', 'tools', 'all', 'info', 'assets', 'library']:
+            if 'root.py' in os.listdir(packaet_path_separator.join([path, directory])) and 'assets' in os.listdir(packaet_path_separator.join([path, directory])) and 'library' in os.listdir(packaet_path_separator.join([path, directory])):
+                if not os.path.isdir(packaet_path_separator.join([path, directory, 'root.py'])) and os.path.isdir(packaet_path_separator.join([path, directory, 'assets'])) and os.path.isdir(packaet_path_separator.join([path, directory, 'library'])):
                     projects.append(directory)
 
     return projects
@@ -218,7 +219,7 @@ class threadBot(threading.Thread):
 
 
     def run(self):
-        self.bot = app(accessToken = self.accessToken, groupId = self.groupId, apiVersion = self.apiVersion, serviceToken = self.serviceToken, level = self.level, print_log = self.print_log, path = self.path, countThread = self.countThread, assets = self.botname + join + self.assets, library = self.botname + join + self.library)
+        self.bot = app(accessToken = self.accessToken, groupId = self.groupId, apiVersion = self.apiVersion, serviceToken = self.serviceToken, level = self.level, print_log = self.print_log, path = self.path, countThread = self.countThread, assets = self.botname + packaet_path_separator + self.assets, library = self.botname + packaet_path_separator + self.library)
         
         if len(self.mentions) != 0: self.bot.setMentions(self.mentions)
         if len(self.pl) != 0: self.bot.setPrivateList(self.pl)

@@ -47,7 +47,7 @@ elif packaet_project_directory not in [args.create, args.project] and args.run =
     raise RuntimeError('2 or more args! \nTry to run command \"python testcanarybot -h\"')
 
 if len(args.run) > 0:
-    sys.path.append(args.path + join)
+    sys.path.append(args.path + packaet_path_separator)
 
     if args.run in [['info'], ['all']]:
         if args.run[0] == 'info':
@@ -86,21 +86,20 @@ elif args.create != '':
     if packaet_project_directory not in projects:
         message("Creating directories")
 
-        os.mkdir(args.path + join + packaet_project_directory)
-        os.mkdir(args.path + join + packaet_project_directory + join + packaet_project_assets)
-        os.mkdir(args.path + join + packaet_project_directory + join + packaet_project_library)
-
+        os.mkdir(packaet_path_separator.join([args.path, packaet_project_directory]))
+        os.mkdir(packaet_path_separator.join([args.path, packaet_project_directory, packaet_project_assets]))
+        os.mkdir(packaet_path_separator.join([args.path, packaet_project_directory, packaet_project_library]))
         message("Creating << root >>")
 
-        with open(args.path + join + packaet_project_directory + join + 'root.py', 'w+') as root:
+        with open(packaet_path_separator.join([args.path, packaet_project_directory, 'root.py']), 'w+') as root:
             root.write(packaet_root_raw.format(token = args.token, group = args.group, service_token = args.service))
 
         message("Creating << readme >>")
 
-        with open(args.path + join + packaet_project_directory + join + packaet_project_library + join + 'readme.txt', 'w+') as readme:
+        with open(packaet_path_separator.join([args.path, packaet_project_directory, packaet_project_library, 'readme.txt']), 'w+') as readme:
             readme.write(packaet_readme_library.format(packaet_project_directory = packaet_project_directory))
         
-        with open(args.path + join + packaet_project_directory + join + packaet_project_assets + join + 'readme.txt', 'w+') as readme:
+        with open(packaet_path_separator.join([args.path, packaet_project_directory, packaet_project_assets, 'readme.txt']), 'w+') as readme:
             readme.write(packaet_readme_assets)
         message(f"Done! \n\tDirectory: ./{packaet_project_directory}/ \n\tUsage: python testcanarybot --run {packaet_project_directory}")
     
@@ -115,12 +114,12 @@ elif args.project != '':
         packaet_module_inFolder = args.folder
 
         if packaet_module_inFolder:
-            if packaet_module_name not in os.listdir(args.path + join + packaet_project_directory + join + 'library' + join):
-                os.mkdir(args.path + join + packaet_project_directory + join + 'library' + join + packaet_module_name)
+            if packaet_module_name not in os.listdir(packaet_path_separator.join([args.path, packaet_project_directory, 'library', ])):
+                os.mkdir(packaet_path_separator.join([args.path, packaet_project_directory, 'library', packaet_module_name]))
             
             message("created folder <<", packaet_module_name, ">>")
             
-            with open(args.path + join + packaet_project_directory + join + 'library' + join + packaet_module_name + "\\main.py", 'w+') as module:
+            with open(packaet_path_separator.join([args.path, packaet_project_directory, 'library', packaet_module_name, "main.py"]), 'w+') as module:
                 module.write(libraryModuleRaw)
             
             message("Done! Results at ./" + packaet_project_directory + "/library/")
@@ -128,7 +127,7 @@ elif args.project != '':
         else:
             message("created file <<", packaet_module_name, ">>")
             
-            with open(args.path + join + packaet_project_directory + join + 'library' + join + packaet_module_name + ".py", 'w+') as module:
+            with open(packaet_path_separator.join([args.path, packaet_project_directory, 'library', packaet_module_name + ".py"]), 'w+') as module:
                 module.write(libraryModuleRaw)
             
             message("Done! Results at ./" + packaet_project_directory + "/library/")

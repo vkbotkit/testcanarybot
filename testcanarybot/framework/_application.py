@@ -8,8 +8,8 @@ from ._api import api
 from ._threading import (thread as handlering_thread, packageHandler as handler)
 from ._library import library as _library
 from ._values import global_expressions
-import logging
 
+import logging
 import asyncio
 import aiohttp
 import atexit
@@ -38,6 +38,7 @@ class _assets:
 
     def __call__(self, *args, **kwargs):
         args = list(args)
+
         if len(args) > 0:
             args[0] = self.__path + args[0]
         
@@ -93,16 +94,10 @@ def _correctCodeName(int1: int, int2: int, int3: int) -> str:
 
 
 class _app:  
-    _headers = {
-        'User-agent': """Mozilla/5.0 (Windows NT 6.1; rv:52.0) 
-            Gecko/20100101 Firefox/52.0"""
-    }
-
-
+    _headers = {'User-agent': """Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"""}
     __longpoll_url = ""
     __longpoll_ts = 0
     __longpoll_key = None
-
     __booted_once = False
 
 
@@ -148,7 +143,6 @@ class _app:
             level = logger_levels[level]
 
         self.logger.setLevel(level)
-
         handlerfile = logging.FileHandler("log.txt")
         self.logger.addHandler(handlerfile)
 

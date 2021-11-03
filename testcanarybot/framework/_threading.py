@@ -38,9 +38,7 @@ class thread(threading.Thread):
 
 
     def create_task(self, package):
-        if hasattr(self, "thread_loop"):
-            pass
-        else:
+        if not hasattr(self, "thread_loop"):
             self.thread_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.thread_loop)
 
@@ -69,7 +67,6 @@ class packageHandler:
         self.add_mentions = self.library.tools.values.ADD_MENTIONS
         self.mentions = self.library.tools.getBotMentions()
         self.packages = []
-
         self.define_key = "@" + self.library.tools.getBotLink() + ":"
         self.define_botment = objects.mention(self.library.tools.getBotId(), self.library.tools.getBotLink())
 
@@ -125,7 +122,6 @@ class packageHandler:
                     'items': [self.library.tools.values.NOREPLY]
                     })
                 package.params.command = True
-
                 self.thread_loop.create_task(handler(module, self.library.tools, package))
 
             else:
@@ -217,19 +213,14 @@ class packageHandler:
                         mentionslisted = list(map(int, package.params.mentions))
                         k = set(map(lambda x: str(x).lower(), package.items))
                         
-                        if self.define_botment.id in mentionslisted:
+                        if self.define_botment.id in mentionslisted or k & self.am != set():
                             package.params.bot_mentioned = True
-
-                        elif k & self.am != set():
-                            package.params.bot_mentioned = True
-
-
 
                 elif len(package.attachments) > 0: 
                     package.params.attachments = True
 
-
             await self.handler(package)
+            
         except Exception as e:
             print(traceback.format_exc())
             print(e)
