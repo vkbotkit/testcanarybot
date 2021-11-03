@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://kensoi.github.io/testcanarybot/"> 
-        <img src ="/pc-cover.png"/>
+        <img src ="pc-cover.png"/>
     </a>
 </p>
 
