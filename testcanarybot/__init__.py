@@ -2,7 +2,9 @@ from .framework._application import (
     _app as app,
     )
 
-version = '1.1.4'
+from .packaet import packaet_path_separator
+
+version = '1.1.5'
 
 def root_init(name: str, file) -> bool:
     import os
@@ -15,7 +17,7 @@ def root_init(name: str, file) -> bool:
         pass
 
     else:
-        test = file[:file.rfind("\\") + 1]
+        test = file[:file.rfind(packaet_path_separator) + 1]
         os.chdir(test)
 
     system_message("launching the project directly...")

@@ -1,19 +1,13 @@
 from .. import exceptions
 from .. import objects
-from ..enums import values
 from ..enums import events
 
 from ._api import api
 from ._threading import (thread as handlering_thread, packageHandler as handler)
 from ._library import library as _library
-from ._values import _ohr
 from ._values import global_expressions
 
-from datetime import datetime
-from enum import Enum
-
 import logging
-
 import asyncio
 import aiohttp
 import atexit
@@ -41,6 +35,7 @@ class _assets:
 
     def __call__(self, *args, **kwargs):
         args = list(args)
+
         if len(args) > 0:
             args[0] = self.__path + args[0]
         
@@ -86,12 +81,9 @@ class async_sessions():
 
 class _app:  
     _headers = {'User-agent': """Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"""}
-
-
     __longpoll_url = ""
     __longpoll_ts = 0
     __longpoll_key = None
-
     __booted_once = False
 
 
@@ -127,7 +119,6 @@ class _app:
         self.__av = apiVersion
         self.__longpoll_delay = 1 / 20
         self.__longpoll_last = 0.0  
-
         self.__http = async_sessions(headers = self._headers, trust_env=True)
         self.__api = api(self.__http, self.method)
         self.logger = logg
@@ -137,7 +128,6 @@ class _app:
             level = logger_levels[level]
 
         self.logger.setLevel(level)
-
         handlerfile = logging.FileHandler("log.txt")
         self.logger.addHandler(handlerfile)
 
