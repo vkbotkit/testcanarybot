@@ -2,18 +2,14 @@ from . import packaet
 from .packaet import app, message, testcanarybot_name_data
 import os
 
-from .packaet import packaet_path_separator
-
 def root_init(name: str, file) -> bool:
+    file_path = os.path.abspath(file)[:-1-len(file)]
+
     if name != "__main__":
         return False
 
-    elif os.path.abspath(file) == os.getcwd():
-        pass
-
-    else:
-        test = file[:file.rfind(packaet_path_separator) + 1]
-        os.chdir(test)
+    elif file_path != os.getcwd():
+        os.chdir(file_path)
 
     message("launching the project directly...")
 
