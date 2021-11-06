@@ -5,7 +5,6 @@ from .. import objects
 import asyncio
 import importlib
 import os
-import sys
 
 join = '\\' if os.name == 'nt' else '/'
 

@@ -32,8 +32,11 @@ logger_levels = {
 }
 
 class _assets:
-    def __init__(self, assets = os.getcwd() + '\\assets'):
+    def __init__(self, assets = None):
+        if not assets:
+            assets = os.getcwd() + '\\assets'
         self.__path = assets + '\\'
+        print(self.__path)
 
 
     def __call__(self, *args, **kwargs):

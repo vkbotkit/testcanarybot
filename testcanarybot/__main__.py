@@ -9,7 +9,6 @@ import os
 import sys
 import time
 
-from .framework._library import join
 from .packaet import *
 
 packaet_parser = argparse.ArgumentParser(description = description)
@@ -36,8 +35,7 @@ packaet_project_directory =  args.create + args.project
 packaet_project_assets = args.assets
 packaet_project_library = args.library
 workingProjects = []
-
-projects = os.listdir(args.path + join)
+projects = os.listdir(args.path + packaet_path_separator)
 
 if packaet_project_directory == '' and args.run == []:
     message('Try to run command \"python testcanarybot -h\"')
@@ -64,7 +62,7 @@ if len(args.run) > 0:
         for i in args.run:
             if i in getProjects(args.path):
                 testApp = importlib.import_module(i + '.root')
-                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library, args.path + join + i)
+                testBot = threadBot(testApp, i, packaet_project_assets, packaet_project_library, args.path)
                 workingProjects.append(testBot)
                 time.sleep(1)
             else:

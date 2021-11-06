@@ -1,10 +1,10 @@
 from . import packaet
-from .packaet import app, message, testcanarybot_name_data
+from .packaet import app, message, testcanarybot_name_data, packaet_path_separator
 import os
 
 def root_init(name: str, file) -> bool:
-    file_path = os.path.abspath(file)[:-1-len(file)]
-
+    file_path = file[:file.rfind(packaet_path_separator)]
+    
     if name != "__main__":
         return False
 
