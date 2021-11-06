@@ -6,10 +6,12 @@ from .packaet import packaet_path_separator
 
 version = '1.1.5'
 
-def root_init(name: str, file) -> bool:
-    import os
-    from .packaet import system_message
+from .packaet import app, system_message, packaet_path_separator
+import os
 
+def root_init(name: str, file) -> bool:
+    file_path = file[:file.rfind(packaet_path_separator)]
+    
     if name != "__main__":
         return False
 
