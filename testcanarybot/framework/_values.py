@@ -65,11 +65,11 @@ class global_expressions:
         }
         self.__values = {}
 
-        self.set(name = "LOGGER_START", value = ":::LOGGER_START:::", type = values.log)
-        self.set(name = "LOGGER_CLOSE", value = ":::LOGGER_END:::", type = values.log)
+        self.set(name = "LOGGER_START", value = ":::START:::", type = values.log)
+        self.set(name = "LOGGER_CLOSE", value = ":::END:::", type = values.log)
         
-        self.set(name = "SESSION_START", value = "started", type = values.log)
-        self.set(name = "SESSION_CLOSE", value = "closed", type = values.log)
+        self.set(name = "SESSION_START", value = "ClientSession has been initialised", type = values.log)
+        self.set(name = "SESSION_CLOSE", value = "ClientSession has been closed", type = values.log)
         
         self.set(name = "LONGPOLL_START", value = "polling...", type = values.log)
         self.set(name = "LONGPOLL_CLOSE", value = "polling is finished", type = values.log)

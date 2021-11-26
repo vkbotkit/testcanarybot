@@ -158,7 +158,7 @@ class _app:
 
 
         self.__tools = tools(self.__group_id, self.__api, self.__http, path + '\\' + assets, self.logger, level, print_log)
-        self.__tools.log(module = "session", level = "info", write = self.__tools.values.SESSION_START)
+        self.__tools.log(module = "sdk", level = "info", write = self.__tools.values.SESSION_START)
             
         self.__library = _library(self.__tools, library)
         atexit.register(self.__close)
@@ -287,7 +287,7 @@ class _app:
                     
                     self.__thread.append(thread_started)
         else:
-            self.__tools.log(module = "framework", level = "debug", write = self.__tools.values.NO_THREAD)
+            self.__tools.log(module = "sdk", level = "debug", write = self.__tools.values.NO_THREAD)
             self.handler = handler(self.__library)
 
         if not self.__booted_once:
@@ -307,7 +307,7 @@ class _app:
         """
 
         self.setup()
-        self.__library.tools.log(module = "longpoll", level = "debug", write = self.__tools.values.LONGPOLL_START)
+        self.__library.tools.log(module = "sdk.longpoll", level = "debug", write = self.__tools.values.LONGPOLL_START)
         self.__loop.run_until_complete(self.__pollingCycle())
 
 
@@ -320,7 +320,7 @@ class _app:
 
         self.setup()
 
-        self.__tools.log(module = 'longpoll', level = "debug", write = self.__tools.values.LONGPOLL_START)
+        self.__tools.log(module = 'sdk.longpoll', level = "debug", write = self.__tools.values.LONGPOLL_START)
         
         while times != 0:
             self.__loop.run_until_complete(self.__polling())
@@ -340,7 +340,7 @@ class _app:
 
         if self.__tools.values.DEBUG_MESSAGES:
             self.__tools.log( 
-                module = "longpoll",
+                module = "sdk.longpoll",
                 level = "debug",
                 write = self.__tools.values.LONGPOLL_UPDATE)
 
@@ -470,7 +470,7 @@ class tools:
         return int(random.random() * 999999)
 
 
-    def log(self, *args, write: typing.Optional[str] = None, module: str = "module", level:str = 'info', sep = " ", end = "\n"):
+    def log(self, *args, write: typing.Optional[str] = None, module: str = "sdk", level:str = 'info', sep = " ", end = "\n"):
         if not write:
             write = list(map(str, args))
             write = sep.join()
